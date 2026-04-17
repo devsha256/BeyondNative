@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Azure DevOps Automator | {% block title %}{% endblock %}</title>
+    <title>Beyond Native | {% block title %}{% endblock %}</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
@@ -15,20 +15,33 @@
         </main>
 
         <nav class="nav-drawer">
-            <div style="padding-left: 16px; margin-bottom: 32px;">
-                <h2 style="font-size: 1.4rem; color: var(--md-sys-color-primary);">DevOps Suite</h2>
+            <div class="nav-header">
+                <h2 class="brand-title">Beyond Native</h2>
+                <span class="brand-subtitle">Developer Suite</span>
             </div>
             
-            <a href="/" class="nav-item {% if request.path == '/' %}active{% endif %}">
-                <i class="material-icons">rocket_launch</i> Bulk PRs
-            </a>
-            <a href="#" class="nav-item">
-                <i class="material-icons">history</i> Audit Logs
-            </a>
-            <a href="#" class="nav-item">
-                <i class="material-icons">settings</i> Settings
-            </a>
+            <div class="nav-section">
+                <label>CORE SUITES</label>
+                <a href="/" class="nav-item {% if 'devops' in request.path or request.path == '/' %}active{% endif %}">
+                    <i class="material-icons">lan</i> DevOps Suite
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="material-icons">api</i> MuleSoft Suite
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <label>SYSTEM</label>
+                <a href="#" class="nav-item">
+                    <i class="material-icons">history</i> Global Audit
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="material-icons">settings</i> Settings
+                </a>
+            </div>
         </nav>
     </div>
+
+    {% block selection_panel %}{% endblock %}
 </body>
 </html>

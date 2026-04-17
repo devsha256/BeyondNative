@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="m3-card">
+    <h1>DevOps Suite: Repository Discovery</h1>
+    <div class="search-box" style="display:flex; gap:10px;">
+        <input type="text" id="prefix" class="m3-input" placeholder="Search by prefix...">
+        <button class="m3-button" onclick="searchRepos()">Search</button>
+    </div>
+    <div class="progress-container" id="prog-cont"><div class="progress-bar" id="prog-bar"></div></div>
+</div>
+
+<table class="m3-table" id="repo-table" style="display:none;">
+    <thead>
+        <tr>
+            <th><input type="checkbox" onclick="toggleAll(this)"></th>
+            <th>Repository Name</th>
+            <th>Link</th>
+            <th>Project</th>
+        </tr>
+    </thead>
+    <tbody id="repo-body"></tbody>
+</table>
+
+<div id="selection-panel" class="selection-panel">
+    <span id="selected-count">0 Repositories Selected</span>
+    <button class="m3-button" style="background: white; color: var(--md-sys-color-primary);" onclick="proceedToPR()">
+        Raise Bulk PR <i class="material-icons">arrow_forward</i>
+    </button>
+</div>
+
+<script>
+async function searchRepos() {
+    const progCont = document.getElementById('prog-cont');
+    const progBar = document.getElementById('prog-bar');
+    progCont.style.display = 'block';
+    progBar.style.width = '30%';
+
+    const res = await fetch('/api/extract-repos', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({prefix: document.getElementById('prefix').value})
+    });
+    
+    progBar.style.width = '100%';
+    const data = await res.json();
+    
+    setTimeout(() => {
+        progCont.style.display = 'none';
+        renderTable(data.repositories);
+    }, 500);
+}
+
+function renderTable(repos) {
+    const body = document.getElementById('repo-body');
+    body.innerHTML = '';
+    repos.forEach(repo => {
+        body.innerHTML += `
+            <tr>
+                <td><input type="checkbox" class="repo-check" value="${repo.name}" onchange="updateSelection()"></td>
+                <td>${repo.name}</td>
+                <td><a href="${repo.url}" target="_blank" class="m3-button" style="padding:5px 12px;"><i class="material-icons">open_in_new</i></a></td>
+                <td>${repo.project}</td>
+            </tr>`;
+    });
+    document.getElementById('repo-table').style.display = 'table';
+}
+
+function updateSelection() {
+    const checked = document.querySelectorAll('.repo-check:checked');
+    const panel = document.getElementById('selection-panel');
+    document.getElementById('selected-count').innerText = `${checked.length} Repositories Selected`;
+    checked.length > 0 ? panel.classList.add('active') : panel.classList.remove('active');
+}
+
+function proceedToPR() {
+    const selected = Array.from(document.querySelectorAll('.repo-check:checked')).map(cb => cb.value);
+    sessionStorage.setItem('selectedRepos', JSON.stringify(selected));
+    window.location.href = '/devops/bulk-pr';
+}
+</script>
+{% endblock %}

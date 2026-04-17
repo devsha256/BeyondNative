@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Configure Bulk PR</h1>
+
+<div class="m3-card">
+    <table class="m3-table">
+        <thead style="background: #F3EDF7;">
+            <tr>
+                <th>Master Control</th>
+                <th>
+                    <select id="master-from" class="m3-input" onchange="applyMaster('from', this.value)">
+                        <option value="">Set All From...</option>
+                        <option value="develop">develop</option>
+                        <option value="feature/v1">feature/v1</option>
+                    </select>
+                </th>
+                <th>
+                    <select id="master-to" class="m3-input" onchange="applyMaster('to', this.value)">
+                        <option value="">Set All To...</option>
+                        <option value="main">main</option>
+                    </select>
+                </th>
+                <th><button class="m3-button" onclick="raiseAll()">Raise All PRs</button></th>
+            </tr>
+        </thead>
+        <tbody id="pr-rows">
+            </tbody>
+    </table>
+</div>
+
+<script>
+function applyMaster(type, value) {
+    if (!value) return;
+    const selects = document.querySelectorAll(`.${type}-select`);
+    selects.forEach(s => {
+        s.value = value;
+        s.disabled = true; // Lock the row as requested
+    });
+}
+
+async function expandRow(repo, rowId) {
+    const expandArea = document.getElementById(`expand-${rowId}`);
+    expandArea.style.display = 'block';
+    expandArea.innerHTML = "Fetching commits...";
+    
+    // API call to fetch commits and files
+    const res = await fetch(`/api/repo-details?repo=${repo}`);
+    const data = await res.json();
+    
+    expandArea.innerHTML = `
+        <div style="display:flex; justify-content:space-between;">
+            <div>
+                <h4>Recent Commits</h4>
+                <ul>${data.commits.map(c => `<li>${c.message}</li>`).join('')}</ul>
+            </div>
+            <button class="m3-button" onclick="confirmPR('${repo}')">Accept & Raise PR</button>
+        </div>
+    `;
+}
+</script>
+{% endblock %}
