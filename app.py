@@ -19,6 +19,16 @@ def extract_repos():
     repos = devops.get_repositories(prefix)
     return jsonify({"repositories": repos})
 
+@app.route('/api/extract-by-file', methods=['POST'])
+def extract_by_file():
+    # Expects a JSON list of repo names from the frontend
+    repo_names = request.json.get('repos', [])
+    all_repos = devops.get_repositories("") # Get all to match URLs and project names
+    
+    # Filter only the repos provided in the file
+    matched = [r for r in all_repos if r['name'] in repo_names]
+    return jsonify({"repositories": matched})
+
 @app.route('/api/branches/<repo_name>')
 def get_branches(repo_name):
     branches = devops.get_branches(repo_name)
@@ -35,7 +45,6 @@ def get_repo_details():
 @app.route('/api/create-pr', methods=['POST'])
 def create_pr():
     data = request.json
-    # Logic now requires last_msg for the title pattern
     status, result = devops.create_pull_request(
         data['repo_id'], 
         data['from_branch'], 
@@ -50,7 +59,6 @@ def bulk_create_pr():
     operations = data.get('operations', [])
     
     def run_op(op):
-        # In bulk, we use the provided last_msg or a default
         status, res = devops.create_pull_request(
             op['repo_id'], 
             op['from_branch'], 

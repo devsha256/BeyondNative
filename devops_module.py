@@ -15,7 +15,7 @@ class AzureDevOpsManager:
 
     def _get_headers(self):
         auth_str = f":{self.pat}"
-        b64_auth = base64.encodebytes(auth_str.encode()).decode().replace('\n', '')
+        b64_auth = base64.b64encode(auth_str.encode()).decode()
         return {
             "Authorization": f"Basic {b64_auth}",
             "Content-Type": "application/json"
@@ -44,10 +44,6 @@ class AzureDevOpsManager:
         return ["main", "develop", "dev", "qa", "staging", "pre-prod"]
 
     def get_commit_details(self, repo_name, source, target):
-        """
-        Uses Azure Git Diffs API to compare branches.
-        URL: GET .../diffs/commits?baseVersion={target}&targetVersion={source}
-        """
         url = f"{self.base_url}/git/repositories/{repo_name}/diffs/commits"
         params = {
             "baseVersion": target,
@@ -56,29 +52,30 @@ class AzureDevOpsManager:
             "targetVersionType": "branch",
             "api-version": "7.1"
         }
-        
         response = requests.get(url, headers=self.headers, params=params)
         
         if response.status_code == 200:
             data = response.json()
-            # Extract commits and file paths
-            commits = [{"message": c['comment'], "author": c['author']['name']} for c in data.get('commits', [])]
-            # Changes list gives us file paths
+            commits_raw = data.get('commits', [])
+            commits = [{"message": c['comment'], "author": c['author']['name']} for c in commits_raw]
+            last_msg = commits[0]['message'] if commits else "No new commits"
             files = list(set([change['item']['path'] for change in data.get('changes', []) if 'item' in change]))
             return {
-                "commits": commits[:10], # Limit to last 10 for UI cleaniness
-                "files": [f.split('/')[-1] for f in files[:15]], # Show filenames only
-                "aheadCount": data.get('aheadCount', 0)
+                "commits": commits[:10],
+                "files": [f.split('/')[-1] for f in files[:15]],
+                "aheadCount": data.get('aheadCount', 0),
+                "last_commit_message": last_msg
             }
-        return {"commits": [], "files": [], "aheadCount": 0, "error": "Branches might not exist or no diff found."}
+        return {"commits": [], "files": [], "aheadCount": 0, "last_commit_message": "N/A"}
 
-    def create_pull_request(self, repo_name, from_branch, to_branch):
+    def create_pull_request(self, repo_name, from_branch, to_branch, last_msg):
         url = f"{self.base_url}/git/repositories/{repo_name}/pullrequests?api-version=7.1"
+        pr_title = f"{to_branch} Deployment: {last_msg}"
         payload = {
             "sourceRefName": f"refs/heads/{from_branch}",
             "targetRefName": f"refs/heads/{to_branch}",
-            "title": f"Beyond Native Bulk PR: {from_branch} -> {to_branch}",
-            "description": "Automated Pull Request raised via Beyond Native Suite."
+            "title": pr_title,
+            "description": f"Automated Deployment PR for {repo_name}."
         }
         response = requests.post(url, headers=self.headers, json=payload)
         return response.status_code, response.json()

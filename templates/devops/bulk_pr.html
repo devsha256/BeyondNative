@@ -52,7 +52,6 @@
 </div>
 
 <script>
-// State object to store the last commit message per repo after review
 const repoState = {};
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -68,20 +67,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const branchRes = await fetch(`/api/branches/${encodeURIComponent(name)}`);
             const branches = await branchRes.json();
-
             const row = `
                 <tr id="row-main-${name}">
                     <td><strong>${name}</strong></td>
-                    <td>
-                        <select class="m3-input from-select">
-                            ${branches.map(b => `<option value="${b}">${b}</option>`).join('')}
-                        </select>
-                    </td>
-                    <td>
-                        <select class="m3-input to-select">
-                            ${branches.map(b => `<option value="${b}">${b}</option>`).join('')}
-                        </select>
-                    </td>
+                    <td><select class="m3-input from-select">${branches.map(b => `<option value="${b}">${b}</option>`).join('')}</select></td>
+                    <td><select class="m3-input to-select">${branches.map(b => `<option value="${b}">${b}</option>`).join('')}</select></td>
                     <td style="text-align:right; padding-right:24px;">
                         <button class="m3-button btn-review" onclick="review('${name}', this)" style="background:none; border:1px solid var(--md-sys-color-primary); color:var(--md-sys-color-primary);">Review</button>
                         <button class="m3-button btn-raise" onclick="raiseSinglePR('${name}', this)">Raise PR</button>
@@ -90,74 +80,49 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <tr id="review-${name}" style="display:none;"><td colspan="4"><div class="expandable-content" id="content-${name}"></div></td></tr>
             `;
             tbody.insertAdjacentHTML('beforeend', row);
-        } catch (e) {
-            console.error("Error loading repo row:", e);
-        }
+        } catch (e) { console.error(e); }
     }
 });
 
 function bulkUpdate(type, val) {
     if(!val) return;
-    const selectors = document.querySelectorAll(`.${type}-select`);
-    selectors.forEach(s => {
-        s.value = val;
-        s.style.background = "var(--md-sys-color-surface-variant)";
-    });
+    document.querySelectorAll(`.${type}-select`).forEach(s => s.value = val);
 }
 
 async function review(name, btn) {
     const row = document.getElementById(`review-${name}`);
     const content = document.getElementById(`content-${name}`);
     const mainRow = document.getElementById(`row-main-${name}`);
+    if(row.style.display === 'table-row') { row.style.display = 'none'; return; }
     
-    if(row.style.display === 'table-row') { 
-        row.style.display = 'none'; 
-        return; 
-    }
-
     const source = mainRow.querySelector('.from-select').value;
     const target = mainRow.querySelector('.to-select').value;
-    
     row.style.display = 'table-row';
-    content.innerHTML = `<div class="m3-loader">Analyzing ${source} ➔ ${target}...</div>`;
+    content.innerHTML = `<div class="m3-loader">Comparing ${source} ➔ ${target}...</div>`;
     
     try {
         const response = await fetch(`/api/repo-details?repo=${encodeURIComponent(name)}&source=${source}&target=${target}`);
         const data = await response.json();
-        
-        // Cache the last commit message for PR creation
         repoState[name] = data.last_commit_message;
 
         if (data.aheadCount === 0) {
-            content.innerHTML = `<div class="status-badge status-success">Branches are identical.</div>`;
+            content.innerHTML = `<div class="status-badge status-success">Identical Branches.</div>`;
             return;
         }
 
         content.innerHTML = `
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
-                <div>
-                    <strong>Recent Changes</strong>
-                    <ul style="font-size:12px; margin-top:8px;">${data.commits.map(c => `<li>${c.message}</li>`).join('')}</ul>
-                </div>
+                <div><strong>Commits</strong><ul style="font-size:12px; margin-top:8px;">${data.commits.map(c => `<li>${c.message}</li>`).join('')}</ul></div>
                 <div>
                     <strong>Impacted Files</strong>
-                    <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:8px;">
-                        ${data.files.map(f => `<span class="status-badge" style="background:#eee">${f}</span>`).join('')}
-                    </div>
+                    <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:8px;">${data.files.map(f => `<span class="status-badge" style="background:#eee">${f}</span>`).join('')}</div>
                     <div style="margin-top:24px; display:flex; gap:12px;">
-                        <button class="m3-button" onclick="raiseSinglePR('${name}', this)">
-                            <i class="material-icons">check</i> Confirm & Raise PR
-                        </button>
-                        <button class="m3-button" style="background:var(--md-sys-color-surface-variant); color:var(--md-sys-color-on-surface);">
-                            Auto-Deploy
-                        </button>
+                        <button class="m3-button" onclick="raiseSinglePR('${name}', this)"><i class="material-icons">check</i> Confirm & Raise PR</button>
+                        <button class="m3-button" style="background:#eee; color:#333;">Auto-Deploy</button>
                     </div>
                 </div>
-            </div>
-        `;
-    } catch (err) {
-        content.innerHTML = '<div class="status-badge status-error">Error fetching diff.</div>';
-    }
+            </div>`;
+    } catch (err) { content.innerHTML = 'Error fetching diff.'; }
 }
 
 async function raiseSinglePR(repoName, btn) {
@@ -167,72 +132,33 @@ async function raiseSinglePR(repoName, btn) {
     const lastMsg = repoState[repoName] || "Manual Deployment";
 
     btn.disabled = true;
-    const originalContent = btn.innerHTML;
     btn.innerHTML = '<i class="material-icons rotating">sync</i>';
 
-    try {
-        const res = await fetch('/api/create-pr', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                repo_id: repoName, 
-                from_branch: from, 
-                to_branch: to,
-                last_msg: lastMsg
-            })
-        });
+    const res = await fetch('/api/create-pr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repo_id: repoName, from_branch: from, to_branch: to, last_msg: lastMsg })
+    });
 
-        const data = await res.json();
-        if (res.ok) {
-            btn.innerHTML = '<i class="material-icons">done</i> PR Created';
-            btn.style.background = "var(--md-sys-color-success)";
-            // If button was inside expansion, update main row button too
-            const mainBtn = mainRow.querySelector('.btn-raise');
-            mainBtn.innerHTML = '<i class="material-icons">done</i>';
-            mainBtn.style.background = "var(--md-sys-color-success)";
-        } else {
-            btn.innerHTML = 'Error';
-            btn.style.background = "var(--md-sys-color-error)";
-            console.error(data);
-        }
-    } catch (e) {
-        btn.innerHTML = 'Failed';
-        btn.style.background = "var(--md-sys-color-error)";
+    if (res.ok) {
+        btn.innerHTML = 'Created'; btn.style.background = "var(--md-sys-color-success)";
+    } else {
+        btn.innerHTML = 'Error'; btn.style.background = "var(--md-sys-color-error)";
     }
 }
 
 async function raiseAll() {
     const rows = document.querySelectorAll('#pr-body tr[id^="row-main-"]');
     const payload = [];
-
     rows.forEach(row => {
         const name = row.querySelector('strong').innerText;
-        payload.push({
-            repo_id: name,
-            from_branch: row.querySelector('.from-select').value,
-            to_branch: row.querySelector('.to-select').value,
-            last_msg: repoState[name] || "Bulk Sync"
-        });
+        payload.push({ repo_id: name, from_branch: row.querySelector('.from-select').value, to_branch: row.querySelector('.to-select').value, last_msg: repoState[name] || "Bulk Sync" });
     });
-
     const btn = document.getElementById('btn-raise-all');
-    btn.disabled = true;
-    btn.innerHTML = 'Executing Bulk...';
-
-    const res = await fetch('/api/bulk-create-pr', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ operations: payload })
-    });
-
-    if (res.ok) {
-        alert("Bulk PR operations completed.");
-        location.reload();
-    } else {
-        alert("One or more PRs failed.");
-        btn.disabled = false;
-        btn.innerHTML = 'Raise All PRs';
-    }
+    btn.disabled = true; btn.innerHTML = 'Processing...';
+    const res = await fetch('/api/bulk-create-pr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ operations: payload }) });
+    if (res.ok) { alert("Bulk PR Completed."); location.reload(); }
+    else { alert("Error in Bulk PR."); btn.disabled = false; btn.innerHTML = 'Raise All PRs'; }
 }
 </script>
 {% endblock %}

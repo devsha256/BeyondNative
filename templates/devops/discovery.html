@@ -1,14 +1,30 @@
 {% extends "base.html" %}
 {% block title %}Discovery{% endblock %}
 {% block content %}
-<div class="m3-card">
-    <h1>Beyond Native: Discovery</h1>
-    <div style="display:flex; gap:12px;">
-        <input type="text" id="prefix" class="m3-input" placeholder="Enter repo prefix...">
-        <button class="m3-button" onclick="searchRepos()"><i class="material-icons">search</i> Search</button>
+<h1>Beyond Native: Discovery</h1>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+    <div class="m3-card">
+        <h3>Prefix Discovery</h3>
+        <p style="font-size: 0.8rem; color: #666;">Scan Azure for matching repo names.</p>
+        <input type="text" id="prefix" class="m3-input" placeholder="e.g. app-service-">
+        <button class="m3-button" onclick="searchRepos()">
+            <i class="material-icons">search</i> Search Azure
+        </button>
     </div>
-    <div class="progress-container" id="prog-cont"><div class="progress-bar" id="prog-bar"></div></div>
+
+    <div class="m3-card">
+        <h3>Targeted Discovery</h3>
+        <p style="font-size: 0.8rem; color: #666;">Upload .csv or .txt (one repo per line).</p>
+        <div class="file-upload-wrapper" onclick="document.getElementById('file-input').click()">
+            <i class="material-icons" style="font-size: 32px; color: var(--md-sys-color-primary);">upload_file</i>
+            <p id="file-status">Click to upload curated list</p>
+        </div>
+        <input type="file" id="file-input" style="display:none" accept=".csv,.txt" onchange="handleFileUpload(this)">
+    </div>
 </div>
+
+<div class="progress-container" id="prog-cont"><div class="progress-bar" id="prog-bar"></div></div>
 
 <div class="table-container" id="table-wrapper" style="display:none; margin-top:24px;">
     <table class="m3-table">
@@ -36,17 +52,46 @@ async function searchRepos() {
     const bar = document.getElementById('prog-bar');
     document.getElementById('prog-cont').style.display = 'block';
     bar.style.width = '40%';
-    
     const res = await fetch('/api/extract-repos', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({prefix: document.getElementById('prefix').value})
     });
     const data = await res.json();
-    bar.style.width = '100%';
+    renderResults(data.repositories);
+}
+
+function handleFileUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
     
+    document.getElementById('file-status').innerText = `Processing: ${file.name}`;
+    const reader = new FileReader();
+    
+    reader.onload = async (e) => {
+        const text = e.target.result;
+        // Split by newline and filter empty lines
+        const repoNames = text.split(/\r?\n/).map(line => line.trim()).filter(line => line.length > 0);
+        
+        document.getElementById('prog-cont').style.display = 'block';
+        document.getElementById('prog-bar').style.width = '50%';
+        
+        const res = await fetch('/api/extract-by-file', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({repos: repoNames})
+        });
+        const data = await res.json();
+        renderResults(data.repositories);
+    };
+    reader.readAsText(file);
+}
+
+function renderResults(repos) {
+    const bar = document.getElementById('prog-bar');
+    bar.style.width = '100%';
     const tbody = document.getElementById('repo-body');
-    tbody.innerHTML = data.repositories.map(r => `
+    tbody.innerHTML = repos.map(r => `
         <tr>
             <td><input type="checkbox" class="repo-check" value="${r.name}" onchange="syncUI()"></td>
             <td><strong>${r.name}</strong></td>
