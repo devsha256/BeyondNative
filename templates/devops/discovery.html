@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block title %}Discovery{% endblock %}
 {% block content %}
 <div class="m3-card">
     <h1>Beyond Native: Discovery</h1>
@@ -9,14 +10,14 @@
     <div class="progress-container" id="prog-cont"><div class="progress-bar" id="prog-bar"></div></div>
 </div>
 
-<div class="table-container" id="table-wrapper" style="display:none;">
+<div class="table-container" id="table-wrapper" style="display:none; margin-top:24px;">
     <table class="m3-table">
         <thead>
             <tr>
-                <th><input type="checkbox" id="master-check" onclick="toggleAll(this)"></th>
+                <th><input type="checkbox" onclick="toggleAll(this)"></th>
                 <th>Repository Name</th>
                 <th>Project</th>
-                <th>Action</th>
+                <th>Link</th>
             </tr>
         </thead>
         <tbody id="repo-body"></tbody>
@@ -44,13 +45,8 @@ async function searchRepos() {
     const data = await res.json();
     bar.style.width = '100%';
     
-    renderTable(data.repositories);
-    setTimeout(() => document.getElementById('prog-cont').style.display = 'none', 500);
-}
-
-function renderTable(repos) {
     const tbody = document.getElementById('repo-body');
-    tbody.innerHTML = repos.map(r => `
+    tbody.innerHTML = data.repositories.map(r => `
         <tr>
             <td><input type="checkbox" class="repo-check" value="${r.name}" onchange="syncUI()"></td>
             <td><strong>${r.name}</strong></td>
@@ -59,6 +55,7 @@ function renderTable(repos) {
         </tr>
     `).join('');
     document.getElementById('table-wrapper').style.display = 'block';
+    setTimeout(() => document.getElementById('prog-cont').style.display = 'none', 500);
 }
 
 function toggleAll(master) {

@@ -1,13 +1,16 @@
 {% extends "base.html" %}
+
+{% block title %}Bulk PR Configuration{% endblock %}
+
 {% block content %}
 <div style="display:flex; justify-content:space-between; align-items:center;">
-    <h1>Bulk PR Configuration</h1>
+    <h1>Beyond Native: Bulk PR Configuration</h1>
     <a href="/" class="m3-button" style="background:var(--md-sys-color-surface-variant); color:var(--md-sys-color-on-surface);">
         <i class="material-icons">arrow_back</i> Change Selection
     </a>
 </div>
 
-<div class="table-container m3-card" style="padding:0;">
+<div class="table-container m3-card" style="padding:0; margin-top:24px;">
     <table class="m3-table">
         <thead>
             <tr style="background: var(--md-sys-color-primary-container);">
@@ -32,7 +35,9 @@
                     </select>
                 </th>
                 <th style="text-align:right; padding-right:24px;">
-                    <button class="m3-button" onclick="raiseAll()">Raise All</button>
+                    <button id="btn-raise-all" class="m3-button" onclick="raiseAll()">
+                        <i class="material-icons">rocket_launch</i> Raise All
+                    </button>
                 </th>
             </tr>
             <tr>
@@ -52,13 +57,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tbody = document.getElementById('pr-body');
 
     if (repos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">No repos selected</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:40px;">No repositories selected.</td></tr>';
         return;
     }
 
     for (const name of repos) {
         try {
-            const branchRes = await fetch(`/api/branches/${name}`);
+            const branchRes = await fetch(`/api/branches/${encodeURIComponent(name)}`);
             const branches = await branchRes.json();
 
             const row = `
@@ -76,6 +81,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </td>
                     <td style="text-align:right; padding-right:24px;">
                         <button class="m3-button" onclick="review('${name}', this)" style="background:none; border:1px solid var(--md-sys-color-primary); color:var(--md-sys-color-primary);">Review</button>
+                        <button class="m3-button" onclick="raiseSinglePR('${name}', this)">Raise PR</button>
                     </td>
                 </tr>
                 <tr id="review-${name}" style="display:none;"><td colspan="4"><div class="expandable-content" id="content-${name}"></div></td></tr>
@@ -92,7 +98,6 @@ function bulkUpdate(type, val) {
     const selectors = document.querySelectorAll(`.${type}-select`);
     selectors.forEach(s => {
         s.value = val;
-        // Lock visual feedback
         s.style.background = "var(--md-sys-color-surface-variant)";
     });
 }
@@ -101,25 +106,14 @@ async function review(name, btn) {
     const row = document.getElementById(`review-${name}`);
     const content = document.getElementById(`content-${name}`);
     
-    if(row.style.display === 'table-row') { 
-        row.style.display = 'none'; 
-        return; 
-    }
+    if(row.style.display === 'table-row') { row.style.display = 'none'; return; }
     
     row.style.display = 'table-row';
     content.innerHTML = '<div class="m3-loader">Fetching Azure Details...</div>';
     
     try {
         const response = await fetch(`/api/repo-details?repo=${encodeURIComponent(name)}`);
-        
-        // Safety check: If the response is not JSON, log the text to see the error
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("Server Error:", errorText);
-            content.innerHTML = `<div class="status-badge status-error">Server Error: ${response.status}</div>`;
-            return;
-        }
-
+        if (!response.ok) throw new Error("API Failure");
         const data = await response.json();
         
         content.innerHTML = `
@@ -134,15 +128,69 @@ async function review(name, btn) {
                         ${data.files.map(f => `<span class="status-badge" style="background:#eee">${f}</span>`).join('')}
                     </div>
                     <div style="margin-top:16px; display:flex; gap:8px;">
-                        <button class="m3-button">Confirm PR</button>
+                        <button class="m3-button" onclick="raiseSinglePR('${name}', this)">Confirm PR</button>
                         <button class="m3-button" style="background:#eee; color:#333;">Auto-Deploy</button>
                     </div>
                 </div>
             </div>
         `;
     } catch (err) {
-        console.error("Fetch failed:", err);
-        content.innerHTML = '<div class="status-badge status-error">Failed to parse response. Check Console.</div>';
+        content.innerHTML = '<div class="status-badge status-error">Failed to load details.</div>';
+    }
+}
+
+async function raiseSinglePR(repoName, btn) {
+    const row = btn.closest('tr');
+    const from = row.querySelector('.from-select').value;
+    const to = row.querySelector('.to-select').value;
+
+    btn.disabled = true;
+    btn.innerText = "Raising...";
+
+    const res = await fetch('/api/create-pr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repo_id: repoName, from_branch: from, to_branch: to })
+    });
+
+    if (res.ok) {
+        btn.innerHTML = '<i class="material-icons">check</i> Success';
+        btn.style.background = "var(--md-sys-color-success)";
+    } else {
+        btn.innerText = "Failed";
+        btn.style.background = "var(--md-sys-color-error)";
+    }
+}
+
+async function raiseAll() {
+    const rows = document.querySelectorAll('#pr-body tr:not(.expand-row)');
+    const payload = [];
+
+    rows.forEach(row => {
+        payload.push({
+            repo_id: row.querySelector('strong').innerText,
+            from_branch: row.querySelector('.from-select').value,
+            to_branch: row.querySelector('.to-select').value
+        });
+    });
+
+    const btn = document.getElementById('btn-raise-all');
+    btn.disabled = true;
+    btn.innerHTML = 'Processing...';
+
+    const res = await fetch('/api/bulk-create-pr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ operations: payload })
+    });
+
+    if (res.ok) {
+        alert("Bulk PR operation completed. Check individual statuses.");
+        location.reload();
+    } else {
+        alert("Bulk PR operation failed.");
+        btn.disabled = false;
+        btn.innerHTML = 'Raise All';
     }
 }
 </script>
