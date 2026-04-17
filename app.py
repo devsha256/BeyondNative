@@ -27,18 +27,20 @@ def get_branches(repo_name):
 @app.route('/api/repo-details', methods=['GET'])
 def get_repo_details():
     repo_name = request.args.get('repo')
-    if not repo_name:
-        return jsonify({"error": "No repository name provided"}), 400
-    details = devops.get_commit_details(repo_name)
+    source = request.args.get('source', 'develop')
+    target = request.args.get('target', 'main')
+    details = devops.get_commit_details(repo_name, source, target)
     return jsonify(details)
 
 @app.route('/api/create-pr', methods=['POST'])
 def create_pr():
     data = request.json
+    # Logic now requires last_msg for the title pattern
     status, result = devops.create_pull_request(
         data['repo_id'], 
         data['from_branch'], 
-        data['to_branch']
+        data['to_branch'],
+        data.get('last_msg', 'Manual Trigger')
     )
     return jsonify({"status": status, "result": result})
 
@@ -48,10 +50,12 @@ def bulk_create_pr():
     operations = data.get('operations', [])
     
     def run_op(op):
+        # In bulk, we use the provided last_msg or a default
         status, res = devops.create_pull_request(
             op['repo_id'], 
             op['from_branch'], 
-            op['to_branch']
+            op['to_branch'],
+            op.get('last_msg', 'Bulk Deployment')
         )
         return {"repo": op['repo_id'], "status": status, "details": res}
 

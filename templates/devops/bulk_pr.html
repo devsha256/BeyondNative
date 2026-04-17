@@ -4,7 +4,7 @@
 
 {% block content %}
 <div style="display:flex; justify-content:space-between; align-items:center;">
-    <h1>Beyond Native: Bulk PR Configuration</h1>
+    <h1 style="color: var(--md-sys-color-primary);">Beyond Native: Bulk PR Configuration</h1>
     <a href="/" class="m3-button" style="background:var(--md-sys-color-surface-variant); color:var(--md-sys-color-on-surface);">
         <i class="material-icons">arrow_back</i> Change Selection
     </a>
@@ -16,7 +16,7 @@
             <tr style="background: var(--md-sys-color-primary-container);">
                 <th style="color: var(--md-sys-color-on-primary-container); padding: 16px;">MASTER CONTROL</th>
                 <th>
-                    <select class="m3-input" onchange="bulkUpdate('from', this.value)">
+                    <select class="m3-input master-select" onchange="bulkUpdate('from', this.value)">
                         <option value="">Global Source...</option>
                         <option value="dev">dev</option>
                         <option value="qa">qa</option>
@@ -25,7 +25,7 @@
                     </select>
                 </th>
                 <th>
-                    <select class="m3-input" onchange="bulkUpdate('to', this.value)">
+                    <select class="m3-input master-select" onchange="bulkUpdate('to', this.value)">
                         <option value="">Global Target...</option>
                         <option value="dev">dev</option>
                         <option value="qa">qa</option>
@@ -36,7 +36,7 @@
                 </th>
                 <th style="text-align:right; padding-right:24px;">
                     <button id="btn-raise-all" class="m3-button" onclick="raiseAll()">
-                        <i class="material-icons">rocket_launch</i> Raise All
+                        <i class="material-icons">rocket_launch</i> Raise All PRs
                     </button>
                 </th>
             </tr>
@@ -52,6 +52,9 @@
 </div>
 
 <script>
+// State object to store the last commit message per repo after review
+const repoState = {};
+
 document.addEventListener('DOMContentLoaded', async () => {
     const repos = JSON.parse(sessionStorage.getItem('selectedRepos') || '[]');
     const tbody = document.getElementById('pr-body');
@@ -67,7 +70,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const branches = await branchRes.json();
 
             const row = `
-                <tr>
+                <tr id="row-main-${name}">
                     <td><strong>${name}</strong></td>
                     <td>
                         <select class="m3-input from-select">
@@ -80,8 +83,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </select>
                     </td>
                     <td style="text-align:right; padding-right:24px;">
-                        <button class="m3-button" onclick="review('${name}', this)" style="background:none; border:1px solid var(--md-sys-color-primary); color:var(--md-sys-color-primary);">Review</button>
-                        <button class="m3-button" onclick="raiseSinglePR('${name}', this)">Raise PR</button>
+                        <button class="m3-button btn-review" onclick="review('${name}', this)" style="background:none; border:1px solid var(--md-sys-color-primary); color:var(--md-sys-color-primary);">Review</button>
+                        <button class="m3-button btn-raise" onclick="raiseSinglePR('${name}', this)">Raise PR</button>
                     </td>
                 </tr>
                 <tr id="review-${name}" style="display:none;"><td colspan="4"><div class="expandable-content" id="content-${name}"></div></td></tr>
@@ -105,78 +108,116 @@ function bulkUpdate(type, val) {
 async function review(name, btn) {
     const row = document.getElementById(`review-${name}`);
     const content = document.getElementById(`content-${name}`);
+    const mainRow = document.getElementById(`row-main-${name}`);
     
-    if(row.style.display === 'table-row') { row.style.display = 'none'; return; }
+    if(row.style.display === 'table-row') { 
+        row.style.display = 'none'; 
+        return; 
+    }
+
+    const source = mainRow.querySelector('.from-select').value;
+    const target = mainRow.querySelector('.to-select').value;
     
     row.style.display = 'table-row';
-    content.innerHTML = '<div class="m3-loader">Fetching Azure Details...</div>';
+    content.innerHTML = `<div class="m3-loader">Analyzing ${source} ➔ ${target}...</div>`;
     
     try {
-        const response = await fetch(`/api/repo-details?repo=${encodeURIComponent(name)}`);
-        if (!response.ok) throw new Error("API Failure");
+        const response = await fetch(`/api/repo-details?repo=${encodeURIComponent(name)}&source=${source}&target=${target}`);
         const data = await response.json();
         
+        // Cache the last commit message for PR creation
+        repoState[name] = data.last_commit_message;
+
+        if (data.aheadCount === 0) {
+            content.innerHTML = `<div class="status-badge status-success">Branches are identical.</div>`;
+            return;
+        }
+
         content.innerHTML = `
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
                 <div>
-                    <strong><i class="material-icons" style="font-size:14px">history</i> Commits to Merge</strong>
+                    <strong>Recent Changes</strong>
                     <ul style="font-size:12px; margin-top:8px;">${data.commits.map(c => `<li>${c.message}</li>`).join('')}</ul>
                 </div>
                 <div>
-                    <strong><i class="material-icons" style="font-size:14px">description</i> Files Impacted</strong>
+                    <strong>Impacted Files</strong>
                     <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:8px;">
                         ${data.files.map(f => `<span class="status-badge" style="background:#eee">${f}</span>`).join('')}
                     </div>
-                    <div style="margin-top:16px; display:flex; gap:8px;">
-                        <button class="m3-button" onclick="raiseSinglePR('${name}', this)">Confirm PR</button>
-                        <button class="m3-button" style="background:#eee; color:#333;">Auto-Deploy</button>
+                    <div style="margin-top:24px; display:flex; gap:12px;">
+                        <button class="m3-button" onclick="raiseSinglePR('${name}', this)">
+                            <i class="material-icons">check</i> Confirm & Raise PR
+                        </button>
+                        <button class="m3-button" style="background:var(--md-sys-color-surface-variant); color:var(--md-sys-color-on-surface);">
+                            Auto-Deploy
+                        </button>
                     </div>
                 </div>
             </div>
         `;
     } catch (err) {
-        content.innerHTML = '<div class="status-badge status-error">Failed to load details.</div>';
+        content.innerHTML = '<div class="status-badge status-error">Error fetching diff.</div>';
     }
 }
 
 async function raiseSinglePR(repoName, btn) {
-    const row = btn.closest('tr');
-    const from = row.querySelector('.from-select').value;
-    const to = row.querySelector('.to-select').value;
+    const mainRow = document.getElementById(`row-main-${repoName}`);
+    const from = mainRow.querySelector('.from-select').value;
+    const to = mainRow.querySelector('.to-select').value;
+    const lastMsg = repoState[repoName] || "Manual Deployment";
 
     btn.disabled = true;
-    btn.innerText = "Raising...";
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<i class="material-icons rotating">sync</i>';
 
-    const res = await fetch('/api/create-pr', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ repo_id: repoName, from_branch: from, to_branch: to })
-    });
+    try {
+        const res = await fetch('/api/create-pr', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                repo_id: repoName, 
+                from_branch: from, 
+                to_branch: to,
+                last_msg: lastMsg
+            })
+        });
 
-    if (res.ok) {
-        btn.innerHTML = '<i class="material-icons">check</i> Success';
-        btn.style.background = "var(--md-sys-color-success)";
-    } else {
-        btn.innerText = "Failed";
+        const data = await res.json();
+        if (res.ok) {
+            btn.innerHTML = '<i class="material-icons">done</i> PR Created';
+            btn.style.background = "var(--md-sys-color-success)";
+            // If button was inside expansion, update main row button too
+            const mainBtn = mainRow.querySelector('.btn-raise');
+            mainBtn.innerHTML = '<i class="material-icons">done</i>';
+            mainBtn.style.background = "var(--md-sys-color-success)";
+        } else {
+            btn.innerHTML = 'Error';
+            btn.style.background = "var(--md-sys-color-error)";
+            console.error(data);
+        }
+    } catch (e) {
+        btn.innerHTML = 'Failed';
         btn.style.background = "var(--md-sys-color-error)";
     }
 }
 
 async function raiseAll() {
-    const rows = document.querySelectorAll('#pr-body tr:not(.expand-row)');
+    const rows = document.querySelectorAll('#pr-body tr[id^="row-main-"]');
     const payload = [];
 
     rows.forEach(row => {
+        const name = row.querySelector('strong').innerText;
         payload.push({
-            repo_id: row.querySelector('strong').innerText,
+            repo_id: name,
             from_branch: row.querySelector('.from-select').value,
-            to_branch: row.querySelector('.to-select').value
+            to_branch: row.querySelector('.to-select').value,
+            last_msg: repoState[name] || "Bulk Sync"
         });
     });
 
     const btn = document.getElementById('btn-raise-all');
     btn.disabled = true;
-    btn.innerHTML = 'Processing...';
+    btn.innerHTML = 'Executing Bulk...';
 
     const res = await fetch('/api/bulk-create-pr', {
         method: 'POST',
@@ -185,12 +226,12 @@ async function raiseAll() {
     });
 
     if (res.ok) {
-        alert("Bulk PR operation completed. Check individual statuses.");
+        alert("Bulk PR operations completed.");
         location.reload();
     } else {
-        alert("Bulk PR operation failed.");
+        alert("One or more PRs failed.");
         btn.disabled = false;
-        btn.innerHTML = 'Raise All';
+        btn.innerHTML = 'Raise All PRs';
     }
 }
 </script>
