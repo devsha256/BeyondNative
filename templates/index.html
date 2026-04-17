@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Bulk PRs{% endblock %}
+
+{% block content %}
+<h1>Bulk Pull Request Automator</h1>
+
+<div class="m3-card">
+    <h3>1. Repository Discovery</h3>
+    <p>Find repositories by name prefix</p>
+    <input type="text" id="prefix" class="m3-input" placeholder="e.g. core-api-">
+    <button class="m3-button" onclick="extractRepos()">
+        <i class="material-icons">search</i> Search Repositories
+    </button>
+</div>
+
+<div id="pr-section" class="m3-card" style="display:none;">
+    <h3>2. Configuration & Execution</h3>
+    <div id="repo-count" style="margin-bottom: 16px; font-weight: 500;"></div>
+    
+    <label>Source Branch</label>
+    <input type="text" id="from_branch" class="m3-input" value="develop">
+    
+    <label>Target Branch</label>
+    <input type="text" id="to_branch" class="m3-input" value="main">
+    
+    <button class="m3-button" onclick="runBulkPR()">
+        <i class="material-icons">send</i> Raise 40+ PRs Now
+    </button>
+</div>
+
+<div id="results-section" style="margin-top: 24px;"></div>
+
+<script>
+    let selectedRepos = [];
+
+    async function extractRepos() {
+        const prefix = document.getElementById('prefix').value;
+        const res = await fetch('/api/extract-repos', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({prefix})
+        });
+        const data = await res.json();
+        selectedRepos = data.repositories;
+        
+        document.getElementById('repo-count').innerText = `Selected ${selectedRepos.length} repositories.`;
+        document.getElementById('pr-section').style.display = 'block';
+    }
+
+    async function runBulkPR() {
+        const body = {
+            repositories: selectedRepos,
+            from_branch: document.getElementById('from_branch').value,
+            to_branch: document.getElementById('to_branch').value
+        };
+        
+        // Visual feedback
+        const resultsDiv = document.getElementById('results-section');
+        resultsDiv.innerHTML = "<h3>Processing...</h3>";
+
+        const res = await fetch('/api/bulk-pr', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body)
+        });
+        
+        const results = await res.json();
+        renderResults(results);
+    }
+
+    function renderResults(data) {
+        const container = document.getElementById('results-section');
+        container.innerHTML = "<h3>Execution Results</h3>";
+        
+        data.forEach(item => {
+            const isSuccess = item.status === 201;
+            const card = `
+                <div class="m3-card" style="padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <strong>${item.repo}</strong>
+                    <span class="status-badge ${isSuccess ? 'status-success' : 'status-error'}">
+                        ${isSuccess ? 'PR Created' : 'Error ' + item.status}
+                    </span>
+                </div>
+            `;
+            container.innerHTML += card;
+        });
+    }
+</script>
+{% endblock %}

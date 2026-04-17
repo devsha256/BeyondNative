@@ -1,0 +1,110 @@
+/* Material 3 Design Tokens */
+:root {
+    --md-sys-color-primary: #6750A4;
+    --md-sys-color-on-primary: #FFFFFF;
+    --md-sys-color-primary-container: #EADDFF;
+    --md-sys-color-on-primary-container: #21005D;
+    --md-sys-color-surface: #FEF7FF;
+    --md-sys-color-on-surface: #1D1B20;
+    --md-sys-color-surface-variant: #E7E0EC;
+    --md-sys-color-outline: #79747E;
+    --md-sys-color-error: #B3261E;
+}
+
+body {
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+    display: flex;
+    height: 100vh;
+}
+
+/* Layout - Right Sidebar Navigation */
+.app-container {
+    display: flex;
+    width: 100%;
+}
+
+main {
+    flex: 1;
+    padding: 40px;
+    overflow-y: auto;
+    order: 1;
+}
+
+.nav-drawer {
+    width: 300px;
+    background-color: #F3EDF7;
+    border-left: 1px solid var(--md-sys-color-outline);
+    padding: 24px 12px;
+    display: flex;
+    flex-direction: column;
+    order: 2;
+}
+
+/* M3 Components */
+.m3-card {
+    background: #FFFFFF;
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.m3-button {
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    border: none;
+    padding: 10px 24px;
+    border-radius: 100px; /* Fully rounded buttons in M3 */
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: box-shadow 0.2s;
+}
+
+.m3-button:hover {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    opacity: 0.9;
+}
+
+.m3-input {
+    width: 100%;
+    padding: 12px 16px;
+    margin: 8px 0 20px 0;
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 16px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    text-decoration: none;
+    color: var(--md-sys-color-on-surface);
+    border-radius: 100px;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.nav-item:hover { background-color: rgba(103, 80, 164, 0.08); }
+.nav-item.active {
+    background-color: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: bold;
+}
+.status-success { background: #C7FECA; color: #005313; }
+.status-error { background: #FFDAD6; color: var(--md-sys-color-error); }
