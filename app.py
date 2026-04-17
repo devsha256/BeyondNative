@@ -33,5 +33,21 @@ def create_pr():
     )
     return jsonify({"status": status, "result": result})
 
+@app.route('/api/repo-details', methods=['GET'])
+def get_repo_details():
+    # Use request.args for GET parameters (the ?repo= part)
+    repo_name = request.args.get('repo')
+    
+    if not repo_name:
+        return jsonify({"error": "Repository name is required"}), 400
+    
+    try:
+        # Call the logic from your module
+        details = devops.get_commit_details(repo_name)
+        return jsonify(details)
+    except Exception as e:
+        print(f"Error fetching details for {repo_name}: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True)
