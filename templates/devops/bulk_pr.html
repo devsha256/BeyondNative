@@ -3,7 +3,7 @@
 <div style="display:flex; justify-content:space-between; align-items:center;">
     <h1>Bulk PR Configuration</h1>
     <a href="/" class="m3-button" style="background:var(--md-sys-color-surface-variant); color:var(--md-sys-color-on-surface);">
-        <i class="material-icons">arrow_back</i> Back
+        <i class="material-icons">arrow_back</i> Change Selection
     </a>
 </div>
 
@@ -11,22 +11,35 @@
     <table class="m3-table">
         <thead>
             <tr style="background: var(--md-sys-color-primary-container);">
-                <th style="color: var(--md-sys-color-on-primary-container);">MASTER CONTROL</th>
+                <th style="color: var(--md-sys-color-on-primary-container); padding: 16px;">MASTER CONTROL</th>
                 <th>
                     <select class="m3-input" onchange="bulkUpdate('from', this.value)">
-                        <option value="">Set All From...</option>
-                        <option value="develop">develop</option>
+                        <option value="">Global Source...</option>
+                        <option value="dev">dev</option>
+                        <option value="qa">qa</option>
+                        <option value="staging">staging</option>
+                        <option value="pre-prod">pre-prod</option>
                     </select>
                 </th>
                 <th>
                     <select class="m3-input" onchange="bulkUpdate('to', this.value)">
-                        <option value="">Set All To...</option>
+                        <option value="">Global Target...</option>
+                        <option value="dev">dev</option>
+                        <option value="qa">qa</option>
+                        <option value="staging">staging</option>
+                        <option value="pre-prod">pre-prod</option>
                         <option value="main">main</option>
                     </select>
                 </th>
                 <th style="text-align:right; padding-right:24px;">
                     <button class="m3-button" onclick="raiseAll()">Raise All</button>
                 </th>
+            </tr>
+            <tr>
+                <th style="padding: 16px;">Repository</th>
+                <th>Source (From)</th>
+                <th>Target (To)</th>
+                <th style="text-align:right; padding-right:24px;">Action</th>
             </tr>
         </thead>
         <tbody id="pr-body"></tbody>
@@ -38,65 +51,99 @@ document.addEventListener('DOMContentLoaded', async () => {
     const repos = JSON.parse(sessionStorage.getItem('selectedRepos') || '[]');
     const tbody = document.getElementById('pr-body');
 
-    for (const name of repos) {
-        const branchRes = await fetch(`/api/branches/${name}`);
-        const branches = await branchRes.json();
+    if (repos.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">No repos selected</td></tr>';
+        return;
+    }
 
-        const row = `
-            <tr>
-                <td><strong>${name}</strong></td>
-                <td>
-                    <select class="m3-input from-select">
-                        ${branches.map(b => `<option value="${b}" ${b==='develop'?'selected':''}>${b}</option>`).join('')}
-                    </select>
-                </td>
-                <td>
-                    <select class="m3-input to-select">
-                        ${branches.map(b => `<option value="${b}" ${b==='main'?'selected':''}>${b}</option>`).join('')}
-                    </select>
-                </td>
-                <td style="text-align:right; padding-right:24px;">
-                    <button class="m3-button" onclick="review('${name}', this)" style="background:none; border:1px solid var(--md-sys-color-primary); color:var(--md-sys-color-primary);">Review</button>
-                </td>
-            </tr>
-            <tr id="review-${name}" style="display:none;"><td colspan="4"><div class="expandable-content" id="content-${name}"></div></td></tr>
-        `;
-        tbody.insertAdjacentHTML('beforeend', row);
+    for (const name of repos) {
+        try {
+            const branchRes = await fetch(`/api/branches/${name}`);
+            const branches = await branchRes.json();
+
+            const row = `
+                <tr>
+                    <td><strong>${name}</strong></td>
+                    <td>
+                        <select class="m3-input from-select">
+                            ${branches.map(b => `<option value="${b}">${b}</option>`).join('')}
+                        </select>
+                    </td>
+                    <td>
+                        <select class="m3-input to-select">
+                            ${branches.map(b => `<option value="${b}">${b}</option>`).join('')}
+                        </select>
+                    </td>
+                    <td style="text-align:right; padding-right:24px;">
+                        <button class="m3-button" onclick="review('${name}', this)" style="background:none; border:1px solid var(--md-sys-color-primary); color:var(--md-sys-color-primary);">Review</button>
+                    </td>
+                </tr>
+                <tr id="review-${name}" style="display:none;"><td colspan="4"><div class="expandable-content" id="content-${name}"></div></td></tr>
+            `;
+            tbody.insertAdjacentHTML('beforeend', row);
+        } catch (e) {
+            console.error("Error loading repo row:", e);
+        }
     }
 });
 
 function bulkUpdate(type, val) {
     if(!val) return;
-    document.querySelectorAll(`.${type}-select`).forEach(s => s.value = val);
+    const selectors = document.querySelectorAll(`.${type}-select`);
+    selectors.forEach(s => {
+        s.value = val;
+        // Lock visual feedback
+        s.style.background = "var(--md-sys-color-surface-variant)";
+    });
 }
 
 async function review(name, btn) {
     const row = document.getElementById(`review-${name}`);
-    if(row.style.display === 'table-row') { row.style.display = 'none'; return; }
+    const content = document.getElementById(`content-${name}`);
+    
+    if(row.style.display === 'table-row') { 
+        row.style.display = 'none'; 
+        return; 
+    }
     
     row.style.display = 'table-row';
-    const content = document.getElementById(`content-${name}`);
-    content.innerHTML = '<div class="m3-loader">Analyzing branches...</div>';
+    content.innerHTML = '<div class="m3-loader">Fetching Azure Details...</div>';
     
-    const res = await fetch(`/api/repo-details?repo=${name}`);
-    const data = await res.json();
-    
-    content.innerHTML = `
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
-            <div>
-                <strong>Commits</strong>
-                <ul style="font-size:12px;">${data.commits.map(c => `<li>${c.message}</li>`).join('')}</ul>
-            </div>
-            <div>
-                <strong>Files</strong>
-                <div style="display:flex; flex-wrap:wrap; gap:4px;">${data.files.map(f => `<span class="status-badge" style="background:#eee">${f}</span>`).join('')}</div>
-                <div style="margin-top:16px; display:flex; gap:8px;">
-                    <button class="m3-button">Raise PR</button>
-                    <button class="m3-button" style="background:#eee; color:#333;">Auto-Deploy</button>
+    try {
+        const response = await fetch(`/api/repo-details?repo=${encodeURIComponent(name)}`);
+        
+        // Safety check: If the response is not JSON, log the text to see the error
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Server Error:", errorText);
+            content.innerHTML = `<div class="status-badge status-error">Server Error: ${response.status}</div>`;
+            return;
+        }
+
+        const data = await response.json();
+        
+        content.innerHTML = `
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
+                <div>
+                    <strong><i class="material-icons" style="font-size:14px">history</i> Commits to Merge</strong>
+                    <ul style="font-size:12px; margin-top:8px;">${data.commits.map(c => `<li>${c.message}</li>`).join('')}</ul>
+                </div>
+                <div>
+                    <strong><i class="material-icons" style="font-size:14px">description</i> Files Impacted</strong>
+                    <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:8px;">
+                        ${data.files.map(f => `<span class="status-badge" style="background:#eee">${f}</span>`).join('')}
+                    </div>
+                    <div style="margin-top:16px; display:flex; gap:8px;">
+                        <button class="m3-button">Confirm PR</button>
+                        <button class="m3-button" style="background:#eee; color:#333;">Auto-Deploy</button>
+                    </div>
                 </div>
             </div>
-        </div>
-    `;
+        `;
+    } catch (err) {
+        console.error("Fetch failed:", err);
+        content.innerHTML = '<div class="status-badge status-error">Failed to parse response. Check Console.</div>';
+    }
 }
 </script>
 {% endblock %}
