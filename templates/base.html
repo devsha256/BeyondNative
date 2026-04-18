@@ -10,19 +10,39 @@
 <body>
     <div class="app-container">
         <main>{% block content %}{% endblock %}</main>
+
         <nav class="nav-drawer">
-            <div class="nav-header">
-                <h2 class="brand-title">Beyond Native</h2>
-                <span class="brand-subtitle">Developer Suite</span>
-            </div>
+            <h2 style="color:var(--md-sys-color-primary); padding-left:16px;">Beyond Native</h2>
+            
             <div class="nav-section">
-                <label>CORE SUITES</label>
-                <a href="/" class="nav-item {% if 'devops' in request.path or request.path == '/' %}active{% endif %}">
-                    <i class="material-icons">lan</i> DevOps Suite
-                </a>
-                <a href="#" class="nav-item"><i class="material-icons">api</i> MuleSoft Suite</a>
+                <div class="accordion-header" onclick="toggleAccordion('devops-menu')">
+                    <span style="display:flex; align-items:center; gap:12px;"><i class="material-icons">lan</i> DevOps Suite</span>
+                    <i class="material-icons">expand_more</i>
+                </div>
+                <div id="devops-menu" class="accordion-content {% if 'devops' in request.path or request.path == '/' %}open{% endif %}">
+                    <a href="/" class="nav-item">Discovery</a>
+                    <a href="/devops/bulk-pr" class="nav-item">Bulk PRs</a>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="accordion-header" onclick="toggleAccordion('mule-menu')">
+                    <span style="display:flex; align-items:center; gap:12px;"><i class="material-icons">api</i> MuleSoft Suite</span>
+                    <i class="material-icons">expand_more</i>
+                </div>
+                <div id="mule-menu" class="accordion-content {% if 'mulesoft' in request.path %}open{% endif %}">
+                    <a href="/mulesoft" class="nav-item">Suite Overview</a>
+                    <a href="/mulesoft/runtime-control" class="nav-item">Start/Stop Apps</a>
+                    <a href="/mulesoft/version-comparator" class="nav-item">Version Compare</a>
+                </div>
             </div>
         </nav>
     </div>
+
+    <script>
+        function toggleAccordion(id) {
+            document.getElementById(id).classList.toggle('open');
+        }
+    </script>
 </body>
 </html>

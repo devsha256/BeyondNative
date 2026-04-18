@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>MuleSoft: Runtime Control</h1>
+
+<div id="auth-check" class="m3-card">
+    <h3>Anypoint Session Required</h3>
+    <p>We need your active browser cookie to communicate with Anypoint REST APIs.</p>
+    <div style="display:flex; gap:12px;">
+        <a href="https://anypoint.mulesoft.com/login/domain" target="_blank" class="m3-button" style="background:#00A2DF;">
+            <i class="material-icons">login</i> Login to Anypoint
+        </a>
+        <button class="m3-button" onclick="promptCookie()">
+            <i class="material-icons">vpn_key</i> Inject Cookie
+        </button>
+    </div>
+</div>
+
+<div id="control-panel" style="display:none;">
+    <div class="m3-card">
+        <h3>Bulk Runtime Manager</h3>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+            <input type="text" id="org_id" class="m3-input" placeholder="Organization ID">
+            <input type="text" id="env_id" class="m3-input" placeholder="Environment ID">
+        </div>
+        <button class="m3-button" onclick="loadMuleApps()" style="margin-top:16px;">Fetch Applications</button>
+    </div>
+
+    <div class="table-container m3-card" style="padding:0;">
+        <table class="m3-table">
+            <thead>
+                <tr>
+                    <th>App Name</th>
+                    <th>Runtime Version</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="app-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function promptCookie() {
+        const cookie = prompt("Please paste your Anypoint 'mulesoft.com' cookie string here:");
+        if (cookie) {
+            fetch('/api/mule/set-session', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({cookie})
+            }).then(() => {
+                document.getElementById('auth-check').style.display = 'none';
+                document.getElementById('control-panel').style.display = 'block';
+            });
+        }
+    }
+
+    async function loadMuleApps() {
+        const res = await fetch('/api/mule/apps', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                org_id: document.getElementById('org_id').value,
+                env_id: document.getElementById('env_id').value
+            })
+        });
+        const apps = await res.json();
+        const tbody = document.getElementById('app-body');
+        tbody.innerHTML = apps.map(app => `
+            <tr>
+                <td><strong>${app.fullDomain}</strong></td>
+                <td>${app.muleVersion}</td>
+                <td><span class="status-indicator status-${app.status.toLowerCase()}"></span> ${app.status}</td>
+                <td>
+                    <button class="m3-button" style="padding:4px 12px; font-size:12px;">
+                        ${app.status === 'STARTED' ? 'Stop' : 'Start'}
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+</script>
+{% endblock %}
