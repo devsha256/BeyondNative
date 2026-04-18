@@ -4,59 +4,34 @@ from devops_module import AzureDevOpsManager
 from mulesoft_module import MuleSoftManager
 
 app = Flask(__name__)
-CORS(app)
+# CRITICAL: CORS must be enabled to allow the Anypoint tab to talk to localhost
+CORS(app) 
+
 devops = AzureDevOpsManager()
 mule = MuleSoftManager()
 
-# --- Common/Home ---
 @app.route('/')
-def home():
+def index():
     return render_template('index.html')
-
-# --- DevOps Suite ---
-@app.route('/devops')
-def devops_index():
-    return render_template('devops/index.html')
-
-@app.route('/devops/discovery')
-def devops_discovery():
-    return render_template('devops/discovery.html')
-
-@app.route('/devops/bulk-pr')
-def bulk_pr_view():
-    return render_template('devops/bulk_pr.html')
-
-# --- MuleSoft Suite ---
-@app.route('/mulesoft')
-def mulesoft_index():
-    return render_template('mulesoft/index.html')
 
 @app.route('/mulesoft/runtime-control')
 def runtime_control():
     return render_template('mulesoft/runtime_control.html')
 
-@app.route('/mulesoft/version-comparator')
-def version_comparator():
-    return render_template('mulesoft/version_comparator.html')
-
-# --- APIs ---
 @app.route('/api/mule/set-session', methods=['POST'])
 def set_mule_session():
     data = request.json
     if data and 'cookie' in data:
         mule.set_session(data['cookie'])
-    return jsonify({"status": "Session Synced"})
+        print(">>> MuleSoft Session Synchronized Successfully")
+        return jsonify({"status": "success", "message": "Session Synced"})
+    return jsonify({"status": "error", "message": "No cookie data received"}), 400
 
-@app.route('/api/extract-repos', methods=['POST'])
-def extract_repos():
-    prefix = request.json.get('prefix', '')
-    repos = devops.get_repositories(prefix)
-    return jsonify({"repositories": repos})
-
-@app.route('/api/branches/<repo_name>')
-def get_branches(repo_name):
-    branches = devops.get_branches(repo_name)
-    return jsonify(branches)
+@app.route('/api/mule/apps', methods=['POST'])
+def get_mule_apps():
+    data = request.json
+    apps = mule.get_runtime_apps(data['org_id'], data['env_id'])
+    return jsonify(apps)
 
 if __name__ == '__main__':
     app.run(debug=True)
