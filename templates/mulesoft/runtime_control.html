@@ -1,43 +1,65 @@
 {% extends "base.html" %}
 
-{% block title %}Runtime Control{% endblock %}
+{% block title %}MuleSoft Runtime Control{% endblock %}
 
 {% block content %}
 <div class="m3-header">
-    <h1>Runtime Control</h1>
-    <p>Automated discovery of Organizations and Environments.</p>
+    <h1>MuleSoft: Runtime Control</h1>
+    <p>Step-by-step Anypoint session synchronization and app management.</p>
 </div>
 
-<div id="auth-section" class="m3-card">
-    <h3><i class="material-icons">sync_lock</i> Step 1: Authorize</h3>
-    <p>Drag the button to bookmarks, click it on Anypoint tab, then return here.</p>
-    <a class="m3-button" href="javascript:(function(){fetch('http://localhost:5000/api/mule/set-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cookie:document.cookie})}).then(r=>r.json()).then(d=>alert('Synced: ' + d.message));})();">BN Sync</a>
-    <button class="m3-button" onclick="initDiscovery()" style="margin-left:12px; background:var(--md-sys-color-success);">I have Synced</button>
+<div class="m3-card">
+    <h3><i class="material-icons" style="vertical-align: middle;">lock_open</i> Step 1: Sync Anypoint Session</h3>
+    <p style="font-size: 0.9rem; color: #444;">You must be logged into Anypoint in another tab for this to work.</p>
+    
+    <div style="display: flex; gap: 16px; align-items: center; margin-top: 16px;">
+        <a href="https://anypoint.mulesoft.com/login/domain" target="_blank" class="m3-button" style="background:#00A2DF;">
+            <i class="material-icons">login</i> 1. Login to Anypoint
+        </a>
+        
+        <a class="m3-button" id="bn-bookmarklet" 
+           href="javascript:(function(){fetch('http://localhost:5000/api/mule/set-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cookie:document.cookie})}).then(r=>r.json()).then(d=>alert('Beyond Native: ' + d.message)).catch(e=>alert('Sync Failed. Ensure Beyond Native app is running locally.'));})();"
+           style="cursor: move; border: 2px dashed white;">
+            <i class="material-icons">drag_indicator</i> 2. Drag to Bookmarks
+        </a>
+
+        <button class="m3-button" onclick="initDiscovery()" style="background: var(--md-sys-color-success);">
+            <i class="material-icons">sync</i> 3. I have Synced
+        </button>
+    </div>
+    <p style="font-size: 0.75rem; color: #777; margin-top: 8px;">Tip: Click the "BN Sync" bookmark while on the Anypoint tab before clicking the green button.</p>
 </div>
 
-<div id="discovery-section" class="m3-card" style="display:none;">
-    <h3><i class="material-icons">hub</i> Step 2: Select Environment</h3>
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+<div id="discovery-section" class="m3-card" style="opacity: 0.5; pointer-events: none; transition: opacity 0.3s;">
+    <h3><i class="material-icons" style="vertical-align: middle;">hub</i> Step 2: Select Context</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px;">
         <div>
-            <label>Organization</label>
+            <label>Organization (Business Group)</label>
             <select id="org-select" class="m3-input" onchange="loadEnvironments(this.value)">
-                <option value="">Select Organization...</option>
+                <option value="">Sync to load Orgs...</option>
             </select>
         </div>
         <div>
             <label>Environment</label>
             <select id="env-select" class="m3-input" onchange="enableFetch()">
-                <option value="">Select Environment...</option>
+                <option value="">Select Org first...</option>
             </select>
         </div>
     </div>
-    <button id="fetch-btn" class="m3-button" style="margin-top:16px;" onclick="loadApps()" disabled>Fetch Applications</button>
+    <button id="fetch-btn" class="m3-button" style="margin-top: 20px;" onclick="loadApps()" disabled>
+        <i class="material-icons">cloud_download</i> Fetch Applications
+    </button>
 </div>
 
-<div id="app-section" class="table-container m3-card" style="display:none; padding:0;">
+<div id="app-section" class="table-container m3-card" style="display:none; padding:0; margin-top: 24px;">
     <table class="m3-table">
         <thead>
-            <tr><th>Application</th><th>Status</th><th>Operation</th></tr>
+            <tr>
+                <th style="padding-left: 24px;">Application Name</th>
+                <th>Status</th>
+                <th>Mule Version</th>
+                <th style="text-align: right; padding-right: 24px;">Operation</th>
+            </tr>
         </thead>
         <tbody id="app-body"></tbody>
     </table>
@@ -45,17 +67,28 @@
 
 <script>
 async function initDiscovery() {
-    const res = await fetch('/api/mule/orgs');
-    const orgs = await res.json();
-    
-    if (orgs.length === 0) return alert("No Organizations found. Did you sync your cookie?");
-    
-    const select = document.getElementById('org-select');
-    select.innerHTML = '<option value="">Select Organization...</option>' + 
-        orgs.map(o => `<option value="${o.id}">${o.name}</option>`).join('');
+    try {
+        const res = await fetch('/api/mule/orgs');
+        if (!res.ok) throw new Error("Not Synced");
+        const orgs = await res.json();
         
-    document.getElementById('auth-section').style.display = 'none';
-    document.getElementById('discovery-section').style.display = 'block';
+        if (orgs.length === 0) {
+            alert("No Organizations found. Please make sure you clicked the BN Sync bookmark on the Anypoint tab.");
+            return;
+        }
+        
+        const select = document.getElementById('org-select');
+        select.innerHTML = '<option value="">Select Organization...</option>' + 
+            orgs.map(o => `<option value="${o.id}">${o.name}</option>`).join('');
+            
+        // Unlock Step 2
+        const section = document.getElementById('discovery-section');
+        section.style.opacity = "1";
+        section.style.pointerEvents = "all";
+        alert("Session Verified. Organizations Loaded.");
+    } catch (e) {
+        alert("Verification failed. Did you click the bookmark while on the Anypoint page?");
+    }
 }
 
 async function loadEnvironments(orgId) {
@@ -69,12 +102,17 @@ async function loadEnvironments(orgId) {
 }
 
 function enableFetch() {
-    document.getElementById('fetch-btn').disabled = !document.getElementById('env-select').value;
+    const envId = document.getElementById('env-select').value;
+    document.getElementById('fetch-btn').disabled = !envId;
 }
 
 async function loadApps() {
     const orgId = document.getElementById('org-select').value;
     const envId = document.getElementById('env-select').value;
+    const tbody = document.getElementById('app-body');
+    
+    document.getElementById('app-section').style.display = 'block';
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:24px;">Loading Runtime Manager data...</td></tr>';
     
     const res = await fetch('/api/mule/apps', {
         method: 'POST',
@@ -83,15 +121,27 @@ async function loadApps() {
     });
     const apps = await res.json();
     
-    const tbody = document.getElementById('app-body');
+    if (apps.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:24px;">No applications found in this environment.</td></tr>';
+        return;
+    }
+
     tbody.innerHTML = apps.map(app => `
         <tr>
-            <td><strong>${app.fullDomain}</strong></td>
-            <td><span class="status-badge ${app.status === 'STARTED' ? 'status-success' : 'status-error'}">${app.status}</span></td>
-            <td><button class="m3-button" style="padding:4px 12px;">Toggle State</button></td>
+            <td style="padding-left: 24px;"><strong>${app.fullDomain}</strong></td>
+            <td>
+                <span class="status-badge ${app.status === 'STARTED' ? 'status-success' : 'status-error'}">
+                    ${app.status}
+                </span>
+            </td>
+            <td>${app.muleVersion || 'N/A'}</td>
+            <td style="text-align: right; padding-right: 24px;">
+                <button class="m3-button" style="background:none; border:1px solid var(--md-sys-color-outline); color:var(--md-sys-color-on-surface); padding: 6px 12px;">
+                    ${app.status === 'STARTED' ? 'Stop' : 'Start'}
+                </button>
+            </td>
         </tr>
     `).join('');
-    document.getElementById('app-section').style.display = 'block';
 }
 </script>
 {% endblock %}

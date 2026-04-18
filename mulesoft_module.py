@@ -14,41 +14,47 @@ class MuleSoftManager:
 
     def get_headers(self):
         return {
-            "Cookie": self.session_cookie,
+            "Cookie": self.session_cookie if self.session_cookie else "",
             "Content-Type": "application/json"
         }
 
     def get_organizations(self):
-        """Fetches all organizations the user has access to."""
+        """Fetches the user profile which contains the list of organizations."""
         url = f"{self.anypoint_url}/accounts/api/me"
         try:
             res = requests.get(url, headers=self.get_headers())
             if res.status_code == 200:
                 data = res.json()
-                # Extracting the master org and any sub-organizations
-                user_obj = data.get('user', {})
-                member_groups = user_obj.get('memberOfOrganizations', [])
-                return member_groups
+                # Accessing memberOfOrganizations which holds the Business Groups
+                return data.get('user', {}).get('memberOfOrganizations', [])
             return []
-        except:
+        except Exception as e:
+            print(f"MuleSoft Org Fetch Error: {e}")
             return []
 
     def get_environments(self, org_id):
-        """Fetches environments for a specific organization ID."""
+        """Fetches environments for the specific organization."""
         url = f"{self.anypoint_url}/accounts/api/organizations/{org_id}/environments"
         try:
             res = requests.get(url, headers=self.get_headers())
-            return res.json().get('data', []) if res.status_code == 200 else []
-        except:
+            if res.status_code == 200:
+                return res.json().get('data', [])
+            return []
+        except Exception as e:
+            print(f"MuleSoft Env Fetch Error: {e}")
             return []
 
     def get_runtime_apps(self, org_id, env_id):
+        """Fetches applications from Runtime Manager."""
         url = f"{self.anypoint_url}/cloudhub/api/v2/applications"
         headers = self.get_headers()
         headers["X-ANYPNT-ORG-ID"] = org_id
         headers["X-ANYPNT-ENV-ID"] = env_id
         try:
             res = requests.get(url, headers=headers)
-            return res.json() if res.status_code == 200 else []
-        except:
+            if res.status_code == 200:
+                return res.json()
+            return []
+        except Exception as e:
+            print(f"MuleSoft App Fetch Error: {e}")
             return []
