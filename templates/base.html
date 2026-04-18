@@ -12,37 +12,59 @@
         <main>{% block content %}{% endblock %}</main>
 
         <nav class="nav-drawer">
-            <h2 style="color:var(--md-sys-color-primary); padding-left:16px;">Beyond Native</h2>
+            <div class="nav-header">
+                <h2 style="color:var(--md-sys-color-primary); margin:0;">Beyond Native</h2>
+                <small style="color:#79747E;">Suite Manager v1.0</small>
+            </div>
             
-            <div class="nav-section">
-                <div class="accordion-header" onclick="toggleAccordion('devops-menu')">
+            <div class="accordion-item">
+                <div class="accordion-header" id="head-devops" onclick="toggleAccordion('content-devops', 'head-devops')">
                     <span style="display:flex; align-items:center; gap:12px;"><i class="material-icons">lan</i> DevOps Suite</span>
                     <i class="material-icons">expand_more</i>
                 </div>
-                <div id="devops-menu" class="accordion-content {% if 'devops' in request.path or request.path == '/' %}open{% endif %}">
-                    <a href="/" class="nav-item">Discovery</a>
-                    <a href="/devops/bulk-pr" class="nav-item">Bulk PRs</a>
+                <div id="content-devops" class="accordion-content">
+                    <a href="/devops" class="nav-sub-item">Overview</a>
+                    <a href="/devops/discovery" class="nav-sub-item">Repo Discovery</a>
+                    <a href="/devops/bulk-pr" class="nav-sub-item">Bulk PR Automator</a>
                 </div>
             </div>
 
-            <div class="nav-section">
-                <div class="accordion-header" onclick="toggleAccordion('mule-menu')">
+            <div class="accordion-item">
+                <div class="accordion-header" id="head-mule" onclick="toggleAccordion('content-mule', 'head-mule')">
                     <span style="display:flex; align-items:center; gap:12px;"><i class="material-icons">api</i> MuleSoft Suite</span>
                     <i class="material-icons">expand_more</i>
                 </div>
-                <div id="mule-menu" class="accordion-content {% if 'mulesoft' in request.path %}open{% endif %}">
-                    <a href="/mulesoft" class="nav-item">Suite Overview</a>
-                    <a href="/mulesoft/runtime-control" class="nav-item">Start/Stop Apps</a>
-                    <a href="/mulesoft/version-comparator" class="nav-item">Version Compare</a>
+                <div id="content-mule" class="accordion-content">
+                    <a href="/mulesoft" class="nav-sub-item">Overview</a>
+                    <a href="/mulesoft/runtime-control" class="nav-sub-item">Runtime Control</a>
+                    <a href="/mulesoft/version-comparator" class="nav-sub-item">Version Compare</a>
                 </div>
             </div>
         </nav>
     </div>
 
     <script>
-        function toggleAccordion(id) {
-            document.getElementById(id).classList.toggle('open');
+        function toggleAccordion(contentId, headId) {
+            const content = document.getElementById(contentId);
+            const head = document.getElementById(headId);
+            const isShowing = content.classList.contains('show');
+            
+            // Close others (Optional: for strict accordion behavior)
+            document.querySelectorAll('.accordion-content').forEach(el => el.classList.remove('show'));
+            document.querySelectorAll('.accordion-header').forEach(el => el.classList.remove('active'));
+
+            if (!isShowing) {
+                content.classList.add('show');
+                head.classList.add('active');
+            }
         }
+        
+        // Auto-expand based on URL
+        window.onload = () => {
+            const path = window.location.pathname;
+            if (path.includes('devops')) toggleAccordion('content-devops', 'head-devops');
+            if (path.includes('mulesoft')) toggleAccordion('content-mule', 'head-mule');
+        };
     </script>
 </body>
 </html>

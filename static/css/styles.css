@@ -1,269 +1,49 @@
-/* Beyond Native - Material 3 Design System 
-    Project: developer-friendly features suite
-*/
-
 :root {
-    /* M3 Color Palette - Primary: #6750A4 */
     --md-sys-color-primary: #6750A4;
     --md-sys-color-on-primary: #FFFFFF;
     --md-sys-color-primary-container: #EADDFF;
     --md-sys-color-on-primary-container: #21005D;
-    --md-sys-color-secondary: #625B71;
     --md-sys-color-surface: #FEF7FF;
-    --md-sys-color-on-surface: #1D1B20;
-    --md-sys-color-surface-variant: #E7E0EC;
-    --md-sys-color-on-surface-variant: #49454F;
     --md-sys-color-outline: #79747E;
-    --md-sys-color-error: #B3261E;
-    --md-sys-color-success: #2E7D32;
-    
-    /* Layout Variables */
-    --nav-width: 300px;
+    --nav-width: 320px;
 }
 
-* {
-    box-sizing: border-box;
-    -webkit-font-smoothing: antialiased;
+body { margin: 0; font-family: 'Roboto', sans-serif; display: flex; height: 100vh; overflow: hidden; background: var(--md-sys-color-surface); }
+.app-container { display: flex; width: 100%; height: 100%; }
+main { flex: 1; padding: 40px; overflow-y: auto; order: 1; }
+
+/* Right Navigation Drawer */
+.nav-drawer { width: var(--nav-width); background: #F3EDF7; border-left: 1px solid var(--md-sys-color-outline); order: 2; padding: 24px 0; display: flex; flex-direction: column; }
+.nav-header { padding: 0 24px; margin-bottom: 24px; }
+
+/* Accordion Styling */
+.accordion-item { border-bottom: 1px solid rgba(0,0,0,0.05); }
+.accordion-header { 
+    display: flex; align-items: center; justify-content: space-between; 
+    padding: 16px 24px; cursor: pointer; transition: 0.2s; font-weight: 500;
 }
+.accordion-header:hover { background: rgba(103, 80, 164, 0.08); }
+.accordion-header.active { color: var(--md-sys-color-primary); }
 
-body {
-    margin: 0;
-    padding: 0;
-    font-family: 'Roboto', sans-serif;
-    background-color: var(--md-sys-color-surface);
-    color: var(--md-sys-color-on-surface);
-    display: flex;
-    height: 100vh;
-    overflow: hidden; /* Prevent body scroll, use main scroll */
+.accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: rgba(0,0,0,0.02); }
+.accordion-content.show { max-height: 300px; }
+
+.nav-sub-item { 
+    display: flex; align-items: center; gap: 12px; padding: 12px 48px; 
+    text-decoration: none; color: #49454F; font-size: 0.9rem; transition: 0.2s;
 }
+.nav-sub-item:hover { color: var(--md-sys-color-primary); background: rgba(103, 80, 164, 0.04); }
 
-/* --- Layout Structure --- */
-
-.app-container {
-    display: flex;
-    width: 100%;
-    height: 100%;
+/* Dashboard Grids */
+.suite-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; margin-top: 32px; }
+.app-card { 
+    background: white; border-radius: 16px; padding: 24px; border: 1px solid var(--md-sys-color-outline);
+    text-decoration: none; color: inherit; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
 }
+.app-card:hover { transform: translateY(-4px); box-shadow: 0 8px 16px rgba(103, 80, 164, 0.12); border-color: var(--md-sys-color-primary); }
+.app-card i { font-size: 32px; color: var(--md-sys-color-primary); }
 
-main {
-    flex: 1;
-    padding: 40px;
-    padding-bottom: 120px; /* Buffer for the selection panel */
-    overflow-y: auto;
-    order: 1;
-    transition: padding-bottom 0.3s ease;
-}
-
-/* Right-side Navigation Drawer */
-.nav-drawer {
-    width: var(--nav-width);
-    background-color: #F3EDF7;
-    border-left: 1px solid var(--md-sys-color-outline);
-    padding: 24px 12px;
-    display: flex;
-    flex-direction: column;
-    order: 2;
-    z-index: 10;
-}
-
-.nav-header {
-    padding: 0 16px;
-    margin-bottom: 32px;
-}
-
-.brand-title {
-    margin: 0;
-    font-size: 1.5rem;
-    color: var(--md-sys-color-primary);
-    font-weight: 500;
-}
-
-.brand-subtitle {
-    font-size: 0.8rem;
-    color: var(--md-sys-color-on-surface-variant);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-}
-
-.nav-section {
-    margin-bottom: 24px;
-}
-
-.nav-section label {
-    display: block;
-    padding: 0 16px 8px 16px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--md-sys-color-on-surface-variant);
-}
-
-.nav-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    text-decoration: none;
-    color: var(--md-sys-color-on-surface);
-    border-radius: 100px;
-    margin-bottom: 4px;
-    transition: background 0.2s;
-}
-
-.nav-item:hover {
-    background-color: rgba(103, 80, 164, 0.08);
-}
-
-.nav-item.active {
-    background-color: var(--md-sys-color-primary-container);
-    color: var(--md-sys-color-on-primary-container);
-}
-
-/* --- M3 Components --- */
-
-.m3-card {
-    background: #FFFFFF;
-    border: 1px solid var(--md-sys-color-outline);
-    border-radius: 12px;
-    padding: 24px;
-    margin-bottom: 24px;
-}
-
-.m3-button {
-    background-color: var(--md-sys-color-primary);
-    color: var(--md-sys-color-on-primary);
-    border: none;
-    padding: 10px 24px;
-    border-radius: 100px;
-    font-weight: 500;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.875rem;
-    transition: box-shadow 0.2s, opacity 0.2s;
-}
-
-.m3-button:hover {
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    opacity: 0.9;
-}
-
-.m3-input {
-    width: 100%;
-    padding: 12px 16px;
-    margin: 8px 0;
-    border: 1px solid var(--md-sys-color-outline);
-    border-radius: 4px;
-    background: transparent;
-    font-size: 1rem;
-    color: var(--md-sys-color-on-surface);
-}
-
-.m3-input:focus {
-    outline: 2px solid var(--md-sys-color-primary);
-    border-color: transparent;
-}
-
-/* --- Tables & Lists --- */
-
-.table-container {
-    background: white;
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid var(--md-sys-color-outline);
-}
-
-.m3-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.m3-table th {
-    background-color: #F3EDF7;
-    text-align: left;
-    padding: 16px;
-    font-weight: 500;
-    font-size: 0.875rem;
-    border-bottom: 1px solid var(--md-sys-color-outline);
-}
-
-.m3-table td {
-    padding: 16px;
-    border-bottom: 1px solid var(--md-sys-color-surface-variant);
-    font-size: 0.9rem;
-}
-
-/* Expansion Logic */
-.expandable-content {
-    background: #fcfaff;
-    padding: 24px;
-    border-top: 1px inset var(--md-sys-color-surface-variant);
-    animation: slideDown 0.3s ease-out;
-}
-
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* --- Selection Panel (Bottom Drawer) --- */
-
-.selection-panel {
-    position: fixed;
-    bottom: -120px;
-    left: 0;
-    right: var(--nav-width); /* Adjust for right nav */
-    height: 80px;
-    background: var(--md-sys-color-on-primary-container);
-    color: var(--md-sys-color-primary-container);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 40px;
-    transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 -4px 16px rgba(0,0,0,0.3);
-    border-radius: 28px 28px 0 0;
-    z-index: 100;
-}
-
-.selection-panel.active {
-    bottom: 0;
-}
-
-/* --- Progress & Status --- */
-
-.progress-container {
-    width: 100%;
-    height: 4px;
-    background: var(--md-sys-color-surface-variant);
-    margin-top: 16px;
-    overflow: hidden;
-    border-radius: 2px;
-}
-
-.progress-bar {
-    width: 0%;
-    height: 100%;
-    background: var(--md-sys-color-primary);
-    transition: width 0.4s ease-in-out;
-}
-
-.status-badge {
-    padding: 4px 12px;
-    border-radius: 8px;
-    font-size: 0.75rem;
-    font-weight: 500;
-}
-
-.status-success { background: #C7FECA; color: #005313; }
-.status-error { background: #FFDAD6; color: var(--md-sys-color-error); }
-
-/* --- Utilities --- */
-
-.m3-loader {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: var(--md-sys-color-primary);
-    font-style: italic;
-}
+/* M3 Components */
+.m3-button { background: var(--md-sys-color-primary); color: white; border: none; padding: 12px 24px; border-radius: 100px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; }
+.m3-card { background: white; border-radius: 12px; padding: 24px; border: 1px solid var(--md-sys-color-outline); margin-bottom: 24px; }

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}DevOps Suite{% endblock %}
+{% block content %}
+<div class="m3-header">
+    <h1>DevOps Suite</h1>
+    <p style="color:#49454F;">Automate Azure DevOps workflows and repository management.</p>
+</div>
+
+<div class="suite-grid">
+    <a href="/devops/discovery" class="app-card">
+        <i class="material-icons">search</i>
+        <h3>Repo Discovery</h3>
+        <p>Search repositories by prefix or targeted list to initiate bulk operations.</p>
+        <span class="m3-button" style="padding:6px 16px; font-size:0.8rem;">Open App</span>
+    </a>
+
+    <a href="/devops/bulk-pr" class="nav-item app-card" style="text-decoration: none;">
+        <i class="material-icons">rocket_launch</i>
+        <h3>Bulk PR Automator</h3>
+        <p>Raise multiple Pull Requests simultaneously with automated naming patterns.</p>
+        <span class="m3-button" style="padding:6px 16px; font-size:0.8rem;">Open App</span>
+    </a>
+</div>
+{% endblock %}
