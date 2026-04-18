@@ -47,3 +47,28 @@ main { flex: 1; padding: 40px; overflow-y: auto; order: 1; }
 /* M3 Components */
 .m3-button { background: var(--md-sys-color-primary); color: white; border: none; padding: 12px 24px; border-radius: 100px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; }
 .m3-card { background: white; border-radius: 12px; padding: 24px; border: 1px solid var(--md-sys-color-outline); margin-bottom: 24px; }
+
+
+.m3-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: 8px;
+    background: #FFF;
+    font-size: 1rem;
+    margin-top: 4px;
+}
+
+label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface-variant);
+    margin-left: 4px;
+}
+
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
