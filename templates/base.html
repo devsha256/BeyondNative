@@ -10,11 +10,9 @@
 <body>
     <div class="app-container">
         <main>{% block content %}{% endblock %}</main>
-
         <nav class="nav-drawer">
             <div class="nav-header">
                 <h2 style="color:var(--md-sys-color-primary); margin:0;">Beyond Native</h2>
-                <small style="color:#79747E;">Suite Manager v1.0</small>
             </div>
             
             <div class="accordion-item">
@@ -25,7 +23,7 @@
                 <div id="content-devops" class="accordion-content">
                     <a href="/devops" class="nav-sub-item">Overview</a>
                     <a href="/devops/discovery" class="nav-sub-item">Repo Discovery</a>
-                    <a href="/devops/bulk-pr" class="nav-sub-item">Bulk PR Automator</a>
+                    <a href="/devops/bulk-pr" class="nav-sub-item">Bulk PRs</a>
                 </div>
             </div>
 
@@ -42,24 +40,14 @@
             </div>
         </nav>
     </div>
-
     <script>
         function toggleAccordion(contentId, headId) {
             const content = document.getElementById(contentId);
             const head = document.getElementById(headId);
             const isShowing = content.classList.contains('show');
-            
-            // Close others (Optional: for strict accordion behavior)
             document.querySelectorAll('.accordion-content').forEach(el => el.classList.remove('show'));
-            document.querySelectorAll('.accordion-header').forEach(el => el.classList.remove('active'));
-
-            if (!isShowing) {
-                content.classList.add('show');
-                head.classList.add('active');
-            }
+            if (!isShowing) { content.classList.add('show'); head.classList.add('active'); }
         }
-        
-        // Auto-expand based on URL
         window.onload = () => {
             const path = window.location.pathname;
             if (path.includes('devops')) toggleAccordion('content-devops', 'head-devops');

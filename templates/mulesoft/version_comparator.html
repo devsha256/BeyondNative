@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Version Comparator{% endblock %}
+{% block content %}
+<h1>Version Comparator</h1>
+<div class="m3-card">
+    <h3>Environment Comparison</h3>
+    <p>Select environments to compare runtime versions and application deployments.</p>
+    <div style="display:flex; gap:12px;">
+        <input type="text" class="m3-input" placeholder="Source Env ID">
+        <input type="text" class="m3-input" placeholder="Target Env ID">
+        <button class="m3-button">Compare Versions</button>
+    </div>
+</div>
+{% endblock %}
