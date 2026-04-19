@@ -167,5 +167,17 @@ def change_mule_app_status():
         return jsonify({"status": "success", "message": f"Successfully triggered {action}"})
     return jsonify({"status": "error", "message": msg}), 400
 
+# ==========================================
+# Postman Suite
+# ==========================================
+
+@app.route('/postman')
+def postman_home():
+    return render_template('postman/index.html')
+
+@app.route('/postman/runner')
+def postman_runner():
+    return render_template('postman/runner.html')
+
 if __name__ == '__main__':
     app.run(debug=True, port=5001, threaded=True)

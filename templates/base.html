@@ -37,6 +37,17 @@
                     <a href="/mulesoft/version-comparator" class="nav-sub-item">Version Compare</a>
                 </div>
             </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header" id="head-postman" onclick="toggleAccordion('content-postman', 'head-postman')">
+                    <span style="display:flex; align-items:center; gap:12px;"><i class="material-icons">send</i> Postman Suite</span>
+                    <i class="material-icons">expand_more</i>
+                </div>
+                <div id="content-postman" class="accordion-content">
+                    <a href="/postman" class="nav-sub-item">Overview</a>
+                    <a href="/postman/runner" class="nav-sub-item">Collection Runner</a>
+                </div>
+            </div>
             
             <div style="margin-top: auto; padding: 24px; border-top: 1px solid var(--border-light); display: flex; gap: 12px;">
                 <button title="Toggle Theme" onclick="toggleTheme()" style="background: transparent; border: none; padding: 12px; border-radius: 12px; cursor: pointer; flex: 1; display: flex; justify-content: center; align-items: center; color: var(--text-main); transition: background 0.2s ease;">
@@ -101,6 +112,7 @@
             const path = window.location.pathname;
             if (path.includes('devops')) toggleAccordion('content-devops', 'head-devops');
             if (path.includes('mulesoft')) toggleAccordion('content-mule', 'head-mule');
+            if (path.includes('postman')) toggleAccordion('content-postman', 'head-postman');
         };
     </script>
 </body>

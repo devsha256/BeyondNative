@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Collection Runner{% endblock %}
+{% block content %}
+<div class="m3-header">
+    <h1>Collection Runner</h1>
+    <p>Upload a Postman collection and environment to execute automated tests.</p>
+</div>
+
+<div class="m3-card" style="margin-top: 24px;">
+    <h3><i class="material-icons" style="vertical-align: middle;">upload_file</i> Execution Setup</h3>
+    <p style="color: var(--text-muted); margin-top: 8px;">Select your local Postman files to begin the orchestrated run.</p>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px;">
+        <div>
+            <label>Collection File (.json)</label>
+            <input type="file" id="collection-file" class="m3-input" accept=".json">
+        </div>
+        <div>
+            <label>Environment File (.json) - Optional</label>
+            <input type="file" id="env-file" class="m3-input" accept=".json">
+        </div>
+    </div>
+
+    <div style="margin-top: 32px; display: flex; justify-content: flex-end;">
+        <button class="m3-button" id="run-btn" disabled>
+            <i class="material-icons">play_arrow</i> Start Collection Run
+        </button>
+    </div>
+</div>
+
+<div class="m3-card" id="results-card" style="margin-top: 24px; display: none;">
+    <h3><i class="material-icons" style="vertical-align: middle;">assignment</i> Run Results</h3>
+    <div id="results-content" style="margin-top: 16px; font-family: monospace; white-space: pre-wrap; background: rgba(0,0,0,0.2); padding: 16px; border-radius: 8px; border: 1px solid var(--border-light);">
+        Waiting for execution...
+    </div>
+</div>
+
+<script>
+    document.getElementById('collection-file').onchange = (e) => {
+        document.getElementById('run-btn').disabled = !e.target.files.length;
+    };
+</script>
+{% endblock %}
