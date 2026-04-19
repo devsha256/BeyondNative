@@ -1,10 +1,16 @@
 import os
+import time
 import requests
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
+from threading import Semaphore
 from dotenv import load_dotenv
 import db_utils
 from logger import log
+
+# Global state for rate limiting and caching across all Flask request threads
+semaphore = Semaphore(10)
+cache = {}
 
 load_dotenv()
 
@@ -127,9 +133,15 @@ class MuleSoftManager:
         return []
 
     def get_runtime_apps(self, org_id, env_id, extract_details=False):
-        """Unified Discovery & Parallel Version Extraction"""
+        """Unified Discovery & Sequential Version Extraction with Rate Limit"""
         headers = self.get_headers()
         headers.update({ "X-ANYPNT-ORG-ID": org_id, "X-ANYPNT-ENV-ID": env_id })
+        
+        # Check cache
+        key = (org_id, env_id, extract_details)
+        if key in cache:
+            return cache[key]
+
         
         # 1. Base List Discovery (Very Fast)
         disc_url = f"{self.anypoint_url}/armui/api/v2/applications"
@@ -143,34 +155,38 @@ class MuleSoftManager:
         if not extract_details or not apps:
             return apps
 
-        # 2. Truly Parallel Deep Scan (N requests at once)
+        # 2. Sequential Deep Scan (Semaphore limits global concurrent API calls)
         def enrich(app):
-            try:
-                target = app.get('target', {}).get('type', '')
-                app_id = app.get('id')
-                
-                # CloudHub 2.0 / RTF Path
-                if target in ["MC", "RTF"]:
-                    d_url = f"{self.anypoint_url}/amc/adam/api/organizations/{org_id}/environments/{env_id}/deployments/{app_id}"
-                    d_res = self.http_session.get(d_url, headers=headers, timeout=8)
-                    if d_res.status_code == 200:
-                        app['adam_details'] = d_res.json()
-                        
-                # CloudHub 1.0 Path
-                else:
-                    domain = (app.get('domain') or app.get('name', '')).split('.cloudhub.io')[0]
-                    ch1_url = f"{self.anypoint_url}/cloudhub/api/v2/applications/{domain}"
-                    d_res = self.http_session.get(ch1_url, headers=headers, timeout=8)
-                    if d_res.status_code == 200:
-                        app.update(d_res.json())
-            except Exception: pass
+            with semaphore:
+                try:
+                    target = app.get('target', {}).get('type', '')
+                    app_id = app.get('id')
+                    
+                    # CloudHub 2.0 / RTF Path
+                    if target in ["MC", "RTF"]:
+                        d_url = f"{self.anypoint_url}/amc/adam/api/organizations/{org_id}/environments/{env_id}/deployments/{app_id}"
+                        d_res = self.http_session.get(d_url, headers=headers, timeout=5)
+                        time.sleep(0.05)
+                        if d_res.status_code == 200:
+                            app['adam_details'] = d_res.json()
+                            
+                    # CloudHub 1.0 Path
+                    else:
+                        domain = (app.get('domain') or app.get('name', '')).split('.cloudhub.io')[0]
+                        ch1_url = f"{self.anypoint_url}/cloudhub/api/v2/applications/{domain}"
+                        d_res = self.http_session.get(ch1_url, headers=headers, timeout=5)
+                        time.sleep(0.05)
+                        if d_res.status_code == 200:
+                            app.update(d_res.json())
+                except Exception: pass
             return app
 
-        with ThreadPoolExecutor(max_workers=50) as executor:
-            apps = list(executor.map(enrich, apps))
+        apps = [enrich(app) for app in apps]
 
         # 3. Clean Minimum Payload Pruning
-        return [self._prune_app(a) for a in apps]
+        pruned_apps = [self._prune_app(a) for a in apps]
+        cache[key] = pruned_apps
+        return pruned_apps
 
     def _prune_app(self, a):
         """Strip the world, return only version essence."""
