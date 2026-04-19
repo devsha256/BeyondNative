@@ -195,14 +195,23 @@ class MuleSoftManager:
 
     def _prune_app(self, a):
         """Strip the world, return only version essence."""
+        # Hunt for a valid Name/Domain across all possible sources
+        name = a.get("name") or a.get("fullDomain") or a.get("domain")
+        if not name and a.get("adam_details"):
+            # Fallback to AMC detail name
+            name = a["adam_details"].get("name")
+        if not name:
+            # Final fallback to common nesting
+            name = a.get("artifact", {}).get("name") or a.get("application", {}).get("name", "Unknown App")
+
         v = None
         if a.get('adam_details'):
             v = a['adam_details'].get('application', {}).get('ref', {}).get('version')
         
         return {
             "id": a.get("id"),
-            "name": a.get("name"),
-            "fullDomain": a.get("fullDomain") or a.get("domain"),
+            "name": name,
+            "fullDomain": name, # Ensure JS finds it in either property
             "muleVersion": a.get("muleVersion"),
             "appVersion": v or a.get("filename") or a.get("fileName") or "Unknown Artifact",
             "targetType": a.get("target", {}).get("type")
