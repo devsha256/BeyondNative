@@ -1,88 +1,230 @@
 {% extends "base.html" %}
 
-{% block title %}Bulk PR Configuration{% endblock %}
+{% block title %}Bulk PR Automator{% endblock %}
 
 {% block content %}
 <div class="m3-header" style="display:flex; justify-content:space-between; align-items:center;">
-    <h1>Beyond Native: Bulk PR Configuration</h1>
-    <a href="/" class="m3-button">
-        <i class="material-icons">arrow_back</i> Change Selection
+    <h1>Beyond Native: Bulk PR Automator</h1>
+    <a href="/devops" class="m3-button" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2);">
+        <i class="material-icons">arrow_back</i> Workspace
     </a>
 </div>
 
-<div class="table-container m3-card" style="padding:0; margin-top:24px;">
-    <table class="m3-table">
-        <thead>
-            <tr>
-                <th style="padding: 16px;">MASTER CONTROL</th>
-                <th>
-                    <select class="m3-input master-select" onchange="bulkUpdate('from', this.value)">
-                        <option value="">Global Source...</option>
-                        <option value="dev">dev</option>
-                        <option value="qa">qa</option>
-                        <option value="staging">staging</option>
-                        <option value="pre-prod">pre-prod</option>
-                    </select>
-                </th>
-                <th>
-                    <select class="m3-input master-select" onchange="bulkUpdate('to', this.value)">
-                        <option value="">Global Target...</option>
-                        <option value="dev">dev</option>
-                        <option value="qa">qa</option>
-                        <option value="staging">staging</option>
-                        <option value="pre-prod">pre-prod</option>
-                        <option value="main">main</option>
-                    </select>
-                </th>
-                <th style="text-align:right; padding-right:24px;">
-                    <button id="btn-raise-all" class="m3-button" onclick="raiseAll()">
-                        <i class="material-icons">rocket_launch</i> Raise All PRs
-                    </button>
-                </th>
-            </tr>
-            <tr>
-                <th style="padding: 16px;">Repository</th>
-                <th>Source (From)</th>
-                <th>Target (To)</th>
-                <th style="text-align:right; padding-right:24px;">Action</th>
-            </tr>
-        </thead>
-        <tbody id="pr-body"></tbody>
-    </table>
+<!-- STEP 1: DISCOVERY -->
+<div id="step-discovery">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px;">
+        <div class="m3-card">
+            <h3><i class="material-icons">search</i> Prefix Scan</h3>
+            <p>Scan Azure for matching names.</p>
+            <div style="display: flex; gap: 8px; margin-top: 12px;">
+                <input type="text" id="prefix" class="m3-input" placeholder="e.g. mapi-" style="margin:0;">
+                <button class="m3-button" onclick="searchRepos()">Scan</button>
+            </div>
+        </div>
+
+        <div class="m3-card">
+            <h3><i class="material-icons">file_upload</i> Targeted List</h3>
+            <p>Upload .csv or .txt (one repo name per line).</p>
+            <div class="file-upload-wrapper" onclick="document.getElementById('file-input').click()" style="padding: 15px; border-radius: 8px; text-align: center; cursor: pointer; margin-top: 10px; border: 1px dashed rgba(255,255,255,0.2);">
+                <span id="file-status">Click to select curated list</span>
+            </div>
+            <input type="file" id="file-input" style="display:none" accept=".csv,.txt" onchange="handleFileUpload(this)">
+        </div>
+    </div>
+
+    <div class="progress-container" id="prog-cont"><div class="progress-bar" id="prog-bar"></div></div>
+
+    <div class="table-container" id="table-wrapper" style="display:none; margin-top:24px;">
+        <table class="m3-table">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" onclick="toggleAll(this)"></th>
+                    <th>Repository Name</th>
+                    <th>Project</th>
+                    <th>Azure Link</th>
+                </tr>
+            </thead>
+            <tbody id="repo-body"></tbody>
+        </table>
+    </div>
+
+    <div id="selection-panel" class="selection-panel">
+        <span id="selected-text">0 Repositories Selected</span>
+        <button class="m3-button" onclick="proceedToConfig()">
+            Next: Configure PRs <i class="material-icons">chevron_right</i>
+        </button>
+    </div>
+</div>
+
+<!-- STEP 2: PR CONFIGURATION -->
+<div id="step-config" style="display:none;">
+    <div class="table-container m3-card" style="padding:0; margin-top:24px;">
+        <table class="m3-table">
+            <thead>
+                <tr>
+                    <th style="padding: 16px;">MASTER CONTROL</th>
+                    <th>
+                        <select class="m3-input master-select" onchange="bulkUpdate('from', this.value)">
+                            <option value="">Global Source...</option>
+                            <option value="dev">dev</option>
+                            <option value="qa">qa</option>
+                            <option value="staging">staging</option>
+                            <option value="pre-prod">pre-prod</option>
+                        </select>
+                    </th>
+                    <th>
+                        <select class="m3-input master-select" onchange="bulkUpdate('to', this.value)">
+                            <option value="">Global Target...</option>
+                            <option value="dev">dev</option>
+                            <option value="qa">qa</option>
+                            <option value="staging">staging</option>
+                            <option value="pre-prod">pre-prod</option>
+                            <option value="main">main</option>
+                        </select>
+                    </th>
+                    <th style="text-align:right; padding-right:24px;">
+                        <button id="btn-raise-all" class="m3-button" onclick="raiseAll()">
+                            <i class="material-icons">rocket_launch</i> Raise All PRs
+                        </button>
+                        <button class="m3-button" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); margin-left: 8px;" onclick="backToDiscovery()">
+                            Back
+                        </button>
+                    </th>
+                </tr>
+                <tr>
+                    <th style="padding: 16px;">Repository</th>
+                    <th>Source (From)</th>
+                    <th>Target (To)</th>
+                    <th style="text-align:right; padding-right:24px;">Action</th>
+                </tr>
+            </thead>
+            <tbody id="pr-body"></tbody>
+        </table>
+    </div>
 </div>
 
 <script>
+// ======== STATE & UTILS ========
 const repoState = {};
+let selectedReposForPR = [];
 
-document.addEventListener('DOMContentLoaded', async () => {
-    const repos = JSON.parse(sessionStorage.getItem('selectedRepos') || '[]');
+// ======== DISCOVERY STEP ========
+async function searchRepos() {
+    const bar = document.getElementById('prog-bar');
+    document.getElementById('prog-cont').style.display = 'block';
+    bar.style.width = '40%';
+    const res = await fetch('/api/extract-repos', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({prefix: document.getElementById('prefix').value})
+    });
+    const data = await res.json();
+    renderResults(data.repositories);
+}
+
+function handleFileUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    document.getElementById('file-status').innerText = `Selected: ${file.name}`;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        const text = e.target.result;
+        const repoNames = text.split(/\\r?\\n/).map(line => line.trim()).filter(line => line.length > 0);
+        document.getElementById('prog-cont').style.display = 'block';
+        const res = await fetch('/api/extract-by-file', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({repos: repoNames})
+        });
+        const data = await res.json();
+        renderResults(data.repositories);
+    };
+    reader.readAsText(file);
+}
+
+function renderResults(repos) {
+    document.getElementById('prog-bar').style.width = '100%';
+    const tbody = document.getElementById('repo-body');
+    tbody.innerHTML = repos.map(r => `
+        <tr>
+            <td><input type="checkbox" class="repo-check" value="${r.name}" onchange="syncUI()"></td>
+            <td><strong>${r.name}</strong></td>
+            <td>${r.project}</td>
+            <td><a href="${r.url}" target="_blank"><i class="material-icons">open_in_new</i></a></td>
+        </tr>`).join('');
+    document.getElementById('table-wrapper').style.display = 'block';
+    setTimeout(() => document.getElementById('prog-cont').style.display = 'none', 500);
+}
+
+function toggleAll(master) {
+    document.querySelectorAll('.repo-check').forEach(c => c.checked = master.checked);
+    syncUI();
+}
+
+function syncUI() {
+    const count = document.querySelectorAll('.repo-check:checked').length;
+    document.getElementById('selected-text').innerText = `${count} Repositories Selected`;
+    document.getElementById('selection-panel').classList.toggle('active', count > 0);
+}
+
+function proceedToConfig() {
+    selectedReposForPR = Array.from(document.querySelectorAll('.repo-check:checked')).map(c => c.value);
+    if(selectedReposForPR.length === 0) return;
+    
+    document.getElementById('step-discovery').style.display = 'none';
+    document.getElementById('selection-panel').classList.remove('active');
+    document.getElementById('step-config').style.display = 'block';
+    
+    initPRPhase();
+}
+
+function backToDiscovery() {
+    document.getElementById('step-config').style.display = 'none';
+    document.getElementById('step-discovery').style.display = 'block';
+    syncUI();
+}
+
+// ======== PR CONFIGURATION STEP ========
+async function initPRPhase() {
     const tbody = document.getElementById('pr-body');
-
-    if (repos.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:40px;"><div class="m3-loader" style="margin: 0 auto;"></div><div style="margin-top:16px;">Fetching branch details...</div></td></tr>';
+    
+    if (selectedReposForPR.length === 0) {
         tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:40px;">No repositories selected.</td></tr>';
         return;
     }
 
-    for (const name of repos) {
+    const fetchBranches = async (name) => {
         try {
             const branchRes = await fetch(`/api/branches/${encodeURIComponent(name)}`);
             const branches = await branchRes.json();
-            const row = `
-                <tr id="row-main-${name}">
-                    <td><strong>${name}</strong></td>
-                    <td><select class="m3-input from-select">${branches.map(b => `<option value="${b}">${b}</option>`).join('')}</select></td>
-                    <td><select class="m3-input to-select">${branches.map(b => `<option value="${b}">${b}</option>`).join('')}</select></td>
-                    <td style="text-align:right; padding-right:24px;">
-                        <button class="m3-button btn-review" onclick="review('${name}', this)" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2);">Review</button>
-                        <button class="m3-button btn-raise" onclick="raiseSinglePR('${name}', this)">Raise PR</button>
-                    </td>
-                </tr>
-                <tr id="review-${name}" style="display:none;"><td colspan="4"><div class="expandable-content" id="content-${name}"></div></td></tr>
-            `;
-            tbody.insertAdjacentHTML('beforeend', row);
-        } catch (e) { console.error(e); }
-    }
-});
+            return { name, branches };
+        } catch (e) {
+            console.error(e);
+            return { name, branches: [] };
+        }
+    };
+
+    const results = await Promise.all(selectedReposForPR.map(fetchBranches));
+    
+    tbody.innerHTML = '';
+    
+    results.forEach(({name, branches}) => {
+        const row = `
+            <tr id="row-main-${name}">
+                <td><strong>${name}</strong></td>
+                <td><select class="m3-input from-select">${branches.map(b => `<option value="${b}">${b}</option>`).join('')}</select></td>
+                <td><select class="m3-input to-select">${branches.map(b => `<option value="${b}">${b}</option>`).join('')}</select></td>
+                <td style="text-align:right; padding-right:24px;">
+                    <button class="m3-button btn-review" onclick="review('${name}', this)" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2);">Review</button>
+                    <button class="m3-button btn-raise" onclick="raiseSinglePR('${name}', this)">Raise PR</button>
+                </td>
+            </tr>
+            <tr id="review-${name}" style="display:none;"><td colspan="4"><div class="expandable-content" id="content-${name}"></div></td></tr>
+        `;
+        tbody.insertAdjacentHTML('beforeend', row);
+    });
+}
 
 function bulkUpdate(type, val) {
     if(!val) return;
@@ -98,7 +240,7 @@ async function review(name, btn) {
     const source = mainRow.querySelector('.from-select').value;
     const target = mainRow.querySelector('.to-select').value;
     row.style.display = 'table-row';
-    content.innerHTML = `<div class="m3-loader">Comparing ${source} ➔ ${target}...</div>`;
+    content.innerHTML = `<div class="m3-loader" style="margin:20px auto;"></div>`;
     
     try {
         const response = await fetch(`/api/repo-details?repo=${encodeURIComponent(name)}&source=${source}&target=${target}`);
@@ -115,7 +257,7 @@ async function review(name, btn) {
                 <div><strong>Commits</strong><ul style="font-size:12px; margin-top:8px;">${data.commits.map(c => `<li>${c.message}</li>`).join('')}</ul></div>
                 <div>
                     <strong>Impacted Files</strong>
-                    <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:8px;">${data.files.map(f => `<span class="status-badge" style="background:#eee">${f}</span>`).join('')}</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:8px;">${data.files.map(f => `<span class="status-badge" style="background:#eee; color:#333">${f}</span>`).join('')}</div>
                     <div style="margin-top:24px; display:flex; gap:12px;">
                         <button class="m3-button" onclick="raiseSinglePR('${name}', this)"><i class="material-icons">check</i> Confirm & Raise PR</button>
                         <button class="m3-button" style="background:#eee; color:#333;">Auto-Deploy</button>

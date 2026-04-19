@@ -22,9 +22,6 @@ def home():
 def devops_index():
     return render_template('devops/index.html')
 
-@app.route('/devops/discovery')
-def devops_discovery():
-    return render_template('devops/discovery.html')
 
 @app.route('/devops/bulk-pr')
 def bulk_pr_view():
