@@ -49,11 +49,19 @@ def extract_repos():
 def extract_by_file():
     repo_names = request.json.get('repos', [])
     matched = []
+    
     with ThreadPoolExecutor(max_workers=20) as executor:
-        results = executor.map(devops.get_repository, repo_names)
-        for r in results:
-            if r:
-                matched.append(r)
+        results = list(executor.map(devops.get_repository, repo_names))
+        
+    for r in results:
+        if r:
+            matched.append(r)
+            
+    # Fallback: if parallel requests failed (e.g. 404 by name, or 429 rate limit)
+    if not matched and repo_names:
+        all_repos = devops.get_repositories("")
+        matched = [r for r in all_repos if r['name'] in repo_names]
+        
     return jsonify({"repositories": matched})
 
 @app.route('/api/branches/<repo_name>')

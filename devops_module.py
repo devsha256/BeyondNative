@@ -2,6 +2,7 @@ import os
 import base64
 import requests
 import fnmatch
+import urllib.parse
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -28,22 +29,27 @@ class AzureDevOpsManager:
         if response.status_code == 200:
             repos = response.json().get('value', [])
             
+            if not pattern:
+                return [{"name": r['name'], "url": r['webUrl'], "project": r['project']['name']} for r in repos]
+            
             # If no wildcard characters are present, treat it as a prefix search by appending '*'
-            if pattern and '*' not in pattern and '?' not in pattern:
+            if '*' not in pattern and '?' not in pattern:
                 pattern = f"{pattern}*"
                 
+            pattern_lower = pattern.lower()
             return [
                 {
                     "name": r['name'],
                     "url": r['webUrl'],
                     "project": r['project']['name']
                 } 
-                for r in repos if not pattern or fnmatch.fnmatch(r['name'], pattern)
+                for r in repos if fnmatch.fnmatch(r['name'].lower(), pattern_lower)
             ]
         return []
 
     def get_repository(self, repo_name):
-        url = f"{self.base_url}/git/repositories/{repo_name}?api-version=7.1"
+        encoded_name = urllib.parse.quote(repo_name)
+        url = f"{self.base_url}/git/repositories/{encoded_name}?api-version=7.1"
         response = requests.get(url, headers=self.headers)
         if response.status_code == 200:
             r = response.json()
