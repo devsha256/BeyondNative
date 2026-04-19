@@ -22,3 +22,11 @@ desktop.ini
 instance/
 .pytest_cache/
 *.log
+
+# --- Databases ---
+*.db
+*.sqlite
+*.sqlite3
+
+# --- Debug & Dumps ---
+*_dump.json

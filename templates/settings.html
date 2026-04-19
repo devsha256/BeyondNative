@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<div class="m3-header">
+    <h1>Settings</h1>
+    <p>Configure credentials and variables for all suites dynamically.</p>
+</div>
+
+<div class="m3-card">
+    <h3><i class="material-icons" style="vertical-align: middle;">lan</i> DevOps Suite (Azure)</h3>
+    <div style="display: grid; gap: 16px; margin-top: 16px;">
+        <div>
+            <label>Azure Organization</label>
+            <input type="text" id="azure_org" class="m3-input" value="{{ settings.get('azure_org', '') }}" placeholder="e.g. devsha256">
+        </div>
+        <div>
+            <label>Azure Project</label>
+            <input type="text" id="azure_project" class="m3-input" value="{{ settings.get('azure_project', '') }}" placeholder="e.g. BeyondNative">
+        </div>
+        <div>
+            <label>Azure PAT (Personal Access Token)</label>
+            <input type="password" id="azure_pat" class="m3-input" value="{{ settings.get('azure_pat', '') }}" placeholder="Enter personal access token">
+        </div>
+    </div>
+</div>
+
+<div class="m3-card" style="margin-top: 24px;">
+    <h3><i class="material-icons" style="vertical-align: middle;">api</i> MuleSoft Suite (Anypoint)</h3>
+    <div style="display: grid; gap: 16px; margin-top: 16px;">
+        <div>
+            <label>Connected App Client ID</label>
+            <input type="text" id="mule_client_id" class="m3-input" value="{{ settings.get('mule_client_id', '') }}" placeholder="Client ID">
+        </div>
+        <div>
+            <label>Connected App Client Secret</label>
+            <input type="password" id="mule_client_secret" class="m3-input" value="{{ settings.get('mule_client_secret', '') }}" placeholder="Client Secret">
+        </div>
+        <div>
+            <label>Bearer Token (Optional Override)</label>
+            <input type="password" id="mule_bearer" class="m3-input" value="{{ settings.get('mule_bearer', '') }}" placeholder="Optional raw token override">
+        </div>
+    </div>
+</div>
+
+<div style="position: fixed; bottom: 32px; right: 32px; z-index: 1000;">
+    <button class="m3-button" onclick="saveSettings()" style="box-shadow: 0 8px 24px rgba(0,0,0,0.4); border-radius: 50px; padding: 16px 32px;">
+        <i class="material-icons" style="vertical-align: middle;">save</i> Save Settings
+    </button>
+</div>
+
+<script>
+    function saveSettings() {
+        const payload = {
+            azure_org: document.getElementById('azure_org').value,
+            azure_project: document.getElementById('azure_project').value,
+            azure_pat: document.getElementById('azure_pat').value,
+            mule_client_id: document.getElementById('mule_client_id').value,
+            mule_client_secret: document.getElementById('mule_client_secret').value,
+            mule_bearer: document.getElementById('mule_bearer').value
+        };
+        fetch('/api/settings', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        }).then(r => r.json()).then(res => {
+            alert(res.message);
+        });
+    }
+</script>
+{% endblock %}

@@ -1,24 +1,26 @@
 {% extends "base.html" %}
-{% block title %}Discovery{% endblock %}
+{% block title %}Azure Discovery{% endblock %}
 {% block content %}
-<h1>Beyond Native: Discovery</h1>
+<div class="m3-header">
+    <h1>Beyond Native: Azure Discovery</h1>
+    <p>Select repositories via prefix search or targeted file upload.</p>
+</div>
 
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px;">
     <div class="m3-card">
-        <h3>Prefix Discovery</h3>
-        <p style="font-size: 0.8rem; color: #666;">Scan Azure for matching repo names.</p>
-        <input type="text" id="prefix" class="m3-input" placeholder="e.g. app-service-">
-        <button class="m3-button" onclick="searchRepos()">
-            <i class="material-icons">search</i> Search Azure
-        </button>
+        <h3><i class="material-icons">search</i> Prefix Scan</h3>
+        <p>Scan Azure for matching names.</p>
+        <div style="display: flex; gap: 8px; margin-top: 12px;">
+            <input type="text" id="prefix" class="m3-input" placeholder="e.g. mapi-" style="margin:0;">
+            <button class="m3-button" onclick="searchRepos()">Scan</button>
+        </div>
     </div>
 
     <div class="m3-card">
-        <h3>Targeted Discovery</h3>
-        <p style="font-size: 0.8rem; color: #666;">Upload .csv or .txt (one repo per line).</p>
-        <div class="file-upload-wrapper" onclick="document.getElementById('file-input').click()">
-            <i class="material-icons" style="font-size: 32px; color: var(--md-sys-color-primary);">upload_file</i>
-            <p id="file-status">Click to upload curated list</p>
+        <h3><i class="material-icons">file_upload</i> Targeted List</h3>
+        <p>Upload .csv or .txt (one repo name per line).</p>
+        <div class="file-upload-wrapper" onclick="document.getElementById('file-input').click()" style="padding: 15px; border-radius: 8px; text-align: center; cursor: pointer; margin-top: 10px;">
+            <span id="file-status">Click to select curated list</span>
         </div>
         <input type="file" id="file-input" style="display:none" accept=".csv,.txt" onchange="handleFileUpload(this)">
     </div>
@@ -33,7 +35,7 @@
                 <th><input type="checkbox" onclick="toggleAll(this)"></th>
                 <th>Repository Name</th>
                 <th>Project</th>
-                <th>Link</th>
+                <th>Azure Link</th>
             </tr>
         </thead>
         <tbody id="repo-body"></tbody>
@@ -42,7 +44,7 @@
 
 <div id="selection-panel" class="selection-panel">
     <span id="selected-text">0 Repositories Selected</span>
-    <button class="m3-button" style="background:white; color:var(--md-sys-color-primary);" onclick="proceed()">
+    <button class="m3-button" onclick="proceed()">
         Next: Configure PRs <i class="material-icons">chevron_right</i>
     </button>
 </div>
@@ -64,18 +66,12 @@ async function searchRepos() {
 function handleFileUpload(input) {
     const file = input.files[0];
     if (!file) return;
-    
-    document.getElementById('file-status').innerText = `Processing: ${file.name}`;
+    document.getElementById('file-status').innerText = `Selected: ${file.name}`;
     const reader = new FileReader();
-    
     reader.onload = async (e) => {
         const text = e.target.result;
-        // Split by newline and filter empty lines
         const repoNames = text.split(/\r?\n/).map(line => line.trim()).filter(line => line.length > 0);
-        
         document.getElementById('prog-cont').style.display = 'block';
-        document.getElementById('prog-bar').style.width = '50%';
-        
         const res = await fetch('/api/extract-by-file', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -88,8 +84,7 @@ function handleFileUpload(input) {
 }
 
 function renderResults(repos) {
-    const bar = document.getElementById('prog-bar');
-    bar.style.width = '100%';
+    document.getElementById('prog-bar').style.width = '100%';
     const tbody = document.getElementById('repo-body');
     tbody.innerHTML = repos.map(r => `
         <tr>
@@ -97,8 +92,7 @@ function renderResults(repos) {
             <td><strong>${r.name}</strong></td>
             <td>${r.project}</td>
             <td><a href="${r.url}" target="_blank"><i class="material-icons">open_in_new</i></a></td>
-        </tr>
-    `).join('');
+        </tr>`).join('');
     document.getElementById('table-wrapper').style.display = 'block';
     setTimeout(() => document.getElementById('prog-cont').style.display = 'none', 500);
 }

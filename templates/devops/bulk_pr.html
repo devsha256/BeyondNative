@@ -3,9 +3,9 @@
 {% block title %}Bulk PR Configuration{% endblock %}
 
 {% block content %}
-<div style="display:flex; justify-content:space-between; align-items:center;">
-    <h1 style="color: var(--md-sys-color-primary);">Beyond Native: Bulk PR Configuration</h1>
-    <a href="/" class="m3-button" style="background:var(--md-sys-color-surface-variant); color:var(--md-sys-color-on-surface);">
+<div class="m3-header" style="display:flex; justify-content:space-between; align-items:center;">
+    <h1>Beyond Native: Bulk PR Configuration</h1>
+    <a href="/" class="m3-button">
         <i class="material-icons">arrow_back</i> Change Selection
     </a>
 </div>
@@ -13,8 +13,8 @@
 <div class="table-container m3-card" style="padding:0; margin-top:24px;">
     <table class="m3-table">
         <thead>
-            <tr style="background: var(--md-sys-color-primary-container);">
-                <th style="color: var(--md-sys-color-on-primary-container); padding: 16px;">MASTER CONTROL</th>
+            <tr>
+                <th style="padding: 16px;">MASTER CONTROL</th>
                 <th>
                     <select class="m3-input master-select" onchange="bulkUpdate('from', this.value)">
                         <option value="">Global Source...</option>
@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td><select class="m3-input from-select">${branches.map(b => `<option value="${b}">${b}</option>`).join('')}</select></td>
                     <td><select class="m3-input to-select">${branches.map(b => `<option value="${b}">${b}</option>`).join('')}</select></td>
                     <td style="text-align:right; padding-right:24px;">
-                        <button class="m3-button btn-review" onclick="review('${name}', this)" style="background:none; border:1px solid var(--md-sys-color-primary); color:var(--md-sys-color-primary);">Review</button>
+                        <button class="m3-button btn-review" onclick="review('${name}', this)" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2);">Review</button>
                         <button class="m3-button btn-raise" onclick="raiseSinglePR('${name}', this)">Raise PR</button>
                     </td>
                 </tr>
@@ -141,9 +141,9 @@ async function raiseSinglePR(repoName, btn) {
     });
 
     if (res.ok) {
-        btn.innerHTML = 'Created'; btn.style.background = "var(--md-sys-color-success)";
+        btn.innerHTML = 'Created'; btn.className = 'm3-button status-success';
     } else {
-        btn.innerHTML = 'Error'; btn.style.background = "var(--md-sys-color-error)";
+        btn.innerHTML = 'Error'; btn.className = 'm3-button status-error';
     }
 }
 

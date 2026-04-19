@@ -53,7 +53,6 @@ class AzureDevOpsManager:
             "api-version": "7.1"
         }
         response = requests.get(url, headers=self.headers, params=params)
-        
         if response.status_code == 200:
             data = response.json()
             commits_raw = data.get('commits', [])

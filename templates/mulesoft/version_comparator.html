@@ -1,14 +1,282 @@
 {% extends "base.html" %}
 {% block title %}Version Comparator{% endblock %}
 {% block content %}
-<h1>Version Comparator</h1>
-<div class="m3-card">
-    <h3>Environment Comparison</h3>
-    <p>Select environments to compare runtime versions and application deployments.</p>
-    <div style="display:flex; gap:12px;">
-        <input type="text" class="m3-input" placeholder="Source Env ID">
-        <input type="text" class="m3-input" placeholder="Target Env ID">
-        <button class="m3-button">Compare Versions</button>
+<div class="m3-header">
+    <h1>Version Comparator</h1>
+    <p>Select a Base Environment and compare application deployments across other Target Environments.</p>
+</div>
+
+<div class="m3-card" id="settings-check-card"
+    style="display: none; background: rgba(255, 100, 100, 0.1); border-left: 4px solid var(--error-color);">
+    <h3 style="color: var(--error-color); margin-bottom: 8px;">Authentication Missing</h3>
+    <p>Please configure your Anypoint Connected App via the Settings page before proceeding.</p>
+    <a href="/settings" class="m3-button" style="margin-top: 12px; display: inline-block;">Go to Settings</a>
+</div>
+
+<div class="m3-card" id="comparator-card">
+    <h3><i class="material-icons" style="vertical-align: middle;">compare_arrows</i> Environment Setup</h3>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px;">
+        <div style="grid-column: span 2;">
+            <label>Organization (Business Group)</label>
+            <select id="org-select" class="m3-input" onchange="handleOrgSelection(this.value)">
+                <option value="">Loading Organizations...</option>
+            </select>
+        </div>
+
+        <div>
+            <label>Base Environment</label>
+            <select id="base-env-select" class="m3-input" onchange="populateTargetEnvs()">
+                <option value="">Select an Org first...</option>
+            </select>
+        </div>
+
+        <div>
+            <label>Target Environments (Multi-Select)</label>
+            <select id="target-envs-select" class="m3-input" multiple style="height: 120px;" onchange="enableCompare()">
+                <option value="" disabled>Select Base Environment first...</option>
+            </select>
+            <p style="font-size: 0.75rem; color: #888; margin-top: 4px;">Hold Ctrl/Cmd to select multiple environments.
+            </p>
+        </div>
+    </div>
+
+    <button id="compare-btn" class="m3-button" style="margin-top: 24px;" onclick="executeComparison()" disabled>
+        <i class="material-icons">analytics</i> Compare Versions
+    </button>
+</div>
+
+<div id="results-card" class="m3-card table-container" style="display: none; padding: 0; margin-top: 24px;">
+    <div
+        style="padding: 24px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0;">Comparison Matrix</h3>
+        <select id="version-type" class="m3-input" style="width: auto; padding: 6px 12px; font-size: 0.9rem;"
+            onchange="renderMatrix()">
+            <option value="appVersion" selected>Compare Application/Artifact Versions</option>
+            <option value="muleVersion">Compare Mule Runtime Versions</option>
+        </select>
+    </div>
+    <div style="overflow-x: auto; width: 100%;">
+        <table class="m3-table" id="matrix-table" style="min-width: 800px;">
+            <thead id="matrix-head"></thead>
+            <tbody id="matrix-body"></tbody>
+        </table>
     </div>
 </div>
+
+<script>
+    let globalEnvs = [];
+    let comparisonData = {
+        baseEnv: null,
+        targetEnvs: [],
+        baseApps: [],
+        targetAppsData: {} // Dictionary matching targetEnvId -> Array of Apps
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initOrgs();
+    });
+
+    async function initOrgs() {
+        try {
+            const res = await fetch('/api/mule/orgs');
+            if (!res.ok) throw new Error("API Failure");
+            const orgs = await res.json();
+
+            if (orgs.length === 0) {
+                document.getElementById('org-select').style.display = 'none';
+                document.getElementById('settings-check-card').style.display = 'block';
+                return;
+            }
+
+            const select = document.getElementById('org-select');
+            select.innerHTML = '<option value="">Select Organization...</option>' +
+                orgs.map(o => `<option value="${o.id}">${o.name}</option>`).join('');
+
+        } catch (e) {
+            document.getElementById('org-select').innerHTML = '<option value="">Error Loading Orgs. Check Settings.</option>';
+        }
+    }
+
+    async function handleOrgSelection(orgId) {
+        if (!orgId) return;
+        document.getElementById('base-env-select').innerHTML = '<option>Loading...</option>';
+        document.getElementById('target-envs-select').innerHTML = '';
+
+        try {
+            const res = await fetch(`/api/mule/envs/${orgId}`);
+            globalEnvs = await res.json();
+
+            const select = document.getElementById('base-env-select');
+            select.innerHTML = '<option value="">Select Base Environment...</option>' +
+                globalEnvs.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+
+            document.getElementById('compare-btn').disabled = true;
+        } catch (e) {
+            alert("Failed to load environments.");
+        }
+    }
+
+    function populateTargetEnvs() {
+        const baseId = document.getElementById('base-env-select').value;
+        const targetSelect = document.getElementById('target-envs-select');
+
+        if (!baseId) {
+            targetSelect.innerHTML = '<option value="" disabled>Select Base Environment first...</option>';
+            return;
+        }
+
+        targetSelect.innerHTML = globalEnvs
+            .filter(e => e.id !== baseId)
+            .map(e => `<option value="${e.id}">${e.name}</option>`)
+            .join('');
+
+        enableCompare();
+    }
+
+    function enableCompare() {
+        const baseId = document.getElementById('base-env-select').value;
+        const targets = Array.from(document.getElementById('target-envs-select').selectedOptions).map(o => o.value);
+        document.getElementById('compare-btn').disabled = !baseId || targets.length === 0;
+    }
+
+    // Utility to normalize app names by stripping standard suffixes or "-envName"
+    function normalizeName(name) {
+        if (!name) return "Unknown";
+        return name.toLowerCase()
+            .replace(/-(dev|qa|test|uat|prod|stg|sandbox|np|dr|preprod).*$/, '')
+            .trim();
+    }
+
+    async function executeComparison() {
+        const btn = document.getElementById('compare-btn');
+        btn.innerHTML = '<i class="material-icons" style="animation: spin 1s linear infinite;">refresh</i> Extracting Metadata...';
+        btn.disabled = true;
+
+        const orgId = document.getElementById('org-select').value;
+        const baseId = document.getElementById('base-env-select').value;
+        const targets = Array.from(document.getElementById('target-envs-select').selectedOptions).map(o => ({ id: o.value, name: o.text }));
+
+        comparisonData.baseEnv = globalEnvs.find(e => e.id === baseId);
+        comparisonData.targetEnvs = targets;
+
+        try {
+            // Fetch Base Environment Apps
+            const baseRes = await fetch('/api/mule/apps', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ org_id: orgId, env_id: baseId })
+            });
+            comparisonData.baseApps = await baseRes.json();
+
+            // Fetch Target Environments Apps via Promise.all for speed
+            const fetchPromises = targets.map(t =>
+                fetch('/api/mule/apps', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ org_id: orgId, env_id: t.id })
+                }).then(r => r.json()).then(payload => ({ envId: t.id, apps: payload }))
+            );
+
+            const results = await Promise.all(fetchPromises);
+            comparisonData.targetAppsData = {};
+            results.forEach(r => comparisonData.targetAppsData[r.envId] = r.apps);
+
+            renderMatrix();
+            document.getElementById('results-card').style.display = 'block';
+
+        } catch (e) {
+            alert("An error occurred during extraction.");
+        } finally {
+            btn.innerHTML = '<i class="material-icons">analytics</i> Compare Versions';
+            btn.disabled = false;
+        }
+    }
+
+    function extractVersion(appObj, versionType) {
+        if (!appObj) return '<span style="color:var(--text-muted);">Not Deployed</span>';
+
+        if (versionType === 'muleVersion') {
+            const v = (appObj.muleVersion && appObj.muleVersion.version) || appObj.muleVersion || (appObj.target && appObj.target.deploymentSettings ? appObj.target.deploymentSettings.muleVersion : null);
+            return v ? `<span class="status-badge" style="background:rgba(255,255,255,0.05);">${v}</span>` : 'N/A';
+        }
+        else if (versionType === 'appVersion') {
+            const v = (appObj.adam_details && appObj.adam_details.application && appObj.adam_details.application.ref ? appObj.adam_details.application.ref.version : null) ||
+                (appObj.application && appObj.application.version) ||
+                (appObj.artifact && appObj.artifact.name) ||
+                (appObj.target && appObj.target.deploymentSettings && appObj.target.deploymentSettings.artifact ? appObj.target.deploymentSettings.artifact.name : null) ||
+                appObj.filename ||
+                'Unknown Artifact';
+            return `<span class="status-badge" style="background:rgba(255,255,255,0.05);">${v}</span>`;
+        }
+        return 'N/A';
+    }
+
+    function renderMatrix() {
+        const versionType = document.getElementById('version-type').value;
+        const thead = document.getElementById('matrix-head');
+        const tbody = document.getElementById('matrix-body');
+
+        // Draw Header
+        let headHTML = `<tr>
+        <th style="padding-left: 24px; min-width: 250px;">Base Application Name</th>
+        <th>${comparisonData.baseEnv.name} (Base)</th>`;
+
+        comparisonData.targetEnvs.forEach(env => {
+            headHTML += `<th>${env.name}</th>`;
+        });
+        headHTML += `</tr>`;
+        thead.innerHTML = headHTML;
+
+        // Process Apps Matrix
+        if (comparisonData.baseApps.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="${2 + comparisonData.targetEnvs.length}" style="text-align: center; padding: 32px;">No applications deployed in Base Environment</td></tr>`;
+            return;
+        }
+
+        let bodyHTML = '';
+
+        // For every base app, find its peer using the normalized name
+        comparisonData.baseApps.forEach(baseApp => {
+            const baseRawName = baseApp.fullDomain || baseApp.name || (baseApp.artifact && baseApp.artifact.name) || 'Unknown App';
+            const baseNameNorm = normalizeName(baseRawName);
+
+            bodyHTML += `<tr>
+            <td style="padding-left: 24px; border-left: 4px solid var(--accent-light);">
+                <strong>${baseRawName}</strong>
+            </td>
+            <td>${extractVersion(baseApp, versionType)}</td>`;
+
+            comparisonData.targetEnvs.forEach(env => {
+                const targetApps = comparisonData.targetAppsData[env.id] || [];
+
+                // Hunt for matching app using normalization
+                let matchingApp = targetApps.find(ta => {
+                    const taRawName = ta.fullDomain || ta.name || (ta.artifact && ta.artifact.name);
+                    return normalizeName(taRawName) === baseNameNorm;
+                });
+
+                if (matchingApp) {
+                    // If they perfectly match the extracted version exactly, we could turn it green
+                    // But for now just display it normally
+                    bodyHTML += `<td>${extractVersion(matchingApp, versionType)}</td>`;
+                } else {
+                    bodyHTML += `<td><span style="color:var(--error-color); font-size:12px; font-style:italic;">Missing</span></td>`;
+                }
+            });
+
+            bodyHTML += `</tr>`;
+        });
+
+        tbody.innerHTML = bodyHTML;
+    }
+</script>
+
+<style>
+    @keyframes spin {
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style>
 {% endblock %}

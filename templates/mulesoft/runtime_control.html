@@ -5,33 +5,11 @@
 {% block content %}
 <div class="m3-header">
     <h1>MuleSoft: Runtime Control</h1>
-    <p>Step-by-step Anypoint session synchronization and app management.</p>
+    <p>Manage applications using configured Anypoint Settings.</p>
 </div>
 
-<div class="m3-card">
-    <h3><i class="material-icons" style="vertical-align: middle;">lock_open</i> Step 1: Sync Anypoint Session</h3>
-    <p style="font-size: 0.9rem; color: #444;">You must be logged into Anypoint in another tab for this to work.</p>
-    
-    <div style="display: flex; gap: 16px; align-items: center; margin-top: 16px;">
-        <a href="https://anypoint.mulesoft.com/login/domain" target="_blank" class="m3-button" style="background:#00A2DF;">
-            <i class="material-icons">login</i> 1. Login to Anypoint
-        </a>
-        
-        <a class="m3-button" id="bn-bookmarklet" 
-           href="javascript:(function(){fetch('http://localhost:5000/api/mule/set-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cookie:document.cookie})}).then(r=>r.json()).then(d=>alert('Beyond Native: ' + d.message)).catch(e=>alert('Sync Failed. Ensure Beyond Native app is running locally.'));})();"
-           style="cursor: move; border: 2px dashed white;">
-            <i class="material-icons">drag_indicator</i> 2. Drag to Bookmarks
-        </a>
-
-        <button class="m3-button" onclick="initDiscovery()" style="background: var(--md-sys-color-success);">
-            <i class="material-icons">sync</i> 3. I have Synced
-        </button>
-    </div>
-    <p style="font-size: 0.75rem; color: #777; margin-top: 8px;">Tip: Click the "BN Sync" bookmark while on the Anypoint tab before clicking the green button.</p>
-</div>
-
-<div id="discovery-section" class="m3-card" style="opacity: 0.5; pointer-events: none; transition: opacity 0.3s;">
-    <h3><i class="material-icons" style="vertical-align: middle;">hub</i> Step 2: Select Context</h3>
+<div id="discovery-section" class="m3-card">
+    <h3><i class="material-icons" style="vertical-align: middle;">hub</i> Select Environment Context</h3>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px;">
         <div>
             <label>Organization (Business Group)</label>
@@ -52,11 +30,28 @@
 </div>
 
 <div id="app-section" class="table-container m3-card" style="display:none; padding:0; margin-top: 24px;">
-    <table class="m3-table">
+    
+    <div style="padding: 16px 24px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.1);">
+        <h3 style="margin: 0; font-size: 1.1rem;">Runtime Applications</h3>
+        <div style="display: flex; gap: 12px;">
+            <button class="m3-button" id="btn-start-multi" style="background: rgba(40,167,69,0.15); color: #2ea043; border-color: transparent; padding: 8px 16px;" onclick="triggerMulti('START')" disabled>
+                <i class="material-icons">play_arrow</i> Start Selected
+            </button>
+            <button class="m3-button" id="btn-stop-multi" style="background: rgba(220,53,69,0.15); color: #d73a49; border-color: transparent; padding: 8px 16px;" onclick="triggerMulti('STOP')" disabled>
+                <i class="material-icons">stop</i> Stop Selected
+            </button>
+        </div>
+    </div>
+
+    <table class="m3-table" style="margin: 0; width: 100%;">
         <thead>
             <tr>
-                <th style="padding-left: 24px;">Application Name</th>
+                <th style="padding-left: 24px; width: 40px;">
+                    <input type="checkbox" id="check-all" onclick="toggleAllCheckboxes(this)">
+                </th>
+                <th>Application Name</th>
                 <th>Status</th>
+                <th>Target Type</th>
                 <th>Mule Version</th>
                 <th style="text-align: right; padding-right: 24px;">Operation</th>
             </tr>
@@ -65,29 +60,36 @@
     </table>
 </div>
 
+<style>
+@keyframes spin { 100% { transform: rotate(360deg); } }
+.row-disabled { opacity: 0.6; pointer-events: none; }
+</style>
+
 <script>
+let currentApps = [];
+
+document.addEventListener('DOMContentLoaded', () => {
+    initDiscovery();
+});
+
 async function initDiscovery() {
     try {
+        const select = document.getElementById('org-select');
+        select.innerHTML = '<option value="">Loading Organizations...</option>';
         const res = await fetch('/api/mule/orgs');
-        if (!res.ok) throw new Error("Not Synced");
+        if (!res.ok) throw new Error("API Failure");
         const orgs = await res.json();
         
         if (orgs.length === 0) {
-            alert("No Organizations found. Please make sure you clicked the BN Sync bookmark on the Anypoint tab.");
+            select.innerHTML = '<option value="">No Orgs Found (Check Settings)</option>';
             return;
         }
         
-        const select = document.getElementById('org-select');
         select.innerHTML = '<option value="">Select Organization...</option>' + 
             orgs.map(o => `<option value="${o.id}">${o.name}</option>`).join('');
             
-        // Unlock Step 2
-        const section = document.getElementById('discovery-section');
-        section.style.opacity = "1";
-        section.style.pointerEvents = "all";
-        alert("Session Verified. Organizations Loaded.");
     } catch (e) {
-        alert("Verification failed. Did you click the bookmark while on the Anypoint page?");
+        document.getElementById('org-select').innerHTML = '<option value="">Error Loading Orgs. Check Database Auth.</option>';
     }
 }
 
@@ -112,7 +114,7 @@ async function loadApps() {
     const tbody = document.getElementById('app-body');
     
     document.getElementById('app-section').style.display = 'block';
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:24px;">Loading Runtime Manager data...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:32px;"><i class="material-icons" style="animation: spin 1s linear infinite; vertical-align: middle;">autorenew</i> Loading Runtime Manager data...</td></tr>';
     
     const res = await fetch('/api/mule/apps', {
         method: 'POST',
@@ -120,28 +122,103 @@ async function loadApps() {
         body: JSON.stringify({ org_id: orgId, env_id: envId })
     });
     const apps = await res.json();
+    currentApps = apps || []; // Save globally
     
-    if (apps.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:24px;">No applications found in this environment.</td></tr>';
+    if (currentApps.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:32px;">No applications found in this environment.</td></tr>';
         return;
     }
 
-    tbody.innerHTML = apps.map(app => `
-        <tr>
-            <td style="padding-left: 24px;"><strong>${app.fullDomain}</strong></td>
-            <td>
-                <span class="status-badge ${app.status === 'STARTED' ? 'status-success' : 'status-error'}">
-                    ${app.status}
-                </span>
+    tbody.innerHTML = currentApps.map((app, idx) => {
+        const appName = app.fullDomain || app.name || (app.artifact && app.artifact.name) || 'Unknown App';
+        const appStatus = (app.application && app.application.status) || app.status || app.lastReportedStatus || 'UNKNOWN';
+        const appMule = (app.muleVersion && app.muleVersion.version) || app.muleVersion || 'N/A';
+        const platformType = (app.target && app.target.type) || 'CH';
+        const isStarted = appStatus === 'STARTED' || appStatus === 'RUNNING';
+        const actionText = isStarted ? 'Stop' : 'Start';
+        const actionIcon = isStarted ? 'stop' : 'play_arrow';
+        const actionColor = isStarted ? 'rgba(220,53,69,0.1)' : 'rgba(40,167,69,0.1)';
+        const actionTextColor = isStarted ? '#d73a49' : '#2ea043';
+        
+        return `
+        <tr id="app-row-${idx}">
+            <td style="padding-left: 24px;">
+                <input type="checkbox" class="app-checkbox" value="${idx}" onclick="updateActionButtons()">
             </td>
-            <td>${app.muleVersion || 'N/A'}</td>
+            <td><strong>${appName}</strong></td>
+            <td id="status-col-${idx}">
+                <span class="status-badge ${isStarted ? 'status-success' : 'status-error'}">${appStatus}</span>
+            </td>
+            <td><span class="status-badge" style="background:rgba(255,255,255,0.05);">${platformType}</span></td>
+            <td>${appMule}</td>
             <td style="text-align: right; padding-right: 24px;">
-                <button class="m3-button" style="background:none; border:1px solid var(--md-sys-color-outline); color:var(--md-sys-color-on-surface); padding: 6px 12px;">
-                    ${app.status === 'STARTED' ? 'Stop' : 'Start'}
+                <button class="m3-button" style="background:${actionColor}; color: ${actionTextColor}; border: none; padding: 6px 14px; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;" onclick="triggerSingle(${idx}, '${isStarted ? 'STOP' : 'START'}')">
+                    <i class="material-icons" style="font-size: 16px;">${actionIcon}</i> ${actionText}
                 </button>
             </td>
         </tr>
-    `).join('');
+    `}).join('');
+    
+    updateActionButtons();
+}
+
+function updateActionButtons() {
+    const checkboxes = document.querySelectorAll('.app-checkbox:checked');
+    document.getElementById('btn-start-multi').disabled = checkboxes.length === 0;
+    document.getElementById('btn-stop-multi').disabled = checkboxes.length === 0;
+}
+
+function toggleAllCheckboxes(source) {
+    const checkboxes = document.querySelectorAll('.app-checkbox');
+    checkboxes.forEach(cb => { cb.checked = source.checked; });
+    updateActionButtons();
+}
+
+async function triggerSingle(index, action) {
+    const orgId = document.getElementById('org-select').value;
+    const envId = document.getElementById('env-select').value;
+    const app = currentApps[index];
+    const row = document.getElementById(`app-row-${index}`);
+    const statusCol = document.getElementById(`status-col-${index}`);
+    
+    row.classList.add('row-disabled');
+    statusCol.innerHTML = '<i class="material-icons" style="animation: spin 1s linear infinite; vertical-align: middle; font-size: 16px;">autorenew</i> <span>Requesting...</span>';
+    
+    try {
+        const res = await fetch('/api/mule/app-action', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ org_id: orgId, env_id: envId, app: app, action: action })
+        });
+        const result = await res.json();
+        
+        if (result.status === 'success') {
+            statusCol.innerHTML = `<span style="color: #2ea043; font-weight: bold;">${action} INITIATED</span>`;
+        } else {
+            statusCol.innerHTML = `<span style="color: #d73a49; font-weight: bold;">FAILED</span>`;
+            alert(`Error on App [${app.id}]: ` + result.message);
+        }
+    } catch(e) {
+        statusCol.innerHTML = `<span style="color: #d73a49; font-weight: bold;">NET ERROR</span>`;
+    }
+}
+
+async function triggerMulti(action) {
+    const checkboxes = document.querySelectorAll('.app-checkbox:checked');
+    if (checkboxes.length === 0) return;
+    
+    // Disable multi buttons so they cant spam
+    document.getElementById('btn-start-multi').disabled = true;
+    document.getElementById('btn-stop-multi').disabled = true;
+    
+    const promises = Array.from(checkboxes).map(cb => {
+        const index = parseInt(cb.value);
+        return triggerSingle(index, action);
+    });
+    
+    await Promise.all(promises);
+    
+    setTimeout(() => { alert(`Bulk ${action} operations successfully triggered! Allow up to 30 seconds for the cloud status to officially update and then click Fetch Applications again.`); }, 500);
 }
 </script>
 {% endblock %}

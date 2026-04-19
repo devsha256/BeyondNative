@@ -3,16 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <title>Beyond Native | {% block title %}{% endblock %}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
     <div class="app-container">
-        <main>{% block content %}{% endblock %}</main>
         <nav class="nav-drawer">
             <div class="nav-header">
-                <h2 style="color:var(--md-sys-color-primary); margin:0;">Beyond Native</h2>
+                <h2>Beyond Native</h2>
             </div>
             
             <div class="accordion-item">
@@ -38,16 +36,66 @@
                     <a href="/mulesoft/version-comparator" class="nav-sub-item">Version Compare</a>
                 </div>
             </div>
+            
+            <div style="margin-top: auto; padding: 24px; border-top: 1px solid var(--border-light); display: flex; gap: 12px;">
+                <button title="Toggle Theme" onclick="toggleTheme()" style="background: transparent; border: none; padding: 12px; border-radius: 12px; cursor: pointer; flex: 1; display: flex; justify-content: center; align-items: center; color: var(--text-main); transition: background 0.2s ease;">
+                    <i id="theme-icon" class="material-icons" style="font-size: 24px;">dark_mode</i> 
+                </button>
+                <a href="/settings" title="Settings" style="background: transparent; border: none; padding: 12px; border-radius: 12px; cursor: pointer; flex: 1; display: flex; justify-content: center; align-items: center; color: var(--text-main); text-decoration: none; transition: background 0.2s ease;">
+                    <i class="material-icons" style="font-size: 24px;">settings</i> 
+                </a>
+            </div>
         </nav>
+        <main>
+            {% block content %}{% endblock %}
+        </main>
     </div>
     <script>
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            if (icon && text) {
+                if (theme === 'dark') {
+                    icon.innerText = 'light_mode';
+                    text.innerText = 'Switch to Light Mode';
+                } else {
+                    icon.innerText = 'dark_mode';
+                    text.innerText = 'Switch to Dark Mode';
+                }
+            }
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const target = current === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('bn-theme', target);
+            applyTheme(target);
+        }
+
+        const savedTheme = localStorage.getItem('bn-theme');
+        if (savedTheme) {
+            applyTheme(savedTheme);
+        } else {
+            const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            applyTheme(isDark ? 'dark' : 'light');
+        }
+
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('bn-theme')) {
+                applyTheme(e.matches ? 'dark' : 'light');
+            }
+        });
+
         function toggleAccordion(contentId, headId) {
             const content = document.getElementById(contentId);
             const head = document.getElementById(headId);
             const isShowing = content.classList.contains('show');
             document.querySelectorAll('.accordion-content').forEach(el => el.classList.remove('show'));
+            document.querySelectorAll('.accordion-header').forEach(el => el.classList.remove('active'));
             if (!isShowing) { content.classList.add('show'); head.classList.add('active'); }
         }
+
         window.onload = () => {
             const path = window.location.pathname;
             if (path.includes('devops')) toggleAccordion('content-devops', 'head-devops');
