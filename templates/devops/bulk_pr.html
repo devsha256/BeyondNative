@@ -14,10 +14,10 @@
 <div id="step-discovery">
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px;">
         <div class="m3-card">
-            <h3><i class="material-icons">search</i> Prefix Scan</h3>
-            <p>Scan Azure for matching names.</p>
+            <h3><i class="material-icons">search</i> Wildcard Scan</h3>
+            <p>Scan Azure using prefix or wildcards.</p>
             <div style="display: flex; gap: 8px; margin-top: 12px;">
-                <input type="text" id="prefix" class="m3-input" placeholder="e.g. mapi-" style="margin:0;">
+                <input type="text" id="prefix" class="m3-input" placeholder="e.g. mapi- or *core*" style="margin:0;">
                 <button class="m3-button" onclick="searchRepos()">Scan</button>
             </div>
         </div>

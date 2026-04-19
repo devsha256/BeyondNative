@@ -1,6 +1,7 @@
 import os
 import base64
 import requests
+import fnmatch
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -21,18 +22,23 @@ class AzureDevOpsManager:
             "Content-Type": "application/json"
         }
 
-    def get_repositories(self, prefix=""):
+    def get_repositories(self, pattern=""):
         url = f"{self.base_url}/git/repositories?api-version=7.1"
         response = requests.get(url, headers=self.headers)
         if response.status_code == 200:
             repos = response.json().get('value', [])
+            
+            # If no wildcard characters are present, treat it as a prefix search by appending '*'
+            if pattern and '*' not in pattern and '?' not in pattern:
+                pattern = f"{pattern}*"
+                
             return [
                 {
                     "name": r['name'],
                     "url": r['webUrl'],
                     "project": r['project']['name']
                 } 
-                for r in repos if r['name'].startswith(prefix)
+                for r in repos if not pattern or fnmatch.fnmatch(r['name'], pattern)
             ]
         return []
 
