@@ -25,6 +25,21 @@ class MuleSoftManager:
         self.http_session.mount('https://', adapter)
         self.http_session.mount('http://', adapter)
 
+    def check_connection(self):
+        """Validates if we have a working connection to Anypoint."""
+        try:
+            # Ensure we have some form of auth
+            if not self.access_token and not self.session_cookie:
+                if not self.authenticate_from_db():
+                    return False
+            
+            # Call /me to verify token validity
+            url = f"{self.anypoint_url}/accounts/api/me"
+            res = self.http_session.get(url, headers=self.get_headers(), timeout=5)
+            return res.status_code == 200
+        except:
+            return False
+
     def authenticate_from_db(self):
         bearer = db_utils.get_setting('mule_bearer')
         if bearer:

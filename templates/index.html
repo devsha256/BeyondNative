@@ -29,14 +29,16 @@
     <div style="display: flex; gap: 40px; margin-top: 24px;">
         <div>
             <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Azure DevOps Connection</div>
-            <div style="font-size: 24px; font-weight: 600; color: var(--success); margin-top: 4px; display: flex; align-items: center; gap: 8px;">
-                <i class="material-icons">check_circle</i> Healthy
+            <div style="font-size: 24px; font-weight: 600; color: {% if devops_status %}var(--success){% else %}var(--error-color){% endif %}; margin-top: 4px; display: flex; align-items: center; gap: 8px;">
+                <i class="material-icons">{% if devops_status %}check_circle{% else %}error{% endif %}</i> 
+                {% if devops_status %}Healthy{% else %}Disconnected{% endif %}
             </div>
         </div>
         <div>
             <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">MuleSoft Session</div>
-            <div style="font-size: 24px; font-weight: 600; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; gap: 8px;">
-                <i class="material-icons">pending</i> Pending Login
+            <div style="font-size: 24px; font-weight: 600; color: {% if mule_status %}var(--success){% else %}var(--text-muted){% endif %}; margin-top: 4px; display: flex; align-items: center; gap: 8px;">
+                <i class="material-icons">{% if mule_status %}check_circle{% else %}pending{% endif %}</i> 
+                {% if mule_status %}Healthy{% else %}Pending Login{% endif %}
             </div>
         </div>
     </div>

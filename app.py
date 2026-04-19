@@ -16,7 +16,9 @@ mule = MuleSoftManager()
 # --- Navigation ---
 @app.route('/')
 def home():
-    return render_template('index.html')
+    devops_status = devops.check_connection()
+    mule_status = mule.check_connection()
+    return render_template('index.html', devops_status=devops_status, mule_status=mule_status)
 
 @app.route('/devops')
 def devops_index():

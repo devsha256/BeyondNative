@@ -15,6 +15,17 @@ class AzureDevOpsManager:
         self.base_url = f"https://dev.azure.com/{self.org}/{self.project}/_apis"
         self.headers = self._get_headers()
 
+    def check_connection(self):
+        if not self.pat or not self.org:
+            return False
+        # Use a lightweight API to check auth
+        url = f"https://dev.azure.com/{self.org}/_apis/projects?api-version=7.1"
+        try:
+            res = requests.get(url, headers=self.headers, timeout=5)
+            return res.status_code == 200
+        except:
+            return False
+
     def _get_headers(self):
         auth_str = f":{self.pat}"
         b64_auth = base64.b64encode(auth_str.encode()).decode()
