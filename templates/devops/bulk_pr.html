@@ -194,18 +194,17 @@ async function initPRPhase() {
         return;
     }
 
-    const fetchBranches = async (name) => {
-        try {
-            const branchRes = await fetch(`/api/branches/${encodeURIComponent(name)}`);
-            const branches = await branchRes.json();
-            return { name, branches };
-        } catch (e) {
-            console.error(e);
-            return { name, branches: [] };
-        }
-    };
-
-    const results = await Promise.all(selectedReposForPR.map(fetchBranches));
+    let results = [];
+    try {
+        const res = await fetch('/api/bulk-branches', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ repos: selectedReposForPR })
+        });
+        results = await res.json();
+    } catch (e) {
+        console.error("Error fetching branches:", e);
+    }
     
     tbody.innerHTML = '';
     

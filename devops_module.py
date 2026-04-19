@@ -36,6 +36,18 @@ class AzureDevOpsManager:
             ]
         return []
 
+    def get_repository(self, repo_name):
+        url = f"{self.base_url}/git/repositories/{repo_name}?api-version=7.1"
+        response = requests.get(url, headers=self.headers)
+        if response.status_code == 200:
+            r = response.json()
+            return {
+                "name": r['name'],
+                "url": r['webUrl'],
+                "project": r['project']['name']
+            }
+        return None
+
     def get_branches(self, repo_name):
         url = f"{self.base_url}/git/repositories/{repo_name}/refs?filter=heads/&api-version=7.1"
         response = requests.get(url, headers=self.headers)

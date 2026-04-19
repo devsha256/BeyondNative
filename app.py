@@ -48,13 +48,29 @@ def extract_repos():
 @app.route('/api/extract-by-file', methods=['POST'])
 def extract_by_file():
     repo_names = request.json.get('repos', [])
-    all_repos = devops.get_repositories("") 
-    matched = [r for r in all_repos if r['name'] in repo_names]
+    matched = []
+    with ThreadPoolExecutor(max_workers=20) as executor:
+        results = executor.map(devops.get_repository, repo_names)
+        for r in results:
+            if r:
+                matched.append(r)
     return jsonify({"repositories": matched})
 
 @app.route('/api/branches/<repo_name>')
 def get_branches(repo_name):
     return jsonify(devops.get_branches(repo_name))
+
+@app.route('/api/bulk-branches', methods=['POST'])
+def bulk_get_branches():
+    repo_names = request.json.get('repos', [])
+    def fetch_branches(repo_name):
+        return {
+            "name": repo_name,
+            "branches": devops.get_branches(repo_name)
+        }
+    with ThreadPoolExecutor(max_workers=20) as executor:
+        results = list(executor.map(fetch_branches, repo_names))
+    return jsonify(results)
 
 @app.route('/api/repo-details', methods=['GET'])
 def get_repo_details():
