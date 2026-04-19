@@ -272,7 +272,7 @@ class MuleSoftManager:
         headers["X-ANYPNT-ORG-ID"] = org_id
         headers["X-ANYPNT-ENV-ID"] = env_id
         
-        target_type = app_data.get('target', {}).get('type', 'Unknown')
+        target_type = app_data.get('targetType') or app_data.get('target', {}).get('type', 'Unknown')
         app_id = app_data.get('id')
         app_domain = app_data.get('fullDomain') or app_data.get('name') or (app_data.get('artifact', {}).get('name'))
         

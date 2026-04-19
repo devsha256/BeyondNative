@@ -47,14 +47,30 @@
 </div>
 
 <div id="results-card" class="m3-card table-container" style="display: none; padding: 0; margin-top: 24px;">
-    <div
-        style="padding: 24px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center;">
-        <h3 style="margin: 0;">Comparison Matrix</h3>
-        <select id="version-type" class="m3-input" style="width: auto; padding: 6px 12px; font-size: 0.9rem;"
-            onchange="renderMatrix()">
-            <option value="appVersion" selected>Compare Application/Artifact Versions</option>
-            <option value="muleVersion">Compare Mule Runtime Versions</option>
-        </select>
+    <div style="padding: 24px; border-bottom: 1px solid var(--border-light); display: flex; flex-direction: column; gap: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0;"><i class="material-icons" style="vertical-align: middle;">grid_view</i> Comparison Matrix</h3>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <select id="version-type" class="m3-input" style="width: auto; padding: 6px 12px; font-size: 0.9rem;" onchange="renderMatrix()">
+                    <option value="appVersion" selected>Application Versions</option>
+                    <option value="muleVersion">Runtime Versions</option>
+                </select>
+                <button class="m3-button" onclick="exportToCSV()" style="background: var(--success); color: white; padding: 8px 16px;">
+                    <i class="material-icons">download</i> Export CSV
+                </button>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 16px; align-items: center;">
+            <div style="position: relative; flex: 1;">
+                <i class="material-icons" style="position: absolute; left: 12px; top: 10px; font-size: 20px; color: var(--text-muted);">search</i>
+                <input type="text" id="search-apps" class="m3-input" placeholder="Search applications..." oninput="renderMatrix()" style="padding-left: 40px; margin: 0;">
+            </div>
+            <button class="m3-button" id="toggle-mismatch" onclick="toggleMismatchFilter()" style="background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border-light); min-width: 180px;">
+                <i class="material-icons" id="toggle-icon">filter_list</i> 
+                <span id="toggle-text">Show All Rows</span>
+            </button>
+        </div>
     </div>
     <div style="overflow-x: auto; width: 100%;">
         <table class="m3-table" id="matrix-table" style="min-width: 800px;">
@@ -75,6 +91,27 @@
         baseApps: [],
         targetAppsData: {} // Dictionary matching targetEnvId -> Array of Apps
     };
+
+    let showOnlyMismatches = false;
+
+    function toggleMismatchFilter() {
+        showOnlyMismatches = !showOnlyMismatches;
+        const btn = document.getElementById('toggle-mismatch');
+        const text = document.getElementById('toggle-text');
+        const icon = document.getElementById('toggle-icon');
+        if (showOnlyMismatches) {
+            btn.style.background = "rgba(255, 61, 113, 0.2)";
+            btn.style.borderColor = "#ff3d71";
+            text.innerText = "Mismatched Only";
+            icon.innerText = "filter_alt";
+        } else {
+            btn.style.background = "rgba(255,255,255,0.05)";
+            btn.style.borderColor = "var(--border-light)";
+            text.innerText = "Show All Rows";
+            icon.innerText = "filter_list";
+        }
+        renderMatrix();
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
         initOrgs();
@@ -167,6 +204,22 @@
             .trim();
     }
 
+    function toggleMismatchFilter() {
+        showOnlyMismatches = !showOnlyMismatches;
+        const btn = document.getElementById('toggle-mismatch');
+        const text = document.getElementById('toggle-text');
+        if (showOnlyMismatches) {
+            btn.style.background = "rgba(255, 61, 113, 0.2)";
+            btn.style.borderColor = "var(--error-color)";
+            text.innerText = "Mismatched Only";
+        } else {
+            btn.style.background = "rgba(255,255,255,0.05)";
+            btn.style.borderColor = "var(--border-light)";
+            text.innerText = "Show All";
+        }
+        renderMatrix();
+    }
+
     async function executeComparison() {
         const btn = document.getElementById('compare-btn');
         btn.innerHTML = '<i class="material-icons" style="animation: spin 1s linear infinite;">refresh</i> Extracting...';
@@ -227,6 +280,14 @@
         }
     }
 
+    function normalizeName(name) {
+        if (!name) return "";
+        // Lowercase and strip common env suffixes (-dev, -qa, -prod, etc.)
+        return name.toLowerCase()
+            .replace(/-(?:dev|qa|prod|stg|uat|test|sandbox)$/, "")
+            .trim();
+    }
+
     function compareVersions(v1, v2) {
         if (!v1 || !v2) return 0;
         // Extract semver-like strings from text or filenames
@@ -247,7 +308,7 @@
     }
 
     function extractVersion(appObj, versionType, baseValue = null) {
-        if (!appObj) return '<span style="color:var(--text-muted); opacity: 0.5;">Missing</span>';
+        if (!appObj) return '<span style="color:var(--error-color); font-weight: 600;">Not Deployed</span>';
 
         let v = 'N/A';
         if (versionType === 'muleVersion') {
@@ -256,25 +317,23 @@
             v = appObj.appVersion || 'Unknown Artifact';
         }
 
+        let isMismatch = baseValue && v !== baseValue && v !== 'N/A' && baseValue !== 'N/A' && v !== 'Unknown Artifact' && baseValue !== 'Unknown Artifact';
+        
         let style = 'background:rgba(255,255,255,0.05);';
         let mismatchIcon = '';
         let title = '';
 
-        if (baseValue && v !== 'N/A' && baseValue !== 'N/A' && v !== baseValue && v !== 'Unknown Artifact' && baseValue !== 'Unknown Artifact') {
+        if (isMismatch) {
             const diff = compareVersions(v, baseValue);
+            // Mismatch Style: Shade of Red/Black
+            style = 'background: rgba(20, 0, 0, 0.8); border: 1px solid #ff3d71; color: #ff3d71 !important; font-weight: 600; box-shadow: 0 0 8px rgba(255, 61, 113, 0.2);';
+            
             if (diff > 0) {
-                // Version is Higher (Upgrade)
-                style = 'background: rgba(255, 61, 113, 0.15); border: 1px solid rgba(255, 61, 113, 0.4); color: #ff3d71 !important; font-weight: 600;';
                 mismatchIcon = '<i class="material-icons" style="font-size:14px; vertical-align:middle; margin-right:4px;">trending_up</i>';
-                title = `Higher than Base (${baseValue})`;
-            } else if (diff < 0) {
-                // Version is Lower (Downgrade)
-                style = 'background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 61, 113, 0.6); color: #ff3d71 !important; font-weight: 600;';
-                mismatchIcon = '<i class="material-icons" style="font-size:14px; vertical-align:middle; margin-right:4px;">trending_down</i>';
-                title = `Lower than Base (${baseValue})`;
+                title = `Higher: ${v} vs Base: ${baseValue}`;
             } else {
-                // Different string but same semver value? (e.g. 1.0 vs 1.0.0)
-                style = 'background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);';
+                mismatchIcon = '<i class="material-icons" style="font-size:14px; vertical-align:middle; margin-right:4px;">trending_down</i>';
+                title = `Lower: ${v} vs Base: ${baseValue}`;
             }
         }
 
@@ -283,13 +342,16 @@
 
     function renderMatrix() {
         const versionType = document.getElementById('version-type').value;
+        const searchTerm = document.getElementById('search-apps').value.toLowerCase();
         const thead = document.getElementById('matrix-head');
         const tbody = document.getElementById('matrix-body');
+
+        if (!comparisonData.baseEnv) return;
 
         // Draw Header
         let headHTML = `<tr>
         <th style="padding-left: 24px; min-width: 250px;">Base Application Name</th>
-        <th>${comparisonData.baseEnv.name} (Base)</th>`;
+        <th style="border-right: 2px solid var(--border-light);">${comparisonData.baseEnv.name} (Base)</th>`;
 
         comparisonData.targetEnvs.forEach(env => {
             headHTML += `<th>${env.name}</th>`;
@@ -297,47 +359,111 @@
         headHTML += `</tr>`;
         thead.innerHTML = headHTML;
 
-        // Process Apps Matrix
+        // Loading and Empty states
         if (comparisonData.baseApps === null) {
-            tbody.innerHTML = `<tr><td colspan="${2 + comparisonData.targetEnvs.length}" style="text-align: center; padding: 32px;"><i class="material-icons" style="animation: spin 1s linear infinite; vertical-align: middle;">refresh</i> Loading Base Environment metadata...</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="${2 + comparisonData.targetEnvs.length}" style="text-align: center; padding: 48px; color: var(--text-muted);"><i class="material-icons" style="animation: spin 1s linear infinite; vertical-align: middle; margin-right: 8px;">refresh</i> Gathering metadata from Base Environment...</td></tr>`;
             return;
         }
 
         if (comparisonData.baseApps.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${2 + comparisonData.targetEnvs.length}" style="text-align: center; padding: 32px;">No applications deployed in Base Environment</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="${2 + comparisonData.targetEnvs.length}" style="text-align: center; padding: 48px; color: var(--text-muted);">No applications found in the selected Base Environment.</td></tr>`;
             return;
         }
 
-        tbody.innerHTML = '';
+        let bodyHTML = '';
 
         // Draw Rows
         comparisonData.baseApps.forEach(baseApp => {
-            const baseRawName = baseApp.fullDomain || baseApp.name || (baseApp.artifact && baseApp.artifact.name) || 'Unknown App';
-            const baseVersionBadge = extractVersion(baseApp, versionType);
+            const baseRawName = (baseApp.name || baseApp.fullDomain || 'Unknown App');
             
-            // Pure version value for comparison
+            // Search Filter
+            if (searchTerm && !baseRawName.toLowerCase().includes(searchTerm)) return;
+
             const baseVersionValue = (versionType === 'muleVersion') ? 
                 ((baseApp.muleVersion && baseApp.muleVersion.version) || baseApp.muleVersion || 'N/A') :
                 (baseApp.appVersion || 'Unknown Artifact');
 
-            let rowHTML = `<tr>
-                <td style="padding-left: 24px; font-weight: 500;">${baseRawName}</td>
-                <td>${baseVersionBadge}</td>
-            `;
+            const baseVersionBadge = extractVersion(baseApp, versionType);
+
+            const targetResults = [];
+            let rowHasMismatch = false;
 
             comparisonData.targetEnvs.forEach(env => {
                 const targetApps = comparisonData.targetAppsData[env.id] || [];
-                const match = targetApps.find(a => 
-                    (a.fullDomain && a.fullDomain === baseApp.fullDomain) || 
-                    (a.name && a.name === baseApp.name) ||
-                    (a.id === baseApp.id)
-                );
-                rowHTML += `<td>${extractVersion(match, versionType, baseVersionValue)}</td>`;
+                const baseNorm = normalizeName(baseRawName);
+                
+                const match = targetApps.find(a => {
+                    const targetName = a.fullDomain || a.name || (a.artifact && a.artifact.name);
+                    return normalizeName(targetName) === baseNorm || a.id === baseApp.id;
+                });
+                
+                const targetV = match ? ((versionType === 'muleVersion') ? ((match.muleVersion && match.muleVersion.version) || match.muleVersion || 'N/A') : (match.appVersion || 'Unknown Artifact')) : 'Missing';
+                
+                if (!match || targetV !== baseVersionValue) rowHasMismatch = true;
+                targetResults.push({ match: match });
+            });
+
+            // Mismatch Filter
+            if (showOnlyMismatches && !rowHasMismatch) return;
+
+            const rowStyle = rowHasMismatch ? 'background: rgba(255, 61, 113, 0.08);' : '';
+            const borderStyle = rowHasMismatch ? 'border-left: 4px solid var(--error-color);' : 'border-left: 4px solid transparent;';
+
+            let rowHTML = `<tr style="${rowStyle}">
+                <td style="padding-left: 24px; font-weight: 600; ${borderStyle}">${baseRawName}</td>
+                <td style="border-right: 2px solid var(--border-light); opacity: 0.8;">${baseVersionBadge}</td>
+            `;
+
+            targetResults.forEach(res => {
+                rowHTML += `<td>${extractVersion(res.match, versionType, baseVersionValue)}</td>`;
             });
 
             rowHTML += `</tr>`;
-            tbody.innerHTML += rowHTML;
+            bodyHTML += rowHTML;
         });
+
+        if (bodyHTML === '') {
+            tbody.innerHTML = `<tr><td colspan="${2 + comparisonData.targetEnvs.length}" style="text-align: center; padding: 48px; color: var(--text-muted);">No results match your filters.</td></tr>`;
+        } else {
+            tbody.innerHTML = bodyHTML;
+        }
+    }
+
+    function exportToCSV() {
+        const versionType = document.getElementById('version-type').value;
+        if (!comparisonData.baseApps) return;
+
+        let csv = `App Name,Base (${comparisonData.baseEnv.name}),` + 
+                  comparisonData.targetEnvs.map(e => e.name).join(',') + "\n";
+
+        comparisonData.baseApps.forEach(baseApp => {
+            const baseRawName = (baseApp.name || baseApp.fullDomain || 'Unknown App');
+            const baseV = (versionType === 'muleVersion') ? ((baseApp.muleVersion && baseApp.muleVersion.version) || baseApp.muleVersion || 'N/A') : (baseApp.appVersion || 'Unknown Artifact');
+            
+            let row = `"${baseRawName}","${baseV}"`;
+
+            comparisonData.targetEnvs.forEach(env => {
+                const targetApps = comparisonData.targetAppsData[env.id] || [];
+                const baseNorm = normalizeName(baseRawName);
+                const match = targetApps.find(a => {
+                    const targetName = a.fullDomain || a.name || (a.artifact && a.artifact.name);
+                    return normalizeName(targetName) === baseNorm || a.id === baseApp.id;
+                });
+                const v = match ? ((versionType === 'muleVersion') ? ((match.muleVersion && match.muleVersion.version) || match.muleVersion || 'N/A') : (match.appVersion || 'Unknown Artifact')) : 'Not Deployed';
+                row += `,"${v}"`;
+            });
+            csv += row + "\n";
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('hidden', '');
+        a.setAttribute('href', url);
+        a.setAttribute('download', `mule_comparison_${new Date().toISOString().slice(0,10)}.csv`);
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
     }
 </script>
 
