@@ -1,11 +1,14 @@
 import os
 import requests
 import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 import db_utils
 from logger import log
 
 load_dotenv()
+
+from requests.adapters import HTTPAdapter
 
 class MuleSoftManager:
     def __init__(self):
@@ -13,6 +16,12 @@ class MuleSoftManager:
         self.session_cookie = None
         self.xsrf_token = None
         self.access_token = None
+        
+        # Enable connection pooling to dramatically reduce TLS handshake / TCP overhead
+        self.http_session = requests.Session()
+        adapter = HTTPAdapter(pool_connections=300, pool_maxsize=300)
+        self.http_session.mount('https://', adapter)
+        self.http_session.mount('http://', adapter)
 
     def authenticate_from_db(self):
         bearer = db_utils.get_setting('mule_bearer')
@@ -24,7 +33,7 @@ class MuleSoftManager:
         client_secret = db_utils.get_setting('mule_client_secret')
         if client_id and client_secret:
             try:
-                res = requests.post(
+                res = self.http_session.post(
                     f"{self.anypoint_url}/accounts/api/v2/oauth2/token", 
                     data={"client_id": client_id, "client_secret": client_secret, "grant_type": "client_credentials"}
                 )
@@ -82,7 +91,7 @@ class MuleSoftManager:
         url_me = f"{self.anypoint_url}/accounts/api/me"
         url_orgs = f"{self.anypoint_url}/accounts/api/organizations"
         try:
-            res = requests.get(url_me, headers=self.get_headers())
+            res = self.http_session.get(url_me, headers=self.get_headers())
             log.debug(f"MuleSoft Org Fetch Status (me): {res.status_code}")
             if res.status_code == 200:
                 data = res.json()
@@ -92,7 +101,7 @@ class MuleSoftManager:
                     return data.get('memberOfOrganizations', [])
             else:
                 log.warning(f"'/me' failed with {res.status_code}. Attempting Connected App fallback to '/organizations'...")
-                res_orgs = requests.get(url_orgs, headers=self.get_headers())
+                res_orgs = self.http_session.get(url_orgs, headers=self.get_headers())
                 log.debug(f"MuleSoft Org Fetch Status (orgs): {res_orgs.status_code}")
                 if res_orgs.status_code == 200:
                     data_orgs = res_orgs.json()
@@ -110,7 +119,7 @@ class MuleSoftManager:
         """Fetches environments for the specific organization."""
         url = f"{self.anypoint_url}/accounts/api/organizations/{org_id}/environments"
         try:
-            res = requests.get(url, headers=self.get_headers())
+            res = self.http_session.get(url, headers=self.get_headers())
             if res.status_code == 200:
                 return res.json().get('data', [])
         except Exception as e:
@@ -126,7 +135,7 @@ class MuleSoftManager:
         }
         url = f"{self.anypoint_url}/amc/adam/api/organizations/{org_id}/environments/{env_id}/deployments/{app_id}"
         try:
-            res = requests.get(url, headers=headers)
+            res = self.http_session.get(url, headers=headers)
             if res.status_code == 200:
                 return res.json()
         except:
@@ -134,23 +143,51 @@ class MuleSoftManager:
         return None
 
     def get_runtime_apps(self, org_id, env_id, extract_details=False):
-        url = f"{self.anypoint_url}/cloudhub/api/v2/applications"
+        """Fetches all types of applications from Runtime Manager ARMUI."""
+        url = f"{self.anypoint_url}/armui/api/v2/applications"
         headers = self.get_headers()
         headers["X-ANYPNT-ORG-ID"] = org_id
         headers["X-ANYPNT-ENV-ID"] = env_id
         
-        res = requests.get(url, headers=headers)
-        apps = res.json() if res.status_code == 200 else []
+        apps = []
+        try:
+            res = self.http_session.get(url, headers=headers)
+            if res.status_code == 200:
+                body = res.json()
+                apps = body.get('data', []) if 'data' in body else (body if isinstance(body, list) else [])
+            else:
+                log.error(f"App Fetch Failed: {res.status_code} - {res.text}")
+        except Exception as e:
+            log.error(f"MuleSoft App Fetch Error: {e}")
+            return []
 
         if extract_details and apps:
             # Parallelize the 'deep dive' into each app's metadata
             def fetch_details(app):
-                # Simulated sub-call for detailed metadata
-                detail_url = f"{self.anypoint_url}/cloudhub/api/v2/applications/{app['domain']}"
-                d_res = requests.get(detail_url, headers=headers)
-                return {**app, **d_res.json()} if d_res.status_code == 200 else app
+                try:
+                    target_type = app.get('target', {}).get('type', 'Unknown')
+                    app_id = app.get('id')
+                    
+                    # CloudHub 2.0 / AMC
+                    if target_type in ["MC", "RTF"] and app_id:
+                        details = self.get_app_details(org_id, env_id, app_id)
+                        if details:
+                            app['adam_details'] = details
+                            
+                    # CloudHub 1.0 Legacy
+                    else:
+                        domain = app.get('domain') or app.get('name')
+                        if domain:
+                            detail_url = f"{self.anypoint_url}/cloudhub/api/v2/applications/{domain}"
+                            d_res = self.http_session.get(detail_url, headers=headers, timeout=10)
+                            if d_res.status_code == 200:
+                                return {**app, **d_res.json()}
+                except Exception as e:
+                    log.error(f"Failed deep-dive details for app: {e}")
+                            
+                return app
 
-            with ThreadPoolExecutor(max_workers=10) as executor:
+            with ThreadPoolExecutor(max_workers=50) as executor:
                 apps = list(executor.map(fetch_details, apps))
         
         return apps
@@ -171,7 +208,7 @@ class MuleSoftManager:
                 target_state = "STARTED" if action == "START" else "STOPPED"
                 url = f"{self.anypoint_url}/amc/application-manager/api/v2/organizations/{org_id}/environments/{env_id}/deployments/{app_id}"
                 payload = {"application": {"desiredState": target_state}}
-                res = requests.patch(url, headers=headers, json=payload)
+                res = self.http_session.patch(url, headers=headers, json=payload)
                 if res.status_code in [200, 202, 204]:
                     log.info(f"Triggered {action} for AMC App {app_id}")
                     return True, ""
@@ -182,7 +219,7 @@ class MuleSoftManager:
                 domain = app_domain if app_domain else app_id
                 url = f"{self.anypoint_url}/cloudhub/api/v2/applications/{domain}/status"
                 payload = {"status": target_state}
-                res = requests.post(url, headers=headers, json=payload)
+                res = self.http_session.post(url, headers=headers, json=payload)
                 if res.status_code in [200, 202, 204]:
                     log.info(f"Triggered {action} for CH1 App {domain}")
                     return True, ""

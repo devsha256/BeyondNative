@@ -179,6 +179,9 @@
         // Create a single list of all Env IDs to fetch
         const allEnvs = [{ id: baseId, isBase: true }, ...targets.map(t => ({ id: t.id, isBase: false }))];
 
+        comparisonData.baseEnv = globalEnvs.find(e => e.id === baseId);
+        comparisonData.targetEnvs = targets;
+
         try {
             // Fire ALL requests at once. No 'await' inside the map!
             const fetchPromises = allEnvs.map(env =>
