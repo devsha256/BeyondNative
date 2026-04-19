@@ -225,10 +225,11 @@
         }
         else if (versionType === 'appVersion') {
             const v = (appObj.adam_details && appObj.adam_details.application && appObj.adam_details.application.ref ? appObj.adam_details.application.ref.version : null) ||
-                (appObj.application && appObj.application.version) ||
-                (appObj.artifact && appObj.artifact.name) ||
                 (appObj.target && appObj.target.deploymentSettings && appObj.target.deploymentSettings.artifact ? appObj.target.deploymentSettings.artifact.name : null) ||
+                (appObj.application && appObj.application.version) ||
+                appObj.fileName ||
                 appObj.filename ||
+                (appObj.artifact && appObj.artifact.name) ||
                 'Unknown Artifact';
             return `<span class="status-badge" style="background:rgba(255,255,255,0.05);">${v}</span>`;
         }

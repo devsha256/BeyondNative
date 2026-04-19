@@ -189,10 +189,13 @@ class MuleSoftManager:
                     
                     # CloudHub 2.0 / AMC
                     if target_type in ["MC", "RTF"] and app_id:
-                        if app_id in amc_bulk:
+                        # Ensure the bulk mapping actually contains the version artifact, otherwise it's superficial API data.
+                        has_deep_ref = app_id in amc_bulk and amc_bulk[app_id].get('application', {}).get('ref')
+                        
+                        if has_deep_ref:
                             app['adam_details'] = amc_bulk[app_id]
                         else:
-                            # Fallback individual query
+                            # Fallback individual query natively. (Super-fast pooled request.)
                             details = self.get_app_details(org_id, env_id, app_id)
                             if details:
                                 app['adam_details'] = details
