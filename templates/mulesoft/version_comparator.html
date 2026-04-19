@@ -227,18 +227,58 @@
         }
     }
 
-    function extractVersion(appObj, versionType) {
-        if (!appObj) return '<span style="color:var(--text-muted);">Not Deployed</span>';
+    function compareVersions(v1, v2) {
+        if (!v1 || !v2) return 0;
+        // Extract semver-like strings from text or filenames
+        const extract = (s) => {
+            const match = s.match(/(\d+(?:\.\d+)+)/);
+            return match ? match[1] : s;
+        };
+        const s1 = extract(v1).split('.').map(n => parseInt(n) || 0);
+        const s2 = extract(v2).split('.').map(n => parseInt(n) || 0);
+        
+        for (let i = 0; i < Math.max(s1.length, s2.length); i++) {
+            const n1 = s1[i] || 0;
+            const n2 = s2[i] || 0;
+            if (n1 > n2) return 1;
+            if (n1 < n2) return -1;
+        }
+        return 0;
+    }
 
+    function extractVersion(appObj, versionType, baseValue = null) {
+        if (!appObj) return '<span style="color:var(--text-muted); opacity: 0.5;">Missing</span>';
+
+        let v = 'N/A';
         if (versionType === 'muleVersion') {
-            const v = (appObj.muleVersion && appObj.muleVersion.version) || appObj.muleVersion || 'N/A';
-            return `<span class="status-badge" style="background:rgba(255,255,255,0.05);">${v}</span>`;
+            v = (appObj.muleVersion && appObj.muleVersion.version) || appObj.muleVersion || 'N/A';
+        } else {
+            v = appObj.appVersion || 'Unknown Artifact';
         }
-        else if (versionType === 'appVersion') {
-            const v = appObj.appVersion || 'Unknown Artifact';
-            return `<span class="status-badge" style="background:rgba(255,255,255,0.05);">${v}</span>`;
+
+        let style = 'background:rgba(255,255,255,0.05);';
+        let mismatchIcon = '';
+        let title = '';
+
+        if (baseValue && v !== 'N/A' && baseValue !== 'N/A' && v !== baseValue && v !== 'Unknown Artifact' && baseValue !== 'Unknown Artifact') {
+            const diff = compareVersions(v, baseValue);
+            if (diff > 0) {
+                // Version is Higher (Upgrade)
+                style = 'background: rgba(255, 61, 113, 0.15); border: 1px solid rgba(255, 61, 113, 0.4); color: #ff3d71 !important; font-weight: 600;';
+                mismatchIcon = '<i class="material-icons" style="font-size:14px; vertical-align:middle; margin-right:4px;">trending_up</i>';
+                title = `Higher than Base (${baseValue})`;
+            } else if (diff < 0) {
+                // Version is Lower (Downgrade)
+                style = 'background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 61, 113, 0.6); color: #ff3d71 !important; font-weight: 600;';
+                mismatchIcon = '<i class="material-icons" style="font-size:14px; vertical-align:middle; margin-right:4px;">trending_down</i>';
+                title = `Lower than Base (${baseValue})`;
+            } else {
+                // Different string but same semver value? (e.g. 1.0 vs 1.0.0)
+                style = 'background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);';
+            }
         }
-        return 'N/A';
+
+        return `<span class="status-badge" style="${style}" title="${title}">${mismatchIcon}${v}</span>`;
     }
 
     function renderMatrix() {
@@ -268,41 +308,36 @@
             return;
         }
 
-        let bodyHTML = '';
+        tbody.innerHTML = '';
 
-        // For every base app, find its peer using the normalized name
+        // Draw Rows
         comparisonData.baseApps.forEach(baseApp => {
             const baseRawName = baseApp.fullDomain || baseApp.name || (baseApp.artifact && baseApp.artifact.name) || 'Unknown App';
-            const baseNameNorm = normalizeName(baseRawName);
+            const baseVersionBadge = extractVersion(baseApp, versionType);
+            
+            // Pure version value for comparison
+            const baseVersionValue = (versionType === 'muleVersion') ? 
+                ((baseApp.muleVersion && baseApp.muleVersion.version) || baseApp.muleVersion || 'N/A') :
+                (baseApp.appVersion || 'Unknown Artifact');
 
-            bodyHTML += `<tr>
-            <td style="padding-left: 24px; border-left: 4px solid var(--accent-light);">
-                <strong>${baseRawName}</strong>
-            </td>
-            <td>${extractVersion(baseApp, versionType)}</td>`;
+            let rowHTML = `<tr>
+                <td style="padding-left: 24px; font-weight: 500;">${baseRawName}</td>
+                <td>${baseVersionBadge}</td>
+            `;
 
             comparisonData.targetEnvs.forEach(env => {
                 const targetApps = comparisonData.targetAppsData[env.id] || [];
-
-                // Hunt for matching app using normalization
-                let matchingApp = targetApps.find(ta => {
-                    const taRawName = ta.fullDomain || ta.name || (ta.artifact && ta.artifact.name);
-                    return normalizeName(taRawName) === baseNameNorm;
-                });
-
-                if (matchingApp) {
-                    // If they perfectly match the extracted version exactly, we could turn it green
-                    // But for now just display it normally
-                    bodyHTML += `<td>${extractVersion(matchingApp, versionType)}</td>`;
-                } else {
-                    bodyHTML += `<td><span style="color:var(--error-color); font-size:12px; font-style:italic;">Missing</span></td>`;
-                }
+                const match = targetApps.find(a => 
+                    (a.fullDomain && a.fullDomain === baseApp.fullDomain) || 
+                    (a.name && a.name === baseApp.name) ||
+                    (a.id === baseApp.id)
+                );
+                rowHTML += `<td>${extractVersion(match, versionType, baseVersionValue)}</td>`;
             });
 
-            bodyHTML += `</tr>`;
+            rowHTML += `</tr>`;
+            tbody.innerHTML += rowHTML;
         });
-
-        tbody.innerHTML = bodyHTML;
     }
 </script>
 
