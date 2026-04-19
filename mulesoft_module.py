@@ -50,14 +50,24 @@ class MuleSoftManager:
         client_secret = db_utils.get_setting('mule_client_secret')
         if client_id and client_secret:
             try:
+                log.info(f"Attempting OAuth2 login for Client ID: {client_id[:8]}...")
                 res = self.http_session.post(
                     f"{self.anypoint_url}/accounts/api/v2/oauth2/token", 
-                    data={"client_id": client_id, "client_secret": client_secret, "grant_type": "client_credentials"}
+                    json={
+                        "client_id": client_id, 
+                        "client_secret": client_secret, 
+                        "grant_type": "client_credentials"
+                    },
+                    timeout=10
                 )
                 if res.status_code == 200:
                     self.access_token = res.json().get('access_token')
+                    log.info("OAuth2 Authentication Successful")
                     return True
-            except: pass
+                else:
+                    log.error(f"OAuth2 Failed: {res.status_code} - {res.text}")
+            except Exception as e:
+                log.error(f"MuleSoft Auth Error: {e}")
         return False
 
     def set_session(self, curl_string):
@@ -109,6 +119,12 @@ class MuleSoftManager:
         url_orgs = f"{self.anypoint_url}/accounts/api/organizations"
         try:
             res = self.http_session.get(url_me, headers=self.get_headers())
+            
+            if res.status_code == 401:
+                log.warning("Token expired during Org fetch. Re-auth...")
+                self.access_token = None
+                res = self.http_session.get(url_me, headers=self.get_headers())
+
             log.debug(f"MuleSoft Org Fetch Status (me): {res.status_code}")
             if res.status_code == 200:
                 data = res.json()
@@ -137,6 +153,11 @@ class MuleSoftManager:
         url = f"{self.anypoint_url}/accounts/api/organizations/{org_id}/environments"
         try:
             res = self.http_session.get(url, headers=self.get_headers())
+            
+            if res.status_code == 401:
+                self.access_token = None
+                res = self.http_session.get(url, headers=self.get_headers())
+
             if res.status_code == 200:
                 return res.json().get('data', [])
         except Exception as e:
@@ -158,9 +179,22 @@ class MuleSoftManager:
         disc_url = f"{self.anypoint_url}/armui/api/v2/applications"
         try:
             res = self.http_session.get(disc_url, headers=headers, timeout=15)
-            apps = res.json().get('data', []) if res.status_code == 200 else []
+            
+            # Handle 401 Unauthorized (Expired Token)
+            if res.status_code == 401:
+                log.warning("MuleSoft session expired. Re-authenticating...")
+                self.access_token = None
+                headers = self.get_headers() # Triggers re-auth
+                headers.update({ "X-ANYPNT-ORG-ID": org_id, "X-ANYPNT-ENV-ID": env_id })
+                res = self.http_session.get(disc_url, headers=headers, timeout=15)
+
+            if res.status_code != 200:
+                log.error(f"Discovery Failed: {res.status_code} - {res.text}")
+                return []
+                
+            apps = res.json().get('data', [])
         except Exception as e:
-            log.error(f"App Discovery Failed: {e}")
+            log.error(f"App Discovery Error: {e}")
             return []
 
         if not extract_details or not apps:
