@@ -133,7 +133,7 @@ class MuleSoftManager:
             pass
         return None
 
-    def get_runtime_apps(self, org_id, env_id):
+    def get_runtime_apps(self, org_id, env_id, extract_details=False):
         """Fetches applications from Runtime Manager."""
         url = f"{self.anypoint_url}/armui/api/v2/applications"
         headers = self.get_headers()
@@ -150,7 +150,7 @@ class MuleSoftManager:
             return []
             
         # Parallel Enrichment for CloudHub 2.0 / AMC metadata
-        if apps:
+        if apps and extract_details:
             with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
                 future_to_app = {}
                 for app in apps:

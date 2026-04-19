@@ -184,7 +184,7 @@
             const baseRes = await fetch('/api/mule/apps', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ org_id: orgId, env_id: baseId })
+                body: JSON.stringify({ org_id: orgId, env_id: baseId, extract_details: true })
             });
             comparisonData.baseApps = await baseRes.json();
 
@@ -193,7 +193,7 @@
                 fetch('/api/mule/apps', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ org_id: orgId, env_id: t.id })
+                    body: JSON.stringify({ org_id: orgId, env_id: t.id, extract_details: true })
                 }).then(r => r.json()).then(payload => ({ envId: t.id, apps: payload }))
             );
 

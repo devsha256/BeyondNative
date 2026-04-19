@@ -146,11 +146,11 @@ def get_mule_envs(org_id):
     return jsonify(mule.get_environments(org_id))
 
 @app.route('/api/mule/apps', methods=['POST'])
-def get_mule_apps():
+def fetch_mule_apps():
     data = request.json
-    org_id = data.get('org_id')
-    env_id = data.get('env_id')
-    return jsonify(mule.get_runtime_apps(org_id, env_id))
+    extract_details = data.get('extract_details', False)
+    apps = mule.get_runtime_apps(data.get('org_id'), data.get('env_id'), extract_details=extract_details)
+    return jsonify(apps)
 
 @app.route('/api/mule/app-action', methods=['POST'])
 def change_mule_app_status():
