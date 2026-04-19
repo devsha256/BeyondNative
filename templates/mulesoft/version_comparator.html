@@ -233,16 +233,11 @@
         if (!appObj) return '<span style="color:var(--text-muted);">Not Deployed</span>';
 
         if (versionType === 'muleVersion') {
-            const v = (appObj.muleVersion && appObj.muleVersion.version) || appObj.muleVersion || (appObj.target && appObj.target.deploymentSettings ? appObj.target.deploymentSettings.muleVersion : null);
-            return v ? `<span class="status-badge" style="background:rgba(255,255,255,0.05);">${v}</span>` : 'N/A';
+            const v = (appObj.muleVersion && appObj.muleVersion.version) || appObj.muleVersion || 'N/A';
+            return `<span class="status-badge" style="background:rgba(255,255,255,0.05);">${v}</span>`;
         }
         else if (versionType === 'appVersion') {
-            const v = (appObj.adam_details && appObj.adam_details.application && appObj.adam_details.application.ref ? appObj.adam_details.application.ref.version : null) ||
-                appObj.fileName ||
-                appObj.filename ||
-                (appObj.application && appObj.application.version) ||
-                (appObj.target && appObj.target.deploymentSettings && appObj.target.deploymentSettings.artifact ? appObj.target.deploymentSettings.artifact.name : null) ||
-                'Unknown Artifact';
+            const v = appObj.appVersion || 'Unknown Artifact';
             return `<span class="status-badge" style="background:rgba(255,255,255,0.05);">${v}</span>`;
         }
         return 'N/A';

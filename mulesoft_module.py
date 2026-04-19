@@ -126,118 +126,66 @@ class MuleSoftManager:
             log.error(f"MuleSoft Env Fetch Error: {e}")
         return []
 
-    def get_app_details(self, org_id, env_id, app_id):
-        """Fetches deep details from the ADAM api for AMC deployments"""
-        # Minimal headers required for details API
-        headers = {
-            "Accept": "application/json, text/plain, */*",
-            "Authorization": f"Bearer {self.access_token}" if self.access_token else ""
-        }
-        url = f"{self.anypoint_url}/amc/adam/api/organizations/{org_id}/environments/{env_id}/deployments/{app_id}"
-        try:
-            res = self.http_session.get(url, headers=headers, timeout=10)
-            if res.status_code == 200:
-                return res.json()
-        except:
-            pass
-        return None
-
     def get_runtime_apps(self, org_id, env_id, extract_details=False):
-        """Fetches all types of applications from Runtime Manager ARMUI."""
-        url = f"{self.anypoint_url}/armui/api/v2/applications"
-        headers = self.get_headers() # Refreshes token if needed
-        headers["X-ANYPNT-ORG-ID"] = org_id
-        headers["X-ANYPNT-ENV-ID"] = env_id
+        """Unified Discovery & Parallel Version Extraction"""
+        headers = self.get_headers()
+        headers.update({ "X-ANYPNT-ORG-ID": org_id, "X-ANYPNT-ENV-ID": env_id })
         
-        apps = []
+        # 1. Base List Discovery (Very Fast)
+        disc_url = f"{self.anypoint_url}/armui/api/v2/applications"
         try:
-            res = self.http_session.get(url, headers=headers, timeout=20)
-            if res.status_code == 200:
-                body = res.json()
-                apps = body.get('data', []) if 'data' in body else (body if isinstance(body, list) else [])
-            else:
-                log.error(f"App Fetch Failed: {res.status_code} - {res.text}")
+            res = self.http_session.get(disc_url, headers=headers, timeout=15)
+            apps = res.json().get('data', []) if res.status_code == 200 else []
         except Exception as e:
-            log.error(f"MuleSoft App Fetch Error: {e}")
+            log.error(f"App Discovery Failed: {e}")
             return []
 
-        if extract_details and apps:
-            # 1. Bulk extraction for CH1 (99% chance of getting version here)
-            ch1_bulk = {}
+        if not extract_details or not apps:
+            return apps
+
+        # 2. Truly Parallel Deep Scan (N requests at once)
+        def enrich(app):
             try:
-                ch1_res = self.http_session.get(f"{self.anypoint_url}/cloudhub/api/v2/applications", headers=headers, timeout=5)
-                if ch1_res.status_code == 200:
-                    for a in ch1_res.json():
-                        if a.get('domain'): ch1_bulk[a['domain']] = a
+                target = app.get('target', {}).get('type', '')
+                app_id = app.get('id')
+                
+                # CloudHub 2.0 / RTF Path
+                if target in ["MC", "RTF"]:
+                    d_url = f"{self.anypoint_url}/amc/adam/api/organizations/{org_id}/environments/{env_id}/deployments/{app_id}"
+                    d_res = self.http_session.get(d_url, headers=headers, timeout=8)
+                    if d_res.status_code == 200:
+                        app['adam_details'] = d_res.json()
+                        
+                # CloudHub 1.0 Path
+                else:
+                    domain = (app.get('domain') or app.get('name', '')).split('.cloudhub.io')[0]
+                    ch1_url = f"{self.anypoint_url}/cloudhub/api/v2/applications/{domain}"
+                    d_res = self.http_session.get(ch1_url, headers=headers, timeout=8)
+                    if d_res.status_code == 200:
+                        app.update(d_res.json())
             except Exception: pass
+            return app
 
-            # 2. Bulk extraction for AMC (90% chance of getting version here)
-            amc_bulk = {}
-            try:
-                amc_bulk_url = f"{self.anypoint_url}/amc/application-manager/api/v2/organizations/{org_id}/environments/{env_id}/deployments"
-                amc_res = self.http_session.get(amc_bulk_url, headers=headers, timeout=5)
-                if amc_res.status_code == 200:
-                    for item in amc_res.json().get('items', []):
-                        if item.get('id'): amc_bulk[item['id']] = item
-            except Exception: pass
+        with ThreadPoolExecutor(max_workers=50) as executor:
+            apps = list(executor.map(enrich, apps))
 
-            # 3. Targeted Parallel Fallback for strictly missing details
-            def resolve_remaining(app):
-                try:
-                    target_type = app.get('target', {}).get('type', 'Unknown')
-                    app_id = app.get('id')
-                    
-                    # Already got AMC version from bulk?
-                    if target_type in ["MC", "RTF"] and app_id in amc_bulk:
-                        # Only use bulk if it has the version payload
-                        if amc_bulk[app_id].get('application', {}).get('ref'):
-                            app['adam_details'] = amc_bulk[app_id]
-                            return app
+        # 3. Clean Minimum Payload Pruning
+        return [self._prune_app(a) for a in apps]
 
-                    # Already got CH1 version from bulk?
-                    domain = app.get('domain') or app.get('name')
-                    if target_type not in ["MC", "RTF"] and domain:
-                        clean_domain = domain.split('.cloudhub.io')[0] if '.cloudhub.io' in domain else domain
-                        if clean_domain in ch1_bulk:
-                            app.update({k: v for k, v in ch1_bulk[clean_domain].items() if v is not None})
-                            if app.get('filename'): return app
-
-                    # FALLBACK: Surgical individual fetch if bulk missed it
-                    if target_type in ["MC", "RTF"] and app_id:
-                        details = self.get_app_details(org_id, env_id, app_id)
-                        if details: app['adam_details'] = details
-                    elif domain:
-                        clean_domain = domain.split('.cloudhub.io')[0] if '.cloudhub.io' in domain else domain
-                        d_res = self.http_session.get(f"{self.anypoint_url}/cloudhub/api/v2/applications/{clean_domain}", headers=headers, timeout=5)
-                        if d_res.status_code == 200: app.update(d_res.json())
-                except Exception: pass
-                return app
-
-            # Only thread apps that don't have enough metadata yet
-            with ThreadPoolExecutor(max_workers=50) as executor:
-                apps = list(executor.map(resolve_remaining, apps))
-
-        # Final Pruning: Only return the minimum required keys to reduce payload size
-        pruned_apps = []
-        for a in apps:
-            p = {
-                "id": a.get("id"),
-                "name": a.get("name"),
-                "domain": a.get("domain"),
-                "fullDomain": a.get("fullDomain"),
-                "muleVersion": a.get("muleVersion"),
-                "filename": a.get("filename") or a.get("fileName"),
-                "target": a.get("target"),
-                "application": a.get("application") # CH2 summary might have version info here
-            }
-            if a.get("adam_details"):
-                # Drill down to only the semver ref in adam_details
-                ref = a["adam_details"].get("application", {}).get("ref")
-                if ref:
-                    p["adam_details"] = {"application": {"ref": ref}}
-            pruned_apps.append(p)
+    def _prune_app(self, a):
+        """Strip the world, return only version essence."""
+        v = None
+        if a.get('adam_details'):
+            v = a['adam_details'].get('application', {}).get('ref', {}).get('version')
         
-        return pruned_apps
+        return {
+            "id": a.get("id"),
+            "name": a.get("name"),
+            "fullDomain": a.get("fullDomain") or a.get("domain"),
+            "muleVersion": a.get("muleVersion"),
+            "appVersion": v or a.get("filename") or a.get("fileName") or "Unknown Artifact",
+            "targetType": a.get("target", {}).get("type")
+        }
 
     def change_app_status(self, org_id, env_id, app_data, action):
         """action is 'START' or 'STOP'"""
