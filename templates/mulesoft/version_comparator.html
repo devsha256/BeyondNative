@@ -169,43 +169,44 @@
 
     async function executeComparison() {
         const btn = document.getElementById('compare-btn');
-        btn.innerHTML = '<i class="material-icons" style="animation: spin 1s linear infinite;">refresh</i> Extracting Metadata...';
+        btn.innerHTML = '<i class="material-icons" style="animation: spin 1s linear infinite;">refresh</i> Extracting...';
         btn.disabled = true;
 
         const orgId = document.getElementById('org-select').value;
         const baseId = document.getElementById('base-env-select').value;
         const targets = Array.from(document.getElementById('target-envs-select').selectedOptions).map(o => ({ id: o.value, name: o.text }));
 
-        comparisonData.baseEnv = globalEnvs.find(e => e.id === baseId);
-        comparisonData.targetEnvs = targets;
+        // Create a single list of all Env IDs to fetch
+        const allEnvs = [{ id: baseId, isBase: true }, ...targets.map(t => ({ id: t.id, isBase: false }))];
 
         try {
-            // Fetch Base Environment Apps
-            const baseRes = await fetch('/api/mule/apps', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ org_id: orgId, env_id: baseId, extract_details: true })
-            });
-            comparisonData.baseApps = await baseRes.json();
-
-            // Fetch Target Environments Apps via Promise.all for speed
-            const fetchPromises = targets.map(t =>
+            // Fire ALL requests at once. No 'await' inside the map!
+            const fetchPromises = allEnvs.map(env =>
                 fetch('/api/mule/apps', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ org_id: orgId, env_id: t.id, extract_details: true })
-                }).then(r => r.json()).then(payload => ({ envId: t.id, apps: payload }))
+                    body: JSON.stringify({ org_id: orgId, env_id: env.id, extract_details: true })
+                }).then(r => r.json()).then(data => ({ envId: env.id, data: data, isBase: env.isBase }))
             );
 
-            const results = await Promise.all(fetchPromises);
+            const allResults = await Promise.all(fetchPromises);
+
+            // Process results
             comparisonData.targetAppsData = {};
-            results.forEach(r => comparisonData.targetAppsData[r.envId] = r.apps);
+            allResults.forEach(res => {
+                if (res.isBase) {
+                    comparisonData.baseApps = res.data;
+                } else {
+                    comparisonData.targetAppsData[res.envId] = res.data;
+                }
+            });
 
             renderMatrix();
             document.getElementById('results-card').style.display = 'block';
 
         } catch (e) {
-            alert("An error occurred during extraction.");
+            console.error(e);
+            alert("Extraction failed. Check Flask logs for Thread timeouts.");
         } finally {
             btn.innerHTML = '<i class="material-icons">analytics</i> Compare Versions';
             btn.disabled = false;

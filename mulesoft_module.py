@@ -134,39 +134,25 @@ class MuleSoftManager:
         return None
 
     def get_runtime_apps(self, org_id, env_id, extract_details=False):
-        """Fetches applications from Runtime Manager."""
-        url = f"{self.anypoint_url}/armui/api/v2/applications"
+        url = f"{self.anypoint_url}/cloudhub/api/v2/applications"
         headers = self.get_headers()
         headers["X-ANYPNT-ORG-ID"] = org_id
         headers["X-ANYPNT-ENV-ID"] = env_id
-        apps = []
-        try:
-            res = requests.get(url, headers=headers)
-            if res.status_code == 200:
-                body = res.json()
-                apps = body.get('data', []) if 'data' in body else (body if isinstance(body, list) else [])
-        except Exception as e:
-            log.error(f"MuleSoft App Fetch Error: {e}")
-            return []
-            
-        # Parallel Enrichment for CloudHub 2.0 / AMC metadata
-        if apps and extract_details:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-                future_to_app = {}
-                for app in apps:
-                    app_id = app.get('id')
-                    target_type = app.get('target', {}).get('type', 'Unknown')
-                    if target_type in ["MC", "RTF"] and app_id:
-                        future_to_app[executor.submit(self.get_app_details, org_id, env_id, app_id)] = app
-                
-                for future in concurrent.futures.as_completed(future_to_app):
-                    app = future_to_app[future]
-                    try:
-                        details = future.result()
-                        if details:
-                            app['adam_details'] = details
-                    except:
-                        pass
+        
+        res = requests.get(url, headers=headers)
+        apps = res.json() if res.status_code == 200 else []
+
+        if extract_details and apps:
+            # Parallelize the 'deep dive' into each app's metadata
+            def fetch_details(app):
+                # Simulated sub-call for detailed metadata
+                detail_url = f"{self.anypoint_url}/cloudhub/api/v2/applications/{app['domain']}"
+                d_res = requests.get(detail_url, headers=headers)
+                return {**app, **d_res.json()} if d_res.status_code == 200 else app
+
+            with ThreadPoolExecutor(max_workers=10) as executor:
+                apps = list(executor.map(fetch_details, apps))
+        
         return apps
 
     def change_app_status(self, org_id, env_id, app_data, action):
