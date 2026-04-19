@@ -33,11 +33,15 @@ def mulesoft_index():
 
 @app.route('/mulesoft/runtime-control')
 def runtime_control():
-    return render_template('mulesoft/runtime_control.html')
+    default_org = db_utils.get_setting('mule_default_org', '')
+    default_env = db_utils.get_setting('mule_default_env', '')
+    return render_template('mulesoft/runtime_control.html', default_org=default_org, default_env=default_env)
 
 @app.route('/mulesoft/version-comparator')
 def version_comparator():
-    return render_template('mulesoft/version_comparator.html')
+    default_org = db_utils.get_setting('mule_default_org', '')
+    default_env = db_utils.get_setting('mule_default_env', '')
+    return render_template('mulesoft/version_comparator.html', default_org=default_org, default_env=default_env)
 
 # --- Azure DevOps APIs ---
 @app.route('/api/extract-repos', methods=['POST'])
@@ -121,7 +125,7 @@ def set_mule_session():
 
 @app.route('/settings')
 def settings_page():
-    keys = ['azure_org', 'azure_project', 'azure_pat', 'mule_client_id', 'mule_client_secret', 'mule_bearer']
+    keys = ['azure_org', 'azure_project', 'azure_pat', 'mule_client_id', 'mule_client_secret', 'mule_bearer', 'mule_default_org', 'mule_default_env']
     setting_vals = {k: db_utils.get_setting(k) for k in keys}
     return render_template('settings.html', settings=setting_vals)
 

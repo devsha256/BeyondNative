@@ -66,6 +66,9 @@
 </style>
 
 <script>
+const defaultOrgId = "{{ default_org }}";
+const defaultEnvId = "{{ default_env }}";
+
 let currentApps = [];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -88,6 +91,14 @@ async function initDiscovery() {
         select.innerHTML = '<option value="">Select Organization...</option>' + 
             orgs.map(o => `<option value="${o.id}">${o.name}</option>`).join('');
             
+        if (defaultOrgId) {
+            let matchedOrg = orgs.find(o => o.id === defaultOrgId || o.name === defaultOrgId);
+            if (matchedOrg) {
+                select.value = matchedOrg.id;
+                loadEnvironments(matchedOrg.id);
+            }
+        }
+            
     } catch (e) {
         document.getElementById('org-select').innerHTML = '<option value="">Error Loading Orgs. Check Database Auth.</option>';
     }
@@ -101,6 +112,15 @@ async function loadEnvironments(orgId) {
     const select = document.getElementById('env-select');
     select.innerHTML = '<option value="">Select Environment...</option>' + 
         envs.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+        
+    if (defaultEnvId) {
+        let matchedEnv = envs.find(e => e.id === defaultEnvId || e.name === defaultEnvId);
+        if (matchedEnv) {
+            select.value = matchedEnv.id;
+            enableFetch();
+            loadApps();
+        }
+    }
 }
 
 function enableFetch() {

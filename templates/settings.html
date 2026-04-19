@@ -28,6 +28,18 @@
     <h3><i class="material-icons" style="vertical-align: middle;">api</i> MuleSoft Suite (Anypoint)</h3>
     <div style="display: grid; gap: 16px; margin-top: 16px;">
         <div>
+            <label>Default Organization</label>
+            <select id="mule_default_org" class="m3-input" onchange="loadTargetEnvs(this.value)">
+                <option value="">Checking credentials...</option>
+            </select>
+        </div>
+        <div>
+            <label>Default Environment</label>
+            <select id="mule_default_env" class="m3-input">
+                <option value="">Select Organization First...</option>
+            </select>
+        </div>
+        <div>
             <label>Connected App Client ID</label>
             <input type="text" id="mule_client_id" class="m3-input" value="{{ settings.get('mule_client_id', '') }}" placeholder="Client ID">
         </div>
@@ -49,11 +61,72 @@
 </div>
 
 <script>
+    const savedOrg = "{{ settings.get('mule_default_org', '') }}";
+    const savedEnv = "{{ settings.get('mule_default_env', '') }}";
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const orgSelect = document.getElementById('mule_default_org');
+        
+        try {
+            const res = await fetch('/api/mule/orgs');
+            if (res.ok) {
+                const orgs = await res.json();
+                if (orgs && orgs.length > 0) {
+                    orgSelect.innerHTML = '<option value="">Select Organization...</option>' + 
+                        orgs.map(o => `<option value="${o.id}">${o.name}</option>`).join('');
+                    
+                    if (savedOrg) {
+                        orgSelect.value = savedOrg;
+                        loadTargetEnvs(savedOrg);
+                    } else {
+                        // Highlight if not set
+                        orgSelect.style.border = "2px solid var(--accent)";
+                        orgSelect.style.boxShadow = "0 0 10px rgba(255, 0, 229, 0.4)";
+                    }
+                } else {
+                    orgSelect.innerHTML = '<option value="">No Orgs (Check Credentials)</option>';
+                }
+            } else {
+                orgSelect.innerHTML = '<option value="">Save valid credentials first</option>';
+            }
+        } catch(e) {
+            orgSelect.innerHTML = '<option value="">Error connecting to API</option>';
+        }
+    });
+
+    async function loadTargetEnvs(orgId) {
+        if (!orgId) return;
+        const envSelect = document.getElementById('mule_default_env');
+        envSelect.innerHTML = '<option value="">Loading Environments...</option>';
+        try {
+            const res = await fetch(`/api/mule/envs/${orgId}`);
+            if (res.ok) {
+                const envs = await res.json();
+                envSelect.innerHTML = '<option value="">Select Environment...</option>' + 
+                    envs.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+                    
+                if (savedEnv && savedOrg === orgId) {
+                    // Only preselect savedEnv if we are looking at the savedOrg
+                    envSelect.value = savedEnv;
+                } else if (!savedEnv) {
+                    envSelect.style.border = "2px solid var(--accent)";
+                    envSelect.style.boxShadow = "0 0 10px rgba(255, 0, 229, 0.4)";
+                }
+            } else {
+                envSelect.innerHTML = '<option value="">Failed to list Envs</option>';
+            }
+        } catch(e) {
+            envSelect.innerHTML = '<option value="">Error connecting to API</option>';
+        }
+    }
+
     function saveSettings() {
         const payload = {
             azure_org: document.getElementById('azure_org').value,
             azure_project: document.getElementById('azure_project').value,
             azure_pat: document.getElementById('azure_pat').value,
+            mule_default_org: document.getElementById('mule_default_org').value,
+            mule_default_env: document.getElementById('mule_default_env').value,
             mule_client_id: document.getElementById('mule_client_id').value,
             mule_client_secret: document.getElementById('mule_client_secret').value,
             mule_bearer: document.getElementById('mule_bearer').value
