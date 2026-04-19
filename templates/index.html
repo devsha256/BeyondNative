@@ -24,21 +24,27 @@
     </a>
 </div>
 
-<div class="m3-card" style="margin-top: 48px; padding: 40px; background: linear-gradient(145deg, rgba(16,23,41,0.8), rgba(0,225,255,0.05)); border: 1px solid rgba(0, 225, 255, 0.2);">
-    <h3><i class="material-icons" style="vertical-align: middle; color: var(--primary);">insights</i> System Status</h3>
-    <div style="display: flex; gap: 40px; margin-top: 24px;">
+<div class="m3-card" style="margin-top: 48px; padding: 40px; background: linear-gradient(145deg, var(--bg-card), var(--primary-glow)); border: 1px solid var(--border-light); position: relative; overflow: hidden;">
+    <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: var(--primary-glow); border-radius: 50%; filter: blur(60px); z-index: 0;"></div>
+    
+    <h3 style="position: relative; z-index: 1;"><i class="material-icons" style="vertical-align: middle; color: var(--primary); margin-right: 8px;">insights</i> System Connectivity</h3>
+    
+    <div style="display: flex; gap: 60px; margin-top: 32px; position: relative; z-index: 1;">
         <div>
-            <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Azure DevOps Connection</div>
-            <div style="font-size: 24px; font-weight: 600; color: {% if devops_status %}var(--success){% else %}var(--error-color){% endif %}; margin-top: 4px; display: flex; align-items: center; gap: 8px;">
-                <i class="material-icons">{% if devops_status %}check_circle{% else %}error{% endif %}</i> 
+            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700;">Azure DevOps Status</div>
+            <div style="font-size: 24px; font-weight: 700; color: {% if devops_status %}var(--success){% else %}var(--error){% endif %}; margin-top: 8px; display: flex; align-items: center; gap: 10px;">
+                <i class="material-icons" style="font-size: 28px;">{% if devops_status %}check_circle{% else %}error_outline{% endif %}</i> 
                 {% if devops_status %}Healthy{% else %}Disconnected{% endif %}
             </div>
         </div>
+        
+        <div style="width: 1px; background: var(--border-light); height: 50px; align-self: center;"></div>
+
         <div>
-            <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">MuleSoft Session</div>
-            <div style="font-size: 24px; font-weight: 600; color: {% if mule_status %}var(--success){% else %}var(--text-muted){% endif %}; margin-top: 4px; display: flex; align-items: center; gap: 8px;">
-                <i class="material-icons">{% if mule_status %}check_circle{% else %}pending{% endif %}</i> 
-                {% if mule_status %}Healthy{% else %}Pending Login{% endif %}
+            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700;">MuleSoft Anypoint Status</div>
+            <div style="font-size: 24px; font-weight: 700; color: {% if mule_status %}var(--success){% else %}var(--text-muted){% endif %}; margin-top: 8px; display: flex; align-items: center; gap: 10px;">
+                <i class="material-icons" style="font-size: 28px;">{% if mule_status %}verified_user{% else %}hourglass_empty{% endif %}</i> 
+                {% if mule_status %}Active Session{% else %}Awaiting Auth{% endif %}
             </div>
         </div>
     </div>
