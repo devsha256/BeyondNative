@@ -135,7 +135,7 @@ class MuleSoftManager:
         }
         url = f"{self.anypoint_url}/amc/adam/api/organizations/{org_id}/environments/{env_id}/deployments/{app_id}"
         try:
-            res = self.http_session.get(url, headers=headers)
+            res = self.http_session.get(url, headers=headers, timeout=10)
             if res.status_code == 200:
                 return res.json()
         except:
@@ -145,13 +145,13 @@ class MuleSoftManager:
     def get_runtime_apps(self, org_id, env_id, extract_details=False):
         """Fetches all types of applications from Runtime Manager ARMUI."""
         url = f"{self.anypoint_url}/armui/api/v2/applications"
-        headers = self.get_headers()
+        headers = self.get_headers() # Refreshes token if needed
         headers["X-ANYPNT-ORG-ID"] = org_id
         headers["X-ANYPNT-ENV-ID"] = env_id
         
         apps = []
         try:
-            res = self.http_session.get(url, headers=headers)
+            res = self.http_session.get(url, headers=headers, timeout=20)
             if res.status_code == 200:
                 body = res.json()
                 apps = body.get('data', []) if 'data' in body else (body if isinstance(body, list) else [])

@@ -179,6 +179,9 @@
         // Create a single list of all Env IDs to fetch
         const allEnvs = [{ id: baseId, isBase: true }, ...targets.map(t => ({ id: t.id, isBase: false }))];
 
+        // Clear previous state for a fresh run
+        comparisonData.baseApps = null;
+        comparisonData.targetAppsData = {};
         comparisonData.baseEnv = globalEnvs.find(e => e.id === baseId);
         comparisonData.targetEnvs = targets;
 
@@ -262,7 +265,12 @@
         thead.innerHTML = headHTML;
 
         // Process Apps Matrix
-        if (!Array.isArray(comparisonData.baseApps) || comparisonData.baseApps.length === 0) {
+        if (comparisonData.baseApps === null) {
+            tbody.innerHTML = `<tr><td colspan="${2 + comparisonData.targetEnvs.length}" style="text-align: center; padding: 32px;"><i class="material-icons" style="animation: spin 1s linear infinite; vertical-align: middle;">refresh</i> Loading Base Environment metadata...</td></tr>`;
+            return;
+        }
+
+        if (comparisonData.baseApps.length === 0) {
             tbody.innerHTML = `<tr><td colspan="${2 + comparisonData.targetEnvs.length}" style="text-align: center; padding: 32px;">No applications deployed in Base Environment</td></tr>`;
             return;
         }
