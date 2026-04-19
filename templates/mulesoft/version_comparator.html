@@ -162,7 +162,7 @@
     // Utility to normalize app names by stripping standard suffixes or "-envName"
     function normalizeName(name) {
         if (!name) return "Unknown";
-        return name.toLowerCase()
+        return String(name).toLowerCase()
             .replace(/-(dev|qa|test|uat|prod|stg|sandbox|np|dr|preprod).*$/, '')
             .trim();
     }
@@ -189,7 +189,10 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ org_id: orgId, env_id: env.id, extract_details: true })
-                }).then(r => r.json()).then(data => ({ envId: env.id, data: data, isBase: env.isBase }))
+                }).then(r => {
+                    if (!r.ok) throw new Error("HTTP " + r.status);
+                    return r.json();
+                }).then(data => ({ envId: env.id, data: data, isBase: env.isBase }))
             );
 
             const allResults = await Promise.all(fetchPromises);
@@ -209,7 +212,7 @@
 
         } catch (e) {
             console.error(e);
-            alert("Extraction failed. Check Flask logs for Thread timeouts.");
+            alert("Exception in Matrix Processing: " + e.message);
         } finally {
             btn.innerHTML = '<i class="material-icons">analytics</i> Compare Versions';
             btn.disabled = false;
@@ -225,11 +228,10 @@
         }
         else if (versionType === 'appVersion') {
             const v = (appObj.adam_details && appObj.adam_details.application && appObj.adam_details.application.ref ? appObj.adam_details.application.ref.version : null) ||
-                (appObj.target && appObj.target.deploymentSettings && appObj.target.deploymentSettings.artifact ? appObj.target.deploymentSettings.artifact.name : null) ||
-                (appObj.application && appObj.application.version) ||
                 appObj.fileName ||
                 appObj.filename ||
-                (appObj.artifact && appObj.artifact.name) ||
+                (appObj.application && appObj.application.version) ||
+                (appObj.target && appObj.target.deploymentSettings && appObj.target.deploymentSettings.artifact ? appObj.target.deploymentSettings.artifact.name : null) ||
                 'Unknown Artifact';
             return `<span class="status-badge" style="background:rgba(255,255,255,0.05);">${v}</span>`;
         }
@@ -253,7 +255,7 @@
         thead.innerHTML = headHTML;
 
         // Process Apps Matrix
-        if (comparisonData.baseApps.length === 0) {
+        if (!Array.isArray(comparisonData.baseApps) || comparisonData.baseApps.length === 0) {
             tbody.innerHTML = `<tr><td colspan="${2 + comparisonData.targetEnvs.length}" style="text-align: center; padding: 32px;">No applications deployed in Base Environment</td></tr>`;
             return;
         }

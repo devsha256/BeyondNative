@@ -162,66 +162,39 @@ class MuleSoftManager:
             return []
 
         if extract_details and apps:
-            # Extract Bulk metadata for CloudHub 1 and 2 to avoid per-app requests
-            ch1_bulk = {}
-            try:
-                ch1_res = self.http_session.get(f"{self.anypoint_url}/cloudhub/api/v2/applications", headers=headers, timeout=10)
-                if ch1_res.status_code == 200:
-                    for a in ch1_res.json():
-                        if a.get('domain'): ch1_bulk[a['domain']] = a
-            except Exception as e:
-                log.warning(f"Failed to fetch bulk CH1: {e}")
-
-            amc_bulk = {}
-            try:
-                amc_res = self.http_session.get(f"{self.anypoint_url}/amc/application-manager/api/v2/organizations/{org_id}/environments/{env_id}/deployments", headers=headers, timeout=10)
-                if amc_res.status_code == 200:
-                    for items in amc_res.json().get('items', []):
-                        if items.get('id'): amc_bulk[items['id']] = items
-            except Exception as e:
-                log.warning(f"Failed to fetch bulk AMC: {e}")
-
-            # Map the bulk properties locally
+            # We use a Session for connection pooling (already initialized in __init__)
+            # Parallelize the 'deep dive' into each app's metadata
             def fetch_details(app):
                 try:
                     target_type = app.get('target', {}).get('type', 'Unknown')
                     app_id = app.get('id')
                     
-                    # CloudHub 2.0 / AMC
+                    # CloudHub 2.0 / AMC / RTF
                     if target_type in ["MC", "RTF"] and app_id:
-                        # Ensure the bulk mapping actually contains the version artifact, otherwise it's superficial API data.
-                        has_deep_ref = app_id in amc_bulk and amc_bulk[app_id].get('application', {}).get('ref')
-                        
-                        if has_deep_ref:
-                            app['adam_details'] = amc_bulk[app_id]
-                        else:
-                            # Fallback individual query natively. (Super-fast pooled request.)
-                            details = self.get_app_details(org_id, env_id, app_id)
-                            if details:
-                                app['adam_details'] = details
+                        # Fetch deep details to get the real artifact version
+                        details = self.get_app_details(org_id, env_id, app_id)
+                        if details:
+                            app['adam_details'] = details
                             
                     # CloudHub 1.0 Legacy
                     else:
                         domain = app.get('domain') or app.get('name')
-                        if domain and '.cloudhub.io' in domain:
-                            domain = domain.split('.cloudhub.io')[0]
+                        if domain:
+                            # Normalize domain for API
+                            if '.cloudhub.io' in domain:
+                                domain = domain.split('.cloudhub.io')[0]
                             
-                        if domain and domain in ch1_bulk:
-                            for k, v in ch1_bulk[domain].items():
-                                if v is not None: app[k] = v
-                        elif domain:
-                            # Fallback individual query
                             detail_url = f"{self.anypoint_url}/cloudhub/api/v2/applications/{domain}"
                             d_res = self.http_session.get(detail_url, headers=headers, timeout=10)
                             if d_res.status_code == 200:
-                                for k, v in d_res.json().items():
-                                    if v is not None: app[k] = v
+                                # Merge detail fields directly (including filename)
+                                app.update(d_res.json())
                 except Exception as e:
                     log.error(f"Failed deep-dive details for app: {e}")
-                            
                 return app
 
-            with ThreadPoolExecutor(max_workers=50) as executor:
+            # Use more workers to saturate the IO band and hit the 3-5s target
+            with ThreadPoolExecutor(max_workers=30) as executor:
                 apps = list(executor.map(fetch_details, apps))
         
         return apps
