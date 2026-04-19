@@ -1,15 +1,11 @@
 import os
-import time
 import requests
-import concurrent.futures
-from concurrent.futures import ThreadPoolExecutor
-from threading import Semaphore
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dotenv import load_dotenv
 import db_utils
 from logger import log
 
-# Global state for rate limiting and caching across all Flask request threads
-semaphore = Semaphore(10)
+MAX_WORKERS = 10
 cache = {}
 
 load_dotenv()
@@ -25,7 +21,7 @@ class MuleSoftManager:
         
         # Enable connection pooling to dramatically reduce TLS handshake / TCP overhead
         self.http_session = requests.Session()
-        adapter = HTTPAdapter(pool_connections=300, pool_maxsize=300)
+        adapter = HTTPAdapter(pool_connections=50, pool_maxsize=50)
         self.http_session.mount('https://', adapter)
         self.http_session.mount('http://', adapter)
 
@@ -133,12 +129,12 @@ class MuleSoftManager:
         return []
 
     def get_runtime_apps(self, org_id, env_id, extract_details=False):
-        """Unified Discovery & Sequential Version Extraction with Rate Limit"""
+        """Unified Discovery & Parallel Extraction with Bounded Concurrency"""
         headers = self.get_headers()
         headers.update({ "X-ANYPNT-ORG-ID": org_id, "X-ANYPNT-ENV-ID": env_id })
         
         # Check cache
-        key = (org_id, env_id, extract_details)
+        key = (org_id, env_id)
         if key in cache:
             return cache[key]
 
@@ -155,33 +151,42 @@ class MuleSoftManager:
         if not extract_details or not apps:
             return apps
 
-        # 2. Sequential Deep Scan (Semaphore limits global concurrent API calls)
+        # 2. Parallel Deep Scan (Bounded Workers)
         def enrich(app):
-            with semaphore:
-                try:
-                    target = app.get('target', {}).get('type', '')
-                    app_id = app.get('id')
-                    
-                    # CloudHub 2.0 / RTF Path
-                    if target in ["MC", "RTF"]:
-                        d_url = f"{self.anypoint_url}/amc/adam/api/organizations/{org_id}/environments/{env_id}/deployments/{app_id}"
-                        d_res = self.http_session.get(d_url, headers=headers, timeout=5)
-                        time.sleep(0.05)
-                        if d_res.status_code == 200:
-                            app['adam_details'] = d_res.json()
-                            
-                    # CloudHub 1.0 Path
-                    else:
-                        domain = (app.get('domain') or app.get('name', '')).split('.cloudhub.io')[0]
-                        ch1_url = f"{self.anypoint_url}/cloudhub/api/v2/applications/{domain}"
-                        d_res = self.http_session.get(ch1_url, headers=headers, timeout=5)
-                        time.sleep(0.05)
-                        if d_res.status_code == 200:
-                            app.update(d_res.json())
-                except Exception: pass
+            try:
+                target = app.get('target', {}).get('type', '')
+                app_id = app.get('id')
+                
+                # CloudHub 2.0 / RTF Path
+                if target in ["MC", "RTF"]:
+                    d_url = f"{self.anypoint_url}/amc/adam/api/organizations/{org_id}/environments/{env_id}/deployments/{app_id}"
+                    d_res = self.http_session.get(d_url, headers=headers, timeout=5)
+                    if d_res.status_code == 200:
+                        app['adam_details'] = d_res.json()
+                        
+                # CloudHub 1.0 Path
+                else:
+                    domain = (app.get('domain') or app.get('name', '')).split('.cloudhub.io')[0]
+                    ch1_url = f"{self.anypoint_url}/cloudhub/api/v2/applications/{domain}"
+                    d_res = self.http_session.get(ch1_url, headers=headers, timeout=5)
+                    if d_res.status_code == 200:
+                        app.update(d_res.json())
+            except Exception: pass
             return app
 
-        apps = [enrich(app) for app in apps]
+        def process_apps_parallel(apps_to_process):
+            results = []
+            with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+                future_to_app = {executor.submit(enrich, app): app for app in apps_to_process}
+                for future in as_completed(future_to_app):
+                    try:
+                        results.append(future.result())
+                    except Exception:
+                        results.append(future_to_app[future])
+            return results
+
+        # Process apps in parallel (bounded)
+        apps = process_apps_parallel(apps)
 
         # 3. Clean Minimum Payload Pruning
         pruned_apps = [self._prune_app(a) for a in apps]

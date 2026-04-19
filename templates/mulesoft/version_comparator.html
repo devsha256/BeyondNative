@@ -186,46 +186,44 @@
         comparisonData.targetEnvs = targets;
 
         try {
-            // Fire ALL requests at once. We handle completion individually for TRUE parallel feel.
-            const fetchPromises = allEnvs.map(async (env) => {
-                try {
-                    const res = await fetch('/api/mule/apps', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ org_id: orgId, env_id: env.id, extract_details: true })
-                    });
-                    
-                    if (!res.ok) throw new Error("HTTP " + res.status);
-                    const data = await res.json();
-
-                    // Update global state for this specific env
-                    if (env.isBase) {
-                        comparisonData.baseApps = data;
-                    } else {
-                        comparisonData.targetAppsData[env.id] = data;
-                    }
-
-                    // Render immediately as each response arrives
-                    renderMatrix();
-                    document.getElementById('results-card').style.display = 'block';
-
-                } catch (err) {
-                    console.error(`Env ${env.id} failed:`, err);
-                }
-            });
-
-            // We don't 'await' the group. They will resolve and call renderMatrix() independently.
-            // But we keep the button loading until everything is done.
-            Promise.all(fetchPromises).finally(() => {
-                btn.innerHTML = '<i class="material-icons">analytics</i> Compare Versions';
-                btn.disabled = false;
-            });
+            // Sequential execution for environments to avoid backend flooding
+            for (const env of allEnvs) {
+                await fetchEnvData(env, orgId);
+            }
 
         } catch (e) {
             console.error(e);
             alert("Exception in Matrix Processing: " + e.message);
+        } finally {
             btn.innerHTML = '<i class="material-icons">analytics</i> Compare Versions';
             btn.disabled = false;
+        }
+    }
+
+    async function fetchEnvData(env, orgId) {
+        try {
+            const res = await fetch('/api/mule/apps', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ org_id: orgId, env_id: env.id, extract_details: true })
+            });
+            
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            const data = await res.json();
+
+            // Update global state for this specific env
+            if (env.isBase) {
+                comparisonData.baseApps = data;
+            } else {
+                comparisonData.targetAppsData[env.id] = data;
+            }
+
+            // Render immediately as each response arrives
+            renderMatrix();
+            document.getElementById('results-card').style.display = 'block';
+
+        } catch (err) {
+            console.error(`Env ${env.id} failed:`, err);
         }
     }
 
