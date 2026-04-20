@@ -9,9 +9,10 @@ load_dotenv()
 
 class AzureDevOpsManager:
     def __init__(self):
-        self.org = os.getenv("AZURE_ORG")
-        self.project = os.getenv("AZURE_PROJECT")
-        self.pat = os.getenv("AZURE_PAT")
+        # We prefer DB settings to allow real-time updates via settings page
+        self.org = db_utils.get_setting('azure_org') or os.getenv("AZURE_ORG")
+        self.project = db_utils.get_setting('azure_project') or os.getenv("AZURE_PROJECT")
+        self.pat = db_utils.get_setting('azure_pat') or os.getenv("AZURE_PAT")
         self.base_url = f"https://dev.azure.com/{self.org}/{self.project}/_apis"
         self.headers = self._get_headers()
 
@@ -112,4 +113,9 @@ class AzureDevOpsManager:
             "description": f"Automated Deployment PR for {repo_name}."
         }
         response = requests.post(url, headers=self.headers, json=payload)
-        return response.status_code, response.json()
+        data = response.json()
+        if response.status_code in [200, 201]:
+            pr_id = data.get('pullRequestId')
+            # Manually construct the definitive web URL for browser viewing
+            data['webUrl'] = f"https://dev.azure.com/{self.org}/{self.project}/_git/{repo_name}/pullrequest/{pr_id}"
+        return response.status_code, data
