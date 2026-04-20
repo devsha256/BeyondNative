@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 from devops_module import AzureDevOpsManager
-from mulesoft_module import MuleSoftManager
+from mulesoft_module import MuleSoftManager, MuleSoftAuthError
 from concurrent.futures import ThreadPoolExecutor
 import db_utils
 
@@ -141,11 +141,17 @@ def save_settings():
 
 @app.route('/api/mule/orgs', methods=['GET'])
 def get_mule_orgs():
-    return jsonify(mule.get_organizations())
+    try:
+        return jsonify(mule.get_organizations())
+    except MuleSoftAuthError:
+        return jsonify({"error": "Unauthorized"}), 401
 
 @app.route('/api/mule/envs/<org_id>', methods=['GET'])
 def get_mule_envs(org_id):
-    return jsonify(mule.get_environments(org_id))
+    try:
+        return jsonify(mule.get_environments(org_id))
+    except MuleSoftAuthError:
+        return jsonify({"error": "Unauthorized"}), 401
 
 @app.route('/api/mule/apps', methods=['POST'])
 def fetch_mule_apps():

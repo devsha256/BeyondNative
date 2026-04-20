@@ -12,6 +12,10 @@ load_dotenv()
 
 from requests.adapters import HTTPAdapter
 
+class MuleSoftAuthError(Exception):
+    """Raised when Anypoint credentials are expired or invalid."""
+    pass
+
 class MuleSoftManager:
     def __init__(self):
         self.anypoint_url = "https://anypoint.mulesoft.com"
@@ -24,6 +28,7 @@ class MuleSoftManager:
         adapter = HTTPAdapter(pool_connections=50, pool_maxsize=50)
         self.http_session.mount('https://', adapter)
         self.http_session.mount('http://', adapter)
+        self.using_bearer_override = False
 
     def check_connection(self):
         """Validates if we have a working connection to Anypoint."""
@@ -44,8 +49,10 @@ class MuleSoftManager:
         bearer = db_utils.get_setting('mule_bearer')
         if bearer:
             self.access_token = bearer.replace('Bearer ', '').strip()
+            self.using_bearer_override = True
             return True
 
+        self.using_bearer_override = False
         client_id = db_utils.get_setting('mule_client_id')
         client_secret = db_utils.get_setting('mule_client_secret')
         if client_id and client_secret:
@@ -121,7 +128,11 @@ class MuleSoftManager:
             res = self.http_session.get(url_me, headers=self.get_headers())
             
             if res.status_code == 401:
-                log.warning("Token expired during Org fetch. Re-auth...")
+                if self.using_bearer_override:
+                    log.error("Manual Bearer Token Expired. Skipping fallback.")
+                    raise MuleSoftAuthError("Bearer Token Expired")
+                
+                log.warning("OAuth Token expired. Re-auth...")
                 self.access_token = None
                 res = self.http_session.get(url_me, headers=self.get_headers())
 
@@ -132,6 +143,8 @@ class MuleSoftManager:
                     return data.get('user', {}).get('memberOfOrganizations', [])
                 elif 'memberOfOrganizations' in data:
                     return data.get('memberOfOrganizations', [])
+            elif res.status_code == 401:
+                raise MuleSoftAuthError("Unauthorized")
             else:
                 log.warning(f"'/me' failed with {res.status_code}. Attempting Connected App fallback to '/organizations'...")
                 res_orgs = self.http_session.get(url_orgs, headers=self.get_headers())
@@ -141,9 +154,13 @@ class MuleSoftManager:
                     if isinstance(data_orgs, list): return data_orgs
                     if 'data' in data_orgs: return data_orgs.get('data', [])
                     return [data_orgs]
+                elif res_orgs.status_code == 401:
+                    raise MuleSoftAuthError("Unauthorized")
                 else:
                     log.error(f"Fallback Fetch Response: {res_orgs.text[:500]}")
             return []
+        except MuleSoftAuthError:
+            raise
         except Exception as e:
             log.error(f"MuleSoft Org Fetch Error: {e}")
             return []
@@ -155,11 +172,17 @@ class MuleSoftManager:
             res = self.http_session.get(url, headers=self.get_headers())
             
             if res.status_code == 401:
+                if self.using_bearer_override:
+                    raise MuleSoftAuthError("Bearer Token Expired")
                 self.access_token = None
                 res = self.http_session.get(url, headers=self.get_headers())
 
             if res.status_code == 200:
                 return res.json().get('data', [])
+            elif res.status_code == 401:
+                raise MuleSoftAuthError("Unauthorized")
+        except MuleSoftAuthError:
+            raise
         except Exception as e:
             log.error(f"MuleSoft Env Fetch Error: {e}")
         return []
@@ -182,6 +205,8 @@ class MuleSoftManager:
             
             # Handle 401 Unauthorized (Expired Token)
             if res.status_code == 401:
+                if self.using_bearer_override:
+                    raise MuleSoftAuthError("Bearer Token Expired")
                 log.warning("MuleSoft session expired. Re-authenticating...")
                 self.access_token = None
                 headers = self.get_headers() # Triggers re-auth
