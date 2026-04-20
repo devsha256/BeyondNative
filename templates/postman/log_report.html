@@ -245,47 +245,65 @@ async function executeRequests() {
     if (selectedIndices.length === 0) return alert("No requests selected.");
 
     const toExecute = selectedIndices.map(i => stateRequests[i]);
-    const envFile = document.getElementById('env-file').value;
+    const envFile = pickedFiles['env-label'] ? pickedFiles['env-label'].name : ""; // Just for meta
+    
+    const execBtn = document.getElementById('btn-execute');
+    execBtn.disabled = true;
+    
+    correlationIds = [];
+    let completed = 0;
     
     showOverlay(`Executing ${toExecute.length} requests...`);
-    correlationIds = [];
     
-    let completed = 0;
     for (const req of toExecute) {
+        completed++;
+        execBtn.innerHTML = `<i class="material-icons rotating">sync</i> Executing ${completed}/${toExecute.length}...`;
         updateOverlay(`Running: ${req.name}...`, (completed / toExecute.length) * 100);
+        
         const row = document.getElementById(`row-${req.id}`);
         const statusCell = row.querySelector('.status-cell');
-        statusCell.innerHTML = '<i class="material-icons rotating">sync</i>';
+        statusCell.innerHTML = '<i class="material-icons rotating" style="font-size:16px;">sync</i>';
         
         try {
+            // Since we parse client side, we send the content of the collection for execution
+            // We use the first 100kb as a proxy for sending data or we just send indices if we had them on server
+            // But since we selected folder, we upload individual collections as needed?
+            // Actually, for this tool, let's assume we send the requirement to the server
+            // To make it work, I'll update the API to handle the execution by path if on same machine
+            // Or I upload the file once.
+            
             const res = await fetch('/api/postman/execute-single', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ 
                     request: req, 
                     environment: envFile,
-                    script: DEFAULT_SCRIPT // Using default since column was removed
+                    script: DEFAULT_SCRIPT
                 })
             });
             const data = await res.json();
             if (data.correlation_id) {
                 correlationIds.push(data.correlation_id);
-                statusCell.innerHTML = `<span class="status-badge status-success">${data.correlation_id}</span>`;
+                statusCell.innerHTML = `<span class="status-badge status-success" style="font-size:10px;">${data.correlation_id}</span>`;
             } else {
-                statusCell.innerHTML = `<span class="status-badge status-error">No ID</span>`;
+                statusCell.innerHTML = `<span class="status-badge status-error" style="font-size:10px;">No ID</span>`;
             }
         } catch (e) {
-            statusCell.innerHTML = `<span class="status-badge status-error">Failed</span>`;
+            statusCell.innerHTML = `<span class="status-badge status-error" style="font-size:10px;">Failed</span>`;
         }
-        completed++;
     }
     
     hideOverlay();
+    execBtn.innerHTML = `<i class="material-icons">check_circle</i> Execution Done`;
+    execBtn.classList.add('status-success');
+    
     if (correlationIds.length > 0) {
         document.getElementById('btn-generate').style.display = 'inline-flex';
-        alert(`Extracted ${correlationIds.length} Correlation IDs.`);
+        document.getElementById('btn-generate').innerHTML = `<i class="material-icons">receipt_long</i> Generate Log Report (${correlationIds.length} IDs)`;
     } else {
-        alert("No Correlation IDs were extracted.");
+        alert("No Correlation IDs were extracted. Check your collections or endpoint responses.");
+        execBtn.disabled = false;
+        execBtn.innerHTML = `<i class="material-icons">play_arrow</i> Execute & Extract IDs`;
     }
 }
 
