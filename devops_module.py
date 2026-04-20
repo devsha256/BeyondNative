@@ -124,7 +124,7 @@ class AzureDevOpsManager:
             "sourceRefName": f"refs/heads/{from_branch}",
             "targetRefName": f"refs/heads/{to_branch}",
             "title": pr_title,
-            "description": f"Automated Deployment PR for {repo_name}."
+            "description": f"{to_branch} Deployment PR for {repo_name}."
         }
 
         response = requests.post(url, headers=self.headers, json=payload)
