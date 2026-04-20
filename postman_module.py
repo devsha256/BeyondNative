@@ -190,6 +190,11 @@ class PostmanManager:
                 executions = report.get('run', {}).get('executions', [])
                 for exe in executions:
                     headers = exe.get('response', {}).get('header', [])
+                    
+                    if debug_mode:
+                        all_keys = [h.get('key') for h in headers]
+                        log.info(f"Available Headers: {all_keys}")
+
                     for h in headers:
                         if h.get('key', '').lower() == 'x-correlation-id':
                             val = h.get('value')

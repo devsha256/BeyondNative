@@ -280,23 +280,21 @@ async function executeRequests() {
     
     showOverlay(`Executing ${toExecute.length} requests...`);
     
-    for (const req of toExecute) {
-        completed++;
-        execBtn.innerHTML = `<i class="material-icons rotating">sync</i> Executing ${completed}/${toExecute.length}...`;
-        updateOverlay(`Running: ${req.name}...`, (completed / toExecute.length) * 100);
+    // Concurrency control: Execute in parallel with a limit
+    const CONCURRENCY_LIMIT = 5;
+    let executing = 0;
+    let queue = [...toExecute];
+    
+    async function runNext() {
+        if (queue.length === 0) return;
+        const req = queue.shift();
         
+        executing++;
         const row = document.getElementById(`row-${req.id}`);
         const statusCell = row.querySelector('.status-cell');
         statusCell.innerHTML = '<i class="material-icons rotating" style="font-size:16px;">sync</i>';
         
         try {
-            // Since we parse client side, we send the content of the collection for execution
-            // We use the first 100kb as a proxy for sending data or we just send indices if we had them on server
-            // But since we selected folder, we upload individual collections as needed?
-            // Actually, for this tool, let's assume we send the requirement to the server
-            // To make it work, I'll update the API to handle the execution by path if on same machine
-            // Or I upload the file once.
-            
             const res = await fetch('/api/postman/execute-single', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -315,8 +313,20 @@ async function executeRequests() {
             }
         } catch (e) {
             statusCell.innerHTML = `<span class="status-badge status-error" style="font-size:10px;">Failed</span>`;
+        } finally {
+            completed++;
+            executing--;
+            execBtn.innerHTML = `<i class="material-icons rotating">sync</i> Executing ${completed}/${toExecute.length}...`;
+            updateOverlay(`Processed ${completed}/${toExecute.length}...`, (completed / toExecute.length) * 100);
+            await runNext();
         }
     }
+
+    const workers = [];
+    for (let i = 0; i < Math.min(CONCURRENCY_LIMIT, toExecute.length); i++) {
+        workers.push(runNext());
+    }
+    await Promise.all(workers);
     
     hideOverlay();
     execBtn.innerHTML = `<i class="material-icons">check_circle</i> Execution Done`;
