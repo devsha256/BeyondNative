@@ -11,7 +11,10 @@ load_dotenv()
 
 class AzureDevOpsManager:
     def __init__(self):
-        # We prefer DB settings to allow real-time updates via settings page
+        self.refresh_configs()
+
+    def refresh_configs(self):
+        """Re-reads settings from the database and updates internal state."""
         self.org = db_utils.get_setting('azure_org') or os.getenv("AZURE_ORG")
         self.project = db_utils.get_setting('azure_project') or os.getenv("AZURE_PROJECT")
         self.pat = db_utils.get_setting('azure_pat') or os.getenv("AZURE_PAT")

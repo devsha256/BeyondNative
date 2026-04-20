@@ -478,3 +478,18 @@ a:hover {
     border-color: var(--primary) !important;
     box-shadow: inset 0 0 20px var(--primary-glow);
 }
+.m3-input-error {
+    border-color: var(--error) !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.25) !important;
+}
+
+.m3-badge {
+    padding: 6px 16px;
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}

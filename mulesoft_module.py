@@ -18,17 +18,23 @@ class MuleSoftAuthError(Exception):
 
 class MuleSoftManager:
     def __init__(self):
-        self.anypoint_url = "https://anypoint.mulesoft.com"
-        self.session_cookie = None
-        self.xsrf_token = None
-        self.access_token = None
-        
         # Enable connection pooling to dramatically reduce TLS handshake / TCP overhead
         self.http_session = requests.Session()
         adapter = HTTPAdapter(pool_connections=50, pool_maxsize=50)
         self.http_session.mount('https://', adapter)
         self.http_session.mount('http://', adapter)
+        
+        self.anypoint_url = "https://anypoint.mulesoft.com"
+        self.refresh_configs()
+
+    def refresh_configs(self):
+        """Reset all session/auth tokens to force fresh fetch from DB settings."""
+        self.session_cookie = None
+        self.xsrf_token = None
+        self.access_token = None
         self.using_bearer_override = False
+        # Clear local cache to ensure fresh data
+        cache.clear()
 
     def check_connection(self):
         """Validates if we have a working connection to Anypoint."""

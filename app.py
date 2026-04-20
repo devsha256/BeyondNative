@@ -160,7 +160,12 @@ def save_settings():
     if not data: return jsonify({"error": "No data"}), 400
     for k, v in data.items():
         db_utils.set_setting(k, v)
-    return jsonify({"status": "success", "message": "Settings updated safely in sqlite3 DB!"})
+    
+    # Force managers to reload their configs from DB
+    devops.refresh_configs()
+    mule.refresh_configs()
+    
+    return jsonify({"status": "success", "message": "Settings updated and managers refreshed!"})
 
 @app.route('/api/mule/orgs', methods=['GET'])
 def get_mule_orgs():

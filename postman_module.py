@@ -130,6 +130,35 @@ class PostmanManager:
             log.error(f"Error loading variables: {e}")
         return variables
 
+    def _prepare_request_details(self, req_item, variables):
+        """Extracts and resolves method, url, headers, and body from a Postman request item."""
+        req_data = req_item.get('request', {})
+        method = req_data.get('method', 'GET')
+        
+        # URL
+        raw_url = req_data.get('url', '')
+        if isinstance(raw_url, dict): raw_url = raw_url.get('raw', '')
+        url = self._resolve_variables(raw_url, variables)
+        
+        # Headers
+        headers = {}
+        for h in req_data.get('header', []):
+            if not h.get('disabled', False):
+                key = self._resolve_variables(h.get('key'), variables)
+                val = self._resolve_variables(h.get('value'), variables)
+                headers[key] = val
+        
+        # Body
+        body = None
+        mode = req_data.get('body', {}).get('mode')
+        if mode == 'raw':
+            body = self._resolve_variables(req_data.get('body', {}).get('raw', ''), variables)
+        elif mode == 'urlencoded':
+            body = {self._resolve_variables(p.get('key'), variables): self._resolve_variables(p.get('value'), variables) 
+                    for p in req_data.get('body', {}).get('urlencoded', [])}
+            
+        return method, url, headers, body
+
     def run_request(self, request_data, environment_path=None, custom_script=None):
         """
         Executes a Postman request natively using Python requests.
@@ -153,30 +182,8 @@ class PostmanManager:
             item = find_item(original.get('item', []), request_data['name'])
             if not item: return None
             
-            req_data = item.get('request', {})
-            method = req_data.get('method', 'GET')
-            
-            # 2. Resolve URL
-            raw_url = req_data.get('url', '')
-            if isinstance(raw_url, dict): raw_url = raw_url.get('raw', '')
-            url = self._resolve_variables(raw_url, variables)
-            
-            # 3. Resolve Headers
-            headers = {}
-            for h in req_data.get('header', []):
-                if not h.get('disabled', False):
-                    key = self._resolve_variables(h.get('key'), variables)
-                    val = self._resolve_variables(h.get('value'), variables)
-                    headers[key] = val
-            
-            # 4. Resolve Body
-            body = None
-            mode = req_data.get('body', {}).get('mode')
-            if mode == 'raw':
-                body = self._resolve_variables(req_data.get('body', {}).get('raw', ''), variables)
-            elif mode == 'urlencoded':
-                body = {self._resolve_variables(p.get('key'), variables): self._resolve_variables(p.get('value'), variables) 
-                        for p in req_data.get('body', {}).get('urlencoded', [])}
+            # 2. Extract and Resolve
+            method, url, headers, body = self._prepare_request_details(item, variables)
 
             # 5. Execute
             log.info(f"Executing In-House: {method} {url}")
@@ -215,32 +222,49 @@ class PostmanManager:
                         if res: return res
                 return None
             
-            base_req = find_req(extractor_data.get('item', []))
-            if not base_req: return {"error": "No request found in extractor collection"}
+            base_item = find_req(extractor_data.get('item', []))
+            if not base_item: return {"error": "No request found in extractor collection"}
 
             shared_vars = self._get_variables_dict(extractor_path, environment_path)
-            method = base_req['request']['method']
-            raw_url = base_req['request']['url']
-            if isinstance(raw_url, dict): raw_url = raw_url.get('raw', '')
-            raw_headers = base_req['request'].get('header', [])
 
             for cid in correlation_ids:
+                # 1. Create request-specific variables
                 vars = shared_vars.copy()
                 vars['correlationId'] = cid
-                url = self._resolve_variables(raw_url, vars)
-                headers = {self._resolve_variables(h['key'], vars): self._resolve_variables(h['value'], vars)
-                           for h in raw_headers if not h.get('disabled')}
+                
+                # 2. Extract and resolve request details
+                method, url, headers, body = self._prepare_request_details(base_item, vars)
+                
                 try:
-                    res = requests.request(method, url, headers=headers, timeout=15, verify=False)
+                    res = requests.request(method, url, headers=headers, data=body, timeout=15, verify=False)
                     if res.ok:
-                        body = res.json()
-                        resp_list = body.get('logRetrieveResponse', {}).get('result', [])
-                        if not resp_list and isinstance(body, list): resp_list = body
+                        data = res.json()
+                        
+                        # 3. Handle various log response structures
+                        # Case A: Nested in logRetrieveResponse.result (Common in some Mule patterns)
+                        resp_list = data.get('logRetrieveResponse', {}).get('result', [])
+                        
+                        # Case B: Direct list
+                        if not resp_list and isinstance(data, list):
+                            resp_list = data
+                        
+                        # Case C: Nested in 'items' or 'data' or similar
+                        if not resp_list and isinstance(data, dict):
+                            resp_list = data.get('data') or data.get('items') or data.get('logs') or []
+                        
+                        # Case D: Single object returned instead of list
+                        if not resp_list and isinstance(data, dict) and any(k in data for k in ['message', 'status', 'processname']):
+                            resp_list = [data]
+
+                        if not resp_list:
+                            log.warning(f"No logs found in response for {cid}. Response Keys: {list(data.keys()) if isinstance(data, dict) else 'N/A'}")
+
                         for item in resp_list:
-                            item['correlationId'] = cid
-                            results.append(item)
+                            if isinstance(item, dict):
+                                item['correlationId'] = cid
+                                results.append(item)
                     else:
-                        results.append({"correlationId": cid, "status": "ERROR", "message": f"HTTP {res.status_code}"})
+                        results.append({"correlationId": cid, "status": "ERROR", "message": f"HTTP {res.status_code}: {res.text[:100]}"})
                 except Exception as e:
                     results.append({"correlationId": cid, "status": "ERROR", "message": str(e)})
         except Exception as e:
