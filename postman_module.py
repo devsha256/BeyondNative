@@ -161,10 +161,16 @@ class PostmanManager:
             
             result = subprocess.run(cmd_str, capture_output=True, text=True, timeout=45, shell=True)
             
-            if debug_mode and result.stdout: log.info(f"Newman STDOUT: {result.stdout[:500]}...")
-            if result.returncode != 0:
-                log.error(f"Newman exited with code {result.returncode}. Stderr: {result.stderr}")
-
+            if debug_mode:
+                if result.stdout: log.info(f"Newman STDOUT:\n{result.stdout}")
+                if result.stderr: log.info(f"Newman STDERR:\n{result.stderr}")
+            
+            # Note: Newman often exits with code 1 if a request fails, but the report might still exist
+            if not os.path.exists(report_path):
+                log.error(f"Newman failed to generate report (Exit {result.returncode}).")
+                if not debug_mode: # If not already printed, show stderr for troubleshooting
+                    log.error(f"Newman Error Output: {result.stderr}")
+                
             if os.path.exists(report_path):
                 with open(report_path, 'r') as f:
                     report = json.load(f)
