@@ -7,7 +7,23 @@ from logger import log
 
 class PostmanManager:
     def __init__(self):
-        pass
+        self.work_dir = os.path.join(os.getcwd(), "post_work_dir")
+        if not os.path.exists(self.work_dir):
+            os.makedirs(self.work_dir)
+
+    def save_file(self, filename, content, subfolder=""):
+        """Saves a file to the post_work_dir."""
+        target_dir = os.path.join(self.work_dir, subfolder)
+        if not os.path.exists(target_dir):
+            os.makedirs(target_dir)
+        
+        path = os.path.join(target_dir, filename)
+        with open(path, 'w', encoding='utf-8') as f:
+            if isinstance(content, str):
+                f.write(content)
+            else:
+                json.dump(content, f, indent=4)
+        return path
 
     def scan_folder_for_collections(self, root_dir):
         """Recursively finds all .postman_collection.json files in a directory."""

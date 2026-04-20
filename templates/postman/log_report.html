@@ -123,11 +123,24 @@ if (correlationId) {
     // Values will be collected by Beyond Native
 }`;
 
-function handleFilePick(input, labelId) {
+async function handleFilePick(input, labelId) {
     const file = input.files[0];
     if (file) {
         document.getElementById(labelId).innerText = file.name;
-        pickedFiles[labelId] = file;
+        
+        // Sync to server
+        const text = await file.text();
+        const res = await fetch('/api/postman/sync', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                filename: file.name,
+                content: text,
+                type: labelId === 'env-label' ? 'environment' : 'collection'
+            })
+        });
+        const data = await res.json();
+        pickedFiles[labelId] = data.path; // Store the server path
     }
 }
 
@@ -144,11 +157,23 @@ async function handleFolderPick(input) {
     for (const file of collections) {
         const text = await file.text();
         try {
+            // 1. Sync to server to get a local path for Newman
+            const syncRes = await fetch('/api/postman/sync', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    filename: file.name,
+                    content: text,
+                    type: 'collection'
+                })
+            });
+            const syncData = await syncRes.json();
+            
             const data = JSON.parse(text);
-            const requests = extractRequestsFromData(data, file.webkitRelativePath);
+            const requests = extractRequestsFromData(data, syncData.path);
             stateRequests.push(...requests);
         } catch (e) {
-            console.error("Failed to parse", file.name);
+            console.error("Failed to sync/parse", file.name);
         }
     }
     
@@ -245,7 +270,7 @@ async function executeRequests() {
     if (selectedIndices.length === 0) return alert("No requests selected.");
 
     const toExecute = selectedIndices.map(i => stateRequests[i]);
-    const envFile = pickedFiles['env-label'] ? pickedFiles['env-label'].name : ""; // Just for meta
+    const envPath = pickedFiles['env-label'] || null;
     
     const execBtn = document.getElementById('btn-execute');
     execBtn.disabled = true;
@@ -277,7 +302,7 @@ async function executeRequests() {
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ 
                     request: req, 
-                    environment: envFile,
+                    environment: envPath,
                     script: DEFAULT_SCRIPT
                 })
             });
@@ -309,8 +334,8 @@ async function executeRequests() {
 
 async function generateReport() {
     if (correlationIds.length === 0) return;
-    const logExtractor = document.getElementById('log-extractor').value;
-    const envFile = document.getElementById('env-file').value;
+    const logExtractorPath = pickedFiles['extractor-label'] || null;
+    const envPath = pickedFiles['env-label'] || null;
     
     showOverlay("Generating Log Report...");
     
@@ -320,8 +345,8 @@ async function generateReport() {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ 
                 correlation_ids: correlationIds,
-                extractor_path: logExtractor,
-                environment: envFile
+                extractor_path: logExtractorPath,
+                environment: envPath
             })
         });
         

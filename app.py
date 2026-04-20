@@ -211,6 +211,21 @@ def postman_scan():
         "requests": all_requests
     })
 
+@app.route('/api/postman/sync', methods=['POST'])
+def postman_sync():
+    data = request.json
+    filename = data.get('filename')
+    content = data.get('content')
+    type = data.get('type') # 'collection' or 'environment'
+    
+    if not filename or not content:
+        return jsonify({"error": "Missing filename or content"}), 400
+    
+    subfolder = "collections" if type == "collection" else "environments"
+    path = postman.save_file(filename, content, subfolder)
+    
+    return jsonify({"status": "success", "path": path})
+
 @app.route('/api/postman/execute-single', methods=['POST'])
 def postman_execute_single():
     data = request.json
