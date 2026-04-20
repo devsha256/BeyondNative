@@ -8,6 +8,8 @@ import db_utils
 import os
 import json
 import requests
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 from json_logic import JSONLogicArchitect
 

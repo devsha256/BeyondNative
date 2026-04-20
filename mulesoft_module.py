@@ -1,5 +1,7 @@
 import os
 import requests
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dotenv import load_dotenv
 import db_utils
