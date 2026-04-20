@@ -14,24 +14,55 @@
     <h3><i class="material-icons">settings</i> Phase 1: Configuration</h3>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px;">
         <div class="m3-input-group">
-            <label>Collections Folder (Local Path)</label>
-             <div style="display: flex; gap: 8px;">
-                <input type="text" id="root-folder" class="m3-input" placeholder="/Users/name/collections" style="margin:0;">
-                <button class="m3-button" onclick="scanCollections()">Scan Folder</button>
+            <label>Collections Folder</label>
+            <div class="file-picker-m3" onclick="document.getElementById('pick-folder').click()">
+                <i class="material-icons">folder</i>
+                <span id="folder-label">Select Folder</span>
+                <input type="file" id="pick-folder" webkitdirectory directory multiple style="display:none;" onchange="handleFolderPick(this)">
             </div>
-            <small>Recursively scans all .postman_collection.json files</small>
+            <small>Deep scan for .postman_collection.json files</small>
         </div>
         <div class="m3-input-group">
-            <label>Environment File (Optional Path)</label>
-            <input type="text" id="env-file" class="m3-input" placeholder="/path/to/env.json">
+            <label>Environment File</label>
+            <div class="file-picker-m3" onclick="document.getElementById('pick-env').click()">
+                <i class="material-icons">description</i>
+                <span id="env-label">Select JSON</span>
+                <input type="file" id="pick-env" accept=".json" style="display:none;" onchange="handleFilePick(this, 'env-label')">
+            </div>
+            <small>Optional Postman Environment JSON</small>
         </div>
     </div>
     <div style="margin-top: 16px;">
-        <label>Log Extractor Collection (Optional Path)</label>
-        <input type="text" id="log-extractor" class="m3-input" placeholder="/path/to/log_extractor.json">
+        <label>Log Extractor Collection</label>
+        <div class="file-picker-m3" onclick="document.getElementById('pick-extractor').click()">
+            <i class="material-icons">query_stats</i>
+            <span id="extractor-label">Select Collection</span>
+            <input type="file" id="pick-extractor" accept=".json" style="display:none;" onchange="handleFilePick(this, 'extractor-label')">
+        </div>
         <small>The collection used to fetch logs once correlation IDs are extracted.</small>
     </div>
 </div>
+
+<style>
+.file-picker-m3 {
+    border: 1px dashed var(--border-light);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    background: rgba(var(--accent-rgb), 0.05);
+    transition: all 0.2s ease;
+}
+.file-picker-m3:hover {
+    background: rgba(var(--accent-rgb), 0.1);
+    border-color: var(--accent);
+}
+.file-picker-m3 i {
+    color: var(--accent);
+}
+</style>
 
 <div id="results-section" style="display:none; margin-top: 24px;">
     <div class="m3-card" style="padding:0;">
@@ -76,6 +107,7 @@
 <script>
 let stateRequests = [];
 let correlationIds = [];
+let pickedFiles = {}; // Store File objects for upload
 
 const DEFAULT_SCRIPT = `// Default Extraction Script
 const correlationId = pm.response.headers.get("x-correlation-id");
@@ -84,27 +116,78 @@ if (correlationId) {
     // Values will be collected by Beyond Native
 }`;
 
-async function scanCollections() {
-    const folder = document.getElementById('root-folder').value;
-    if (!folder) return alert("Please provide a folder path.");
-
-    showOverlay("Scanning collections...");
-    try {
-        const res = await fetch('/api/postman/scan', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ folder })
-        });
-        const data = await res.json();
-        stateRequests = data.requests;
-        renderRequests();
-        document.getElementById('results-section').style.display = 'block';
-    } catch (e) {
-        alert("Scan failed. Ensure path is correct and accessible.");
-    } finally {
-        hideOverlay();
+function handleFilePick(input, labelId) {
+    const file = input.files[0];
+    if (file) {
+        document.getElementById(labelId).innerText = file.name;
+        pickedFiles[labelId] = file;
     }
 }
+
+async function handleFolderPick(input) {
+    const files = Array.from(input.files);
+    const collections = files.filter(f => f.name.endsWith('.postman_collection.json'));
+    document.getElementById('folder-label').innerText = `${collections.length} Collections Found`;
+    
+    // For large folders, we need to upload them to the server for scanner to work
+    // OR we parse them browser side. Let's parse them browser side for speed!
+    stateRequests = [];
+    showOverlay("Analyzing Collections...");
+    
+    for (const file of collections) {
+        const text = await file.text();
+        try {
+            const data = JSON.parse(text);
+            const requests = extractRequestsFromData(data, file.webkitRelativePath);
+            stateRequests.push(...requests);
+        } catch (e) {
+            console.error("Failed to parse", file.name);
+        }
+    }
+    
+    renderRequests();
+    document.getElementById('results-section').style.display = 'block';
+    hideOverlay();
+}
+
+function extractRequestsFromData(data, collectionPath) {
+    const requests = [];
+    function recurse(items, parent = "") {
+        items.forEach(item => {
+            const name = item.name;
+            const fullName = parent ? `${parent} > ${name}` : name;
+            if (item.request) {
+                let url = item.request.url || "";
+                if (typeof url === 'object') url = url.raw || "";
+                
+                let script = "";
+                if (item.event) {
+                    item.event.forEach(ev => {
+                        if (ev.listen === 'test' && ev.script) {
+                            script = (ev.script.exec || []).join('\n');
+                        }
+                    });
+                }
+
+                requests.push({
+                    id: Math.random().toString(36).substr(2, 9),
+                    name: name,
+                    full_name: fullName,
+                    method: item.request.method,
+                    url: url,
+                    collection_path: collectionPath, 
+                    script: script || DEFAULT_SCRIPT
+                });
+            }
+            if (item.item) recurse(item.item, fullName);
+        });
+    }
+    recurse(data.item || []);
+    return requests;
+}
+
+// We don't need scanCollections() anymore as it's handled by handleFolderPick
+async function scanCollections() {} // Placeholder
 
 function renderRequests() {
     const tbody = document.getElementById('request-body');
