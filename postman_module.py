@@ -133,12 +133,19 @@ class PostmanManager:
 
             # Phase 2: Execute via Newman
             report_path = os.path.join(tempfile.gettempdir(), f"report_{uuid.uuid4()}.json")
-            cmd = ["newman", "run", temp_col_path, "--reporters", "json", "--reporter-json-export", report_path]
+            
+            # Use shell=True and join with quotes to handle potential spaces in paths
+            cmd_parts = [
+                "newman", "run", f'"{temp_col_path}"',
+                "--reporters", "json",
+                "--reporter-json-export", f'"{report_path}"'
+            ]
             
             if environment_path and os.path.exists(environment_path):
-                cmd.extend(["-e", environment_path])
+                cmd_parts.extend(["-e", f'"{environment_path}"'])
             
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=45)
+            cmd_str = " ".join(cmd_parts)
+            result = subprocess.run(cmd_str, capture_output=True, text=True, timeout=45, shell=True)
             
             if os.path.exists(report_path):
                 with open(report_path, 'r') as f:
