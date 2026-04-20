@@ -66,18 +66,25 @@
 
 <div id="results-section" style="display:none; margin-top: 24px;">
     <div class="m3-card" style="padding:0;">
-        <div style="padding: 16px; border-bottom: 1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center;">
-            <h3><i class="material-icons">list</i> Discovered Requests</h3>
+        <div style="padding: 16px; border-bottom: 1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center; gap: 24px;">
+            <div style="display:flex; align-items:center; gap:16px; flex:1;">
+                <h3><i class="material-icons">list</i> Discovered Requests</h3>
+                <div class="m3-input-group" style="margin:0; flex:1; max-width:400px;">
+                    <div style="position:relative;">
+                        <i class="material-icons" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:20px;">search</i>
+                        <input type="text" id="req-search" class="m3-input" placeholder="Search by URL Substring..." oninput="filterRequests()" style="margin:0; padding-left:40px;">
+                    </div>
+                </div>
+            </div>
             <span id="request-count" class="status-badge" style="background: var(--accent); color: white;">0 Requests</span>
         </div>
         <div class="table-container" style="max-height: 500px; overflow-y: auto;">
             <table class="m3-table">
                 <thead>
                     <tr>
-                        <th style="width: 40px;"><input type="checkbox" onclick="toggleAll(this)"></th>
+                        <th style="width: 40px;"><input type="checkbox" id="master-check" onclick="toggleAll(this)"></th>
                         <th>Request Name & Path</th>
                         <th>Method & URL</th>
-                        <th style="width: 300px;">Postman Script (Correlation ID Extraction)</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -189,6 +196,24 @@ function extractRequestsFromData(data, collectionPath) {
 // We don't need scanCollections() anymore as it's handled by handleFolderPick
 async function scanCollections() {} // Placeholder
 
+function filterRequests() {
+    const term = document.getElementById('req-search').value.toLowerCase();
+    const rows = document.querySelectorAll('#request-body tr');
+    
+    rows.forEach(row => {
+        const url = row.querySelector('.req-url').innerText.toLowerCase();
+        const checkbox = row.querySelector('.req-check');
+        
+        if (url.includes(term)) {
+            row.style.display = 'table-row';
+            if (term.length > 0) checkbox.checked = true;
+        } else {
+            row.style.display = 'none';
+            if (term.length > 0) checkbox.checked = false;
+        }
+    });
+}
+
 function renderRequests() {
     const tbody = document.getElementById('request-body');
     document.getElementById('request-count').innerText = `${stateRequests.length} Requests`;
@@ -202,10 +227,7 @@ function renderRequests() {
             </td>
             <td>
                 <span class="status-badge" style="background:#eee; color:#333; font-size:10px;">${req.method}</span>
-                <span style="font-size:12px; color:#666;">${req.url}</span>
-            </td>
-            <td>
-                <textarea class="m3-input script-area" style="font-family:monospace; font-size:11px; height:60px; margin:0;" spellcheck="false">${req.script.trim() || DEFAULT_SCRIPT}</textarea>
+                <span class="req-url" style="font-size:12px; color:#666;">${req.url}</span>
             </td>
             <td class="status-cell">
                 <span class="status-badge">Ready</span>
@@ -242,7 +264,7 @@ async function executeRequests() {
                 body: JSON.stringify({ 
                     request: req, 
                     environment: envFile,
-                    script: row.querySelector('.script-area').value
+                    script: DEFAULT_SCRIPT // Using default since column was removed
                 })
             });
             const data = await res.json();
