@@ -66,6 +66,15 @@
     color: var(--accent);
 }
 #report-table th { background: #f8f9fa; position: sticky; top: 0; z-index: 10; }
+.status-badge {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+}
+.status-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+.status-error { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+.status-neutral { background: #f5f5f5; color: #616161; border: 1px solid #e0e0e0; }
 </style>
 
 <!-- Phase 2: Discovered Requests -->
@@ -390,19 +399,25 @@ async function applyJQFilter() {
 function renderReportTable(results) {
     const tbody = document.getElementById('report-body');
     // Precision mapping to logRetrieveResponse.result fields
-    tbody.innerHTML = results.map(row => `
-        <tr>
-            <td style="font-size:11px; font-family:monospace;">${row.correlationId || '-'}</td>
-            <td>${row.env || '-'}</td>
-            <td>${row.processname || '-'}</td>
-            <td>${row.apiname || '-'}</td>
-            <td>${row.businessunit || '-'}</td>
-            <td><span class="status-badge ${row.status === 'SUCCESS' ? 'status-success' : 'status-error'}">${row.status || '-'}</span></td>
-            <td style="font-size:11px;">${row.datetimestamp || '-'}</td>
-            <td title="${row.message}" style="max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${row.message || '-'}</td>
-            <td style="color:var(--error); font-size:11px;">${row.errormessage || '-'}</td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = results.map(row => {
+        let statusClass = 'status-neutral';
+        if (row.status === 'SUCCESS') statusClass = 'status-success';
+        else if (row.status === 'ERROR') statusClass = 'status-error';
+        
+        return `
+            <tr>
+                <td style="font-size:11px; font-family:monospace;">${row.correlationId || '-'}</td>
+                <td>${row.env || '-'}</td>
+                <td>${row.processname || '-'}</td>
+                <td>${row.apiname || '-'}</td>
+                <td>${row.businessunit || '-'}</td>
+                <td><span class="status-badge ${statusClass}">${row.status || '-'}</span></td>
+                <td style="font-size:11px;">${row.datetimestamp || '-'}</td>
+                <td title="${row.message}" style="max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${row.message || '-'}</td>
+                <td style="color:var(--error); font-size:11px;">${row.errormessage || '-'}</td>
+            </tr>
+        `;
+    }).join('');
 }
 
 function downloadReportCSV() {
