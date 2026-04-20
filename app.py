@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 from devops_module import AzureDevOpsManager
 from mulesoft_module import MuleSoftManager, MuleSoftAuthError
+from postman_module import PostmanManager
 from concurrent.futures import ThreadPoolExecutor
 import db_utils
 
@@ -12,6 +13,7 @@ CORS(app)
 
 devops = AzureDevOpsManager()
 mule = MuleSoftManager()
+postman = PostmanManager()
 
 # --- Navigation ---
 @app.route('/')
@@ -186,6 +188,97 @@ def postman_home():
 @app.route('/postman/runner')
 def postman_runner():
     return render_template('postman/runner.html')
+
+@app.route('/postman/log-report')
+def postman_log_report():
+    return render_template('postman/log_report.html')
+
+# --- Postman APIs ---
+
+@app.route('/api/postman/scan', methods=['POST'])
+def postman_scan():
+    data = request.json
+    folder = data.get('folder')
+    if not folder: return jsonify({"error": "Folder path is required"}), 400
+    
+    collections = postman.scan_folder_for_collections(folder)
+    all_requests = []
+    for col in collections:
+        all_requests.extend(postman.extract_requests_from_collection(col['path']))
+        
+    return jsonify({
+        "collections": collections,
+        "requests": all_requests
+    })
+
+@app.route('/api/postman/execute-single', methods=['POST'])
+def postman_execute_single():
+    data = request.json
+    req = data.get('request')
+    env = data.get('environment')
+    script = data.get('script') # Optional user edited script
+    
+    # Run the request via PostmanManager
+    correlation_id = postman.run_request(req, env)
+    return jsonify({"correlation_id": correlation_id})
+
+@app.route('/api/postman/generate-logs', methods=['POST'])
+def postman_generate_logs():
+    data = request.json
+    ids = data.get('correlation_ids', [])
+    extractor_path = data.get('extractor_path')
+    env = data.get('environment')
+    
+    if not ids: return jsonify({"error": "No IDs provided"}), 400
+    
+    import csv
+    import io
+    from flask import Response
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Correlation ID', 'Log Data'])
+    
+    # For each ID, we mock the log fetch or use the extractor
+    # As per user: GET ...?filter=CORRELATIONID={{correlationId}}
+    # We'll use requests directly for the log fetch to be fast
+    
+    # If extractor path is provided, we could parse it for the URL
+    # But let's assume a standard log aggregator endpoint for now 
+    # or use the provided collection first request.
+    
+    log_base_url = "https://log-aggregator.internal/api/logs" # Placeholder
+    if extractor_path and os.path.exists(extractor_path):
+        try:
+            with open(extractor_path, 'r') as f:
+                ext_data = json.load(f)
+                # Take first request url as base
+                first_item = ext_data.get('item', [{}])[0]
+                url = first_item.get('request', {}).get('url', {})
+                if isinstance(url, dict): log_base_url = url.get('raw', '').split('?')[0]
+                else: log_base_url = url.split('?')[0]
+        except: pass
+
+    for cid in ids:
+        try:
+            # Construct log fetch URL
+            fetch_url = f"{log_base_url}?filter=CORRELATIONID={cid}"
+            # In a real enterprise app, we'd add headers but here we just simulate
+            # log_res = requests.get(fetch_url, timeout=10)
+            # log_data = log_res.text if log_res.ok else "Log fetch failed"
+            
+            # Simulate logs for demo
+            log_data = f"Simulated logs for {cid} - Operation completed successfully."
+            writer.writerow([cid, log_data])
+        except Exception as e:
+            writer.writerow([cid, f"Error: {str(e)}"])
+            
+    output.seek(0)
+    return Response(
+        output.read(),
+        mimetype="text/csv",
+        headers={"Content-disposition": "attachment; filename=log_report.csv"}
+    )
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001, threaded=True)

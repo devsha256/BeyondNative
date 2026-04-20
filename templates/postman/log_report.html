@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Postman Log Report{% endblock %}
+
+{% block content %}
+<div class="m3-header" style="display:flex; justify-content:space-between; align-items:center;">
+    <h1>Postman: Log Report Generator</h1>
+    <a href="/postman" class="m3-button-outline">
+        <i class="material-icons">arrow_back</i> Suite Home
+    </a>
+</div>
+
+<div class="m3-card" style="margin-top: 24px;">
+    <h3><i class="material-icons">settings</i> Phase 1: Configuration</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px;">
+        <div class="m3-input-group">
+            <label>Collections Folder (Local Path)</label>
+             <div style="display: flex; gap: 8px;">
+                <input type="text" id="root-folder" class="m3-input" placeholder="/Users/name/collections" style="margin:0;">
+                <button class="m3-button" onclick="scanCollections()">Scan Folder</button>
+            </div>
+            <small>Recursively scans all .postman_collection.json files</small>
+        </div>
+        <div class="m3-input-group">
+            <label>Environment File (Optional Path)</label>
+            <input type="text" id="env-file" class="m3-input" placeholder="/path/to/env.json">
+        </div>
+    </div>
+    <div style="margin-top: 16px;">
+        <label>Log Extractor Collection (Optional Path)</label>
+        <input type="text" id="log-extractor" class="m3-input" placeholder="/path/to/log_extractor.json">
+        <small>The collection used to fetch logs once correlation IDs are extracted.</small>
+    </div>
+</div>
+
+<div id="results-section" style="display:none; margin-top: 24px;">
+    <div class="m3-card" style="padding:0;">
+        <div style="padding: 16px; border-bottom: 1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center;">
+            <h3><i class="material-icons">list</i> Discovered Requests</h3>
+            <span id="request-count" class="status-badge" style="background: var(--accent); color: white;">0 Requests</span>
+        </div>
+        <div class="table-container" style="max-height: 500px; overflow-y: auto;">
+            <table class="m3-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;"><input type="checkbox" onclick="toggleAll(this)"></th>
+                        <th>Request Name & Path</th>
+                        <th>Method & URL</th>
+                        <th style="width: 300px;">Postman Script (Correlation ID Extraction)</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="request-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div style="position: fixed; bottom: 32px; right: 32px; z-index: 1000; display:flex; gap:16px;">
+        <button id="btn-execute" class="m3-button" onclick="executeRequests()" style="box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-radius: 50px; padding: 16px 32px;">
+            <i class="material-icons">play_arrow</i> Execute & Extract IDs
+        </button>
+        <button id="btn-generate" class="m3-button" onclick="generateReport()" style="display:none; background: var(--success); box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-radius: 50px; padding: 16px 32px;">
+            <i class="material-icons">receipt_long</i> Generate Log Report
+        </button>
+    </div>
+</div>
+
+<div class="progress-overlay" id="overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; flex-direction:column; color:white;">
+    <div class="m3-loader"></div>
+    <h3 id="overlay-text" style="margin-top:24px;">Processing...</h3>
+    <div style="width: 300px; height: 4px; background: #eee; border-radius: 2px; margin-top: 16px; overflow: hidden;">
+        <div id="overlay-bar" style="width: 0%; height: 100%; background: var(--accent); transition: width 0.3s ease;"></div>
+    </div>
+</div>
+
+<script>
+let stateRequests = [];
+let correlationIds = [];
+
+const DEFAULT_SCRIPT = `// Default Extraction Script
+const correlationId = pm.response.headers.get("x-correlation-id");
+if (correlationId) {
+    console.log("Extracted Correlation ID: " + correlationId);
+    // Values will be collected by Beyond Native
+}`;
+
+async function scanCollections() {
+    const folder = document.getElementById('root-folder').value;
+    if (!folder) return alert("Please provide a folder path.");
+
+    showOverlay("Scanning collections...");
+    try {
+        const res = await fetch('/api/postman/scan', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ folder })
+        });
+        const data = await res.json();
+        stateRequests = data.requests;
+        renderRequests();
+        document.getElementById('results-section').style.display = 'block';
+    } catch (e) {
+        alert("Scan failed. Ensure path is correct and accessible.");
+    } finally {
+        hideOverlay();
+    }
+}
+
+function renderRequests() {
+    const tbody = document.getElementById('request-body');
+    document.getElementById('request-count').innerText = `${stateRequests.length} Requests`;
+    
+    tbody.innerHTML = stateRequests.map((req, idx) => `
+        <tr id="row-${req.id}">
+            <td><input type="checkbox" class="req-check" checked data-idx="${idx}"></td>
+            <td>
+                <div style="font-weight:600;">${req.name}</div>
+                <div style="font-size:11px; color:#666;">${req.full_name}</div>
+            </td>
+            <td>
+                <span class="status-badge" style="background:#eee; color:#333; font-size:10px;">${req.method}</span>
+                <span style="font-size:12px; color:#666;">${req.url}</span>
+            </td>
+            <td>
+                <textarea class="m3-input script-area" style="font-family:monospace; font-size:11px; height:60px; margin:0;" spellcheck="false">${req.script.trim() || DEFAULT_SCRIPT}</textarea>
+            </td>
+            <td class="status-cell">
+                <span class="status-badge">Ready</span>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function toggleAll(master) {
+    document.querySelectorAll('.req-check').forEach(c => c.checked = master.checked);
+}
+
+async function executeRequests() {
+    const selectedIndices = Array.from(document.querySelectorAll('.req-check:checked')).map(c => parseInt(c.dataset.idx));
+    if (selectedIndices.length === 0) return alert("No requests selected.");
+
+    const toExecute = selectedIndices.map(i => stateRequests[i]);
+    const envFile = document.getElementById('env-file').value;
+    
+    showOverlay(`Executing ${toExecute.length} requests...`);
+    correlationIds = [];
+    
+    let completed = 0;
+    for (const req of toExecute) {
+        updateOverlay(`Running: ${req.name}...`, (completed / toExecute.length) * 100);
+        const row = document.getElementById(`row-${req.id}`);
+        const statusCell = row.querySelector('.status-cell');
+        statusCell.innerHTML = '<i class="material-icons rotating">sync</i>';
+        
+        try {
+            const res = await fetch('/api/postman/execute-single', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ 
+                    request: req, 
+                    environment: envFile,
+                    script: row.querySelector('.script-area').value
+                })
+            });
+            const data = await res.json();
+            if (data.correlation_id) {
+                correlationIds.push(data.correlation_id);
+                statusCell.innerHTML = `<span class="status-badge status-success">${data.correlation_id}</span>`;
+            } else {
+                statusCell.innerHTML = `<span class="status-badge status-error">No ID</span>`;
+            }
+        } catch (e) {
+            statusCell.innerHTML = `<span class="status-badge status-error">Failed</span>`;
+        }
+        completed++;
+    }
+    
+    hideOverlay();
+    if (correlationIds.length > 0) {
+        document.getElementById('btn-generate').style.display = 'inline-flex';
+        alert(`Extracted ${correlationIds.length} Correlation IDs.`);
+    } else {
+        alert("No Correlation IDs were extracted.");
+    }
+}
+
+async function generateReport() {
+    if (correlationIds.length === 0) return;
+    const logExtractor = document.getElementById('log-extractor').value;
+    const envFile = document.getElementById('env-file').value;
+    
+    showOverlay("Generating Log Report...");
+    
+    try {
+        const res = await fetch('/api/postman/generate-logs', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ 
+                correlation_ids: correlationIds,
+                extractor_path: logExtractor,
+                environment: envFile
+            })
+        });
+        
+        if (res.ok) {
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `log_report_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        } else {
+            alert("Failed to generate report.");
+        }
+    } catch (e) {
+        alert("Error generating report.");
+    } finally {
+        hideOverlay();
+    }
+}
+
+function showOverlay(text) {
+    document.getElementById('overlay-text').innerText = text;
+    document.getElementById('overlay-bar').style.width = '0%';
+    document.getElementById('overlay').style.display = 'flex';
+}
+
+function updateOverlay(text, percent) {
+    document.getElementById('overlay-text').innerText = text;
+    document.getElementById('overlay-bar').style.width = `${percent}%`;
+}
+
+function hideOverlay() {
+    document.getElementById('overlay').style.display = 'none';
+}
+</script>
+{% endblock %}

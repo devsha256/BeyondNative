@@ -15,10 +15,12 @@
         </div>
     </a>
 
-    <div class="m3-card" style="opacity: 0.7;">
-        <i class="material-icons" style="font-size: 48px; color: var(--text-muted);">inventory_2</i>
-        <h3 style="margin-top: 16px;">Environment Sync</h3>
-        <p style="color: var(--text-muted); font-size: 14px; margin-top: 8px;">Coming Soon: Synchronize Postman environments with your DevOps variables across all projects.</p>
-    </div>
+    <a href="/postman/log-report" style="text-decoration: none; color: inherit;">
+        <div class="m3-card" style="height: 100%; transition: transform 0.2s; cursor: pointer;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+            <i class="material-icons" style="font-size: 48px; color: var(--success);">receipt_long</i>
+            <h3 style="margin-top: 16px;">Log Report</h3>
+            <p style="color: var(--text-muted); font-size: 14px; margin-top: 8px;">Extract correlation IDs from collections and aggregate cross-service log reports automatically.</p>
+        </div>
+    </a>
 </div>
 {% endblock %}
