@@ -91,20 +91,19 @@ class PostmanManager:
         
         return requests
 
-    def run_request(self, request_data, environment_path=None):
+    def run_request(self, request_data, environment_path=None, custom_script=None):
         """
         Runs a single request using Newman.
         Captures the x-correlation-id from response headers or environment variables.
         """
+        debug_mode = os.getenv("POSTMAN_DEBUG", "false").lower() == "true"
         # Phase 1: Create a temporary focused collection containing ONLY the target request
-        # This ensures we run only what we need and avoid large collection overhead
         temp_col_path = os.path.join(tempfile.gettempdir(), f"temp_req_{uuid.uuid4()}.json")
         
         try:
             with open(request_data['collection_path'], 'r', encoding='utf-8') as f:
                 original = json.load(f)
             
-            # Helper to find the specific item by name (deep search)
             def find_item_by_name(items, target_name):
                 for item in items:
                     if item.get('name') == target_name and 'request' in item:
@@ -119,7 +118,21 @@ class PostmanManager:
                 log.error(f"Could not find request '{request_data['name']}' in collection.")
                 return None
 
-            # Build a minimal collection shell
+            # INJECT SCRIPT: If custom_script is provided, replace or add the 'test' event
+            if custom_script:
+                if 'event' not in target_item:
+                    target_item['event'] = []
+                # Remove existing test scripts
+                target_item['event'] = [e for e in target_item['event'] if e.get('listen') != 'test']
+                # Add the new one
+                target_item['event'].append({
+                    "listen": "test",
+                    "script": {
+                        "exec": custom_script.split('\n'),
+                        "type": "text/javascript"
+                    }
+                })
+
             mini_col = {
                 "info": {
                     "name": "Temp Execution",
@@ -134,7 +147,6 @@ class PostmanManager:
             # Phase 2: Execute via Newman
             report_path = os.path.join(tempfile.gettempdir(), f"report_{uuid.uuid4()}.json")
             
-            # Use shell=True and join with quotes to handle potential spaces in paths
             cmd_parts = [
                 "newman", "run", f'"{temp_col_path}"',
                 "--reporters", "json",
@@ -145,12 +157,23 @@ class PostmanManager:
                 cmd_parts.extend(["-e", f'"{environment_path}"'])
             
             cmd_str = " ".join(cmd_parts)
+            if debug_mode: log.info(f"Executing: {cmd_str}")
+            
             result = subprocess.run(cmd_str, capture_output=True, text=True, timeout=45, shell=True)
             
+            if debug_mode and result.stdout: log.info(f"Newman STDOUT: {result.stdout[:500]}...")
+            if result.returncode != 0:
+                log.error(f"Newman exited with code {result.returncode}. Stderr: {result.stderr}")
+
             if os.path.exists(report_path):
                 with open(report_path, 'r') as f:
                     report = json.load(f)
                 
+                if debug_mode:
+                    log.info(f"Report structure: {list(report.keys())}")
+                    if 'environment' in report:
+                        log.info(f"Env values: {report['environment'].get('values', [])}")
+
                 # Cleanup temp files
                 try: os.remove(temp_col_path)
                 except: pass
@@ -163,20 +186,24 @@ class PostmanManager:
                     headers = exe.get('response', {}).get('header', [])
                     for h in headers:
                         if h.get('key', '').lower() == 'x-correlation-id':
-                            return h.get('value')
+                            val = h.get('value')
+                            if debug_mode: log.info(f"Found via Header: {val}")
+                            return val
                 
-                # Extraction Strategy B: Check Environment Variables (if set by script)
-                # User's script might do: pm.environment.set("correlationId", ...)
+                # Extraction Strategy B: Check Environment Variables
                 env_vars = report.get('environment', {}).get('values', [])
                 for var in env_vars:
                     if var.get('key', '').lower() in ['correlationid', 'x-correlation-id']:
-                        return var.get('value')
-
+                        val = var.get('value')
+                        if debug_mode: log.info(f"Found via Env Var: {val}")
+                        return val
             else:
-                log.error(f"Newman failed to generate report. Stderr: {result.stderr}")
+                log.error(f"Newman report file not found at {report_path}")
                 
         except Exception as e:
             log.error(f"Postman execution exception: {e}")
-            if os.path.exists(temp_col_path): os.remove(temp_col_path)
+            if os.path.exists(temp_col_path):
+                try: os.remove(temp_col_path)
+                except: pass
 
         return None

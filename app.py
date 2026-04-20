@@ -234,7 +234,7 @@ def postman_execute_single():
     script = data.get('script') # Optional user edited script
     
     # Run the request via PostmanManager
-    correlation_id = postman.run_request(req, env)
+    correlation_id = postman.run_request(req, env, script)
     return jsonify({"correlation_id": correlation_id})
 
 @app.route('/api/postman/generate-logs', methods=['POST'])
