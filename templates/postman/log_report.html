@@ -111,15 +111,30 @@
 <!-- Phase 3: Report Results Table -->
 <div id="report-section" style="display:none; margin-top: 24px;">
     <div class="m3-card" style="padding:0;">
-        <div style="padding: 16px; border-bottom: 1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center;">
-            <h3><i class="material-icons">summarize</i> Log Report Results</h3>
-            <div style="display:flex; gap:12px;">
-                <button onclick="downloadReportCSV()" class="m3-button secondary">
-                    <i class="material-icons">download</i> Download CSV
-                </button>
-                <button onclick="backToRequests()" class="m3-button">
-                    <i class="material-icons">arrow_back</i> Back to Requests
-                </button>
+        <div style="padding: 16px; border-bottom: 1px solid var(--border-light); display:flex; flex-direction:column; gap:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3><i class="material-icons">summarize</i> Log Report Results</h3>
+                <div style="display:flex; gap:12px;">
+                    <button onclick="downloadReportCSV()" class="m3-button secondary">
+                        <i class="material-icons">download</i> Download CSV
+                    </button>
+                    <button onclick="backToRequests()" class="m3-button">
+                        <i class="material-icons">arrow_back</i> Back to Requests
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Elite JQ Search Bar -->
+            <div class="m3-input-group" style="margin:0;">
+                <label style="font-size:12px; color:var(--accent); font-weight:600;">Elite JQ Filter</label>
+                <div style="position:relative; display:flex; gap:8px;">
+                    <i class="material-icons" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--accent); font-size:20px;">terminal</i>
+                    <input type="text" id="jq-filter-input" class="m3-input" placeholder="e.g. .[] | select(.status == 'ERROR')" style="margin:0; padding-left:40px; font-family:monospace; background: rgba(var(--accent-rgb), 0.03);" onkeyup="if(event.key==='Enter') applyJQFilter()">
+                    <button onclick="applyJQFilter()" class="m3-button" style="min-width:120px;">
+                        <i class="material-icons">filter_alt</i> Apply
+                    </button>
+                </div>
+                <small>Press Enter to transform results using JQ logic architect.</small>
             </div>
         </div>
         <div class="table-container" style="max-height: 600px; overflow-y: auto;">
@@ -128,12 +143,13 @@
                     <tr>
                         <th>Correlation ID</th>
                         <th>Env</th>
-                        <th>Process Name</th>
+                        <th>Process</th>
                         <th>API Name</th>
-                        <th>Business Unit</th>
+                        <th>BU</th>
                         <th>Status</th>
                         <th>Timestamp</th>
                         <th>Message</th>
+                        <th>Error Msg</th>
                     </tr>
                 </thead>
                 <tbody id="report-body"></tbody>
@@ -331,7 +347,7 @@ async function generateReport() {
         });
         const data = await res.json();
         if (data.results && data.results.length > 0) {
-            fullReportData = data.results; // Save FULL data for CSV
+            fullReportData = data.results; 
             renderReportTable(fullReportData);
             document.getElementById('results-section').style.display = 'none';
             document.getElementById('setup-section').style.display = 'none';
@@ -341,9 +357,39 @@ async function generateReport() {
     finally { hideOverlay(); }
 }
 
+async function applyJQFilter() {
+    const filter = document.getElementById('jq-filter-input').value;
+    if (!filter || filter.trim() === "") {
+        renderReportTable(fullReportData); // Reset
+        return;
+    }
+    
+    showOverlay("Calculating JQ Logic...");
+    try {
+        const res = await fetch('/api/jq/filter', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ data: fullReportData, filter: filter })
+        });
+        const transformed = await res.json();
+        hideOverlay();
+        
+        if (transformed.error) {
+            alert(transformed.error);
+        } else if (Array.isArray(transformed)) {
+            renderReportTable(transformed);
+        } else {
+            renderReportTable([transformed]);
+        }
+    } catch (e) {
+        hideOverlay();
+        alert("JQ Execution Failed: " + e);
+    }
+}
+
 function renderReportTable(results) {
     const tbody = document.getElementById('report-body');
-    // Only render the specific UI fields requested
+    // Precision mapping to logRetrieveResponse.result fields
     tbody.innerHTML = results.map(row => `
         <tr>
             <td style="font-size:11px; font-family:monospace;">${row.correlationId || '-'}</td>
@@ -351,9 +397,9 @@ function renderReportTable(results) {
             <td>${row.processname || '-'}</td>
             <td>${row.apiname || '-'}</td>
             <td>${row.businessunit || '-'}</td>
-            <td title="${row.message}" style="max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${row.message || '-'}</td>
             <td><span class="status-badge ${row.status === 'SUCCESS' ? 'status-success' : 'status-error'}">${row.status || '-'}</span></td>
             <td style="font-size:11px;">${row.datetimestamp || '-'}</td>
+            <td title="${row.message}" style="max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${row.message || '-'}</td>
             <td style="color:var(--error); font-size:11px;">${row.errormessage || '-'}</td>
         </tr>
     `).join('');

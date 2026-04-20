@@ -266,63 +266,12 @@ def postman_generate_logs():
     if not ids: return jsonify({"error": "No IDs provided"}), 400
     if not extractor_path: return jsonify({"error": "No Log Extractor collection provided"}), 400
 
-    from logger import log
-    report_results = []
+    report_result = postman.aggregate_logs(ids, extractor_path, env_path)
     
-    try:
-        with open(extractor_path, 'r', encoding='utf-8') as f:
-            extractor_data = json.load(f)
-            
-            def find_first_req(items):
-                for i in items:
-                    if 'request' in i: return i
-                    if 'item' in i:
-                        res = find_first_req(i['item'])
-                        if res: return res
-                return None
-            
-            base_req_item = find_first_req(extractor_data.get('item', []))
-            if not base_req_item:
-                return jsonify({"error": "No request found in extractor collection"}), 400
-            
-            for cid in ids:
-                variables = postman._get_variables_dict(extractor_path, env_path)
-                variables['correlationId'] = cid 
-                variables['correlation_id'] = cid 
-                
-                method = base_req_item['request']['method']
-                raw_url = base_req_item['request']['url']
-                if isinstance(raw_url, dict): raw_url = raw_url.get('raw', '')
-                
-                url = postman._resolve_variables(raw_url, variables)
-                headers = {postman._resolve_variables(h['key'], variables): postman._resolve_variables(h['value'], variables)
-                           for h in base_req_item['request'].get('header', []) if not h.get('disabled')}
-                
-                try:
-                    res = requests.request(method, url, headers=headers, timeout=15, verify=False)
-                    if res.ok:
-                        json_body = res.json()
-                        # Support the specific structure: logRetrieveResponse.result
-                        result_list = json_body.get('logRetrieveResponse', {}).get('result', [])
-                        # Fallback if it's already a list
-                        if not result_list and isinstance(json_body, list): result_list = json_body
-                        
-                        for item in result_list:
-                            item['correlationId'] = cid
-                            report_results.append(item)
-                    else:
-                        report_results.append({"correlationId": cid, "message": f"Fetch failed: {res.status_code}", "status": "Error"})
-                except Exception as e:
-                    report_results.append({"correlationId": cid, "message": f"Error: {str(e)}", "status": "Error"})
-
-    except Exception as e:
-        log.error(f"Global generation error: {e}")
-        return jsonify({"error": str(e)}), 500
-
-    return jsonify({
-        "results": report_results,
-        "count": len(report_results)
-    })
+    if "error" in report_result:
+        return jsonify(report_result), 500
+        
+    return jsonify(report_result)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001, threaded=True)

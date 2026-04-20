@@ -197,3 +197,52 @@ class PostmanManager:
             log.error(f"In-House execution failed: {e}")
         
         return None
+
+    def aggregate_logs(self, correlation_ids, extractor_path, environment_path=None):
+        """
+        Batch retrieves logs for multiple correlation IDs using a Postman collection as a template.
+        """
+        results = []
+        try:
+            with open(extractor_path, 'r', encoding='utf-8') as f:
+                extractor_data = json.load(f)
+            
+            def find_req(items):
+                for i in items:
+                    if 'request' in i: return i
+                    if 'item' in i:
+                        res = find_req(i['item'])
+                        if res: return res
+                return None
+            
+            base_req = find_req(extractor_data.get('item', []))
+            if not base_req: return {"error": "No request found in extractor collection"}
+
+            shared_vars = self._get_variables_dict(extractor_path, environment_path)
+            method = base_req['request']['method']
+            raw_url = base_req['request']['url']
+            if isinstance(raw_url, dict): raw_url = raw_url.get('raw', '')
+            raw_headers = base_req['request'].get('header', [])
+
+            for cid in correlation_ids:
+                vars = shared_vars.copy()
+                vars['correlationId'] = cid
+                url = self._resolve_variables(raw_url, vars)
+                headers = {self._resolve_variables(h['key'], vars): self._resolve_variables(h['value'], vars)
+                           for h in raw_headers if not h.get('disabled')}
+                try:
+                    res = requests.request(method, url, headers=headers, timeout=15, verify=False)
+                    if res.ok:
+                        body = res.json()
+                        resp_list = body.get('logRetrieveResponse', {}).get('result', [])
+                        if not resp_list and isinstance(body, list): resp_list = body
+                        for item in resp_list:
+                            item['correlationId'] = cid
+                            results.append(item)
+                    else:
+                        results.append({"correlationId": cid, "status": "ERROR", "message": f"HTTP {res.status_code}"})
+                except Exception as e:
+                    results.append({"correlationId": cid, "status": "ERROR", "message": str(e)})
+        except Exception as e:
+            return {"error": str(e)}
+        return {"results": results, "count": len(results)}
