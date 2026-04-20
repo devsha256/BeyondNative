@@ -69,6 +69,22 @@
         
         try {
             const res = await fetch('/api/mule/orgs');
+            
+            if (res.status === 401) {
+                // Credentials Expired
+                orgSelect.innerHTML = '<option value="">Credentials Expired (401)</option>';
+                ['mule_bearer', 'mule_client_id', 'mule_client_secret'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el && el.value) {
+                        el.style.border = "2px solid var(--error)";
+                        el.style.boxShadow = "0 0 15px rgba(220, 38, 38, 0.4)";
+                        // Add a title for clarity
+                        el.title = "This credential appears to be expired or invalid (received 401)";
+                    }
+                });
+                return;
+            }
+
             if (res.ok) {
                 const orgs = await res.json();
                 if (orgs && orgs.length > 0) {
