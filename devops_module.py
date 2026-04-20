@@ -5,6 +5,7 @@ import fnmatch
 import urllib.parse
 from dotenv import load_dotenv
 import db_utils
+from logger import log
 
 load_dotenv()
 
@@ -126,20 +127,33 @@ class AzureDevOpsManager:
             "description": f"Automated Deployment PR for {repo_name}."
         }
 
-        if auto_complete:
-            id_val = self._get_identity_id()
-            if id_val:
-                payload["autoCompleteSetBy"] = {"id": id_val}
-                payload["completionOptions"] = {
-                    "deleteSourceBranch": False,
-                    "mergeStrategy": "squash", # Common for automated deployments
-                    "transitionWorkItems": True
-                }
-
         response = requests.post(url, headers=self.headers, json=payload)
         data = response.json()
+        
         if response.status_code in [200, 201]:
             pr_id = data.get('pullRequestId')
             # Manually construct the definitive web URL for browser viewing
             data['webUrl'] = f"https://dev.azure.com/{self.org}/{self.project}/_git/{repo_name}/pullrequest/{pr_id}"
+            
+            # PHASE 2: If auto-complete is requested, we MUST PATCH the PR after creation (standard Azure behavior)
+            if auto_complete:
+                id_val = self._get_identity_id()
+                if id_val:
+                    patch_url = f"{self.base_url}/git/repositories/{repo_name}/pullrequests/{pr_id}?api-version=7.1"
+                    patch_payload = {
+                        "autoCompleteSetBy": {"id": id_val},
+                        "completionOptions": {
+                            "deleteSourceBranch": False,
+                            "mergeStrategy": "squash",
+                            "transitionWorkItems": True
+                        }
+                    }
+                    try:
+                        patch_res = requests.patch(patch_url, headers=self.headers, json=patch_payload)
+                        if patch_res.status_code != 200:
+                             # We still return the PR creation success, but log the patch failure
+                             log.error(f"Auto-Complete PATCH failed for PR {pr_id}: {patch_res.text}")
+                    except Exception as e:
+                        log.error(f"Auto-Complete PATCH Exception for PR {pr_id}: {e}")
+
         return response.status_code, data
