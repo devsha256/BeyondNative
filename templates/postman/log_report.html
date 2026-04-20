@@ -154,6 +154,9 @@
 let stateRequests = [];
 let correlationIds = [];
 let pickedFiles = {};
+let fullReportData = []; // Store the full raw dataset for comprehensive CSV export
+
+const UI_FIELDS = ['correlationId', 'env', 'processname', 'apiname', 'businessunit', 'message', 'status', 'datetimestamp', 'errormessage'];
 
 const DEFAULT_SCRIPT = `const correlationId = pm.response.headers.get("x-correlation-id");
 if (correlationId) { pm.environment.set("correlationId", correlationId); }`;
@@ -328,7 +331,8 @@ async function generateReport() {
         });
         const data = await res.json();
         if (data.results && data.results.length > 0) {
-            renderReportTable(data.results);
+            fullReportData = data.results; // Save FULL data for CSV
+            renderReportTable(fullReportData);
             document.getElementById('results-section').style.display = 'none';
             document.getElementById('setup-section').style.display = 'none';
             document.getElementById('report-section').style.display = 'block';
@@ -339,6 +343,7 @@ async function generateReport() {
 
 function renderReportTable(results) {
     const tbody = document.getElementById('report-body');
+    // Only render the specific UI fields requested
     tbody.innerHTML = results.map(row => `
         <tr>
             <td style="font-size:11px; font-family:monospace;">${row.correlationId || '-'}</td>
@@ -346,33 +351,38 @@ function renderReportTable(results) {
             <td>${row.processname || '-'}</td>
             <td>${row.apiname || '-'}</td>
             <td>${row.businessunit || '-'}</td>
+            <td title="${row.message}" style="max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${row.message || '-'}</td>
             <td><span class="status-badge ${row.status === 'SUCCESS' ? 'status-success' : 'status-error'}">${row.status || '-'}</span></td>
             <td style="font-size:11px;">${row.datetimestamp || '-'}</td>
-            <td title="${row.message}" style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${row.message || '-'}</td>
+            <td style="color:var(--error); font-size:11px;">${row.errormessage || '-'}</td>
         </tr>
     `).join('');
 }
 
-function backToRequests() {
-    document.getElementById('report-section').style.display = 'none';
-    document.getElementById('results-section').style.display = 'block';
-    document.getElementById('setup-section').style.display = 'block';
-}
-
 function downloadReportCSV() {
-    const table = document.getElementById('report-table');
-    let csv = [];
-    const rows = table.querySelectorAll('tr');
-    for (const row of rows) {
-        const cols = row.querySelectorAll('td, th');
-        const rowData = [];
-        for (const col of cols) rowData.push(`"${col.innerText.replace(/"/g, '""')}"`);
-        csv.push(rowData.join(','));
+    if (fullReportData.length === 0) return;
+    
+    // 1. Find ALL unique keys across ALL rows
+    const allKeys = new Set();
+    fullReportData.forEach(row => Object.keys(row).forEach(k => allKeys.add(k)));
+    const headers = Array.from(allKeys);
+    
+    // 2. Build CSV rows
+    let csvRows = [headers.join(',')]; // Header line
+    
+    for (const row of fullReportData) {
+        const values = headers.map(header => {
+            const val = row[header] === undefined ? "" : row[header];
+            const escaped = ('' + val).replace(/"/g, '""');
+            return `"${escaped}"`;
+        });
+        csvRows.push(values.join(','));
     }
-    const blob = new Blob([csv.join("\n")], { type: 'text/csv;charset=utf-8;' });
+    
+    const blob = new Blob([csvRows.join("\n")], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.setAttribute("download", `log_report_${new Date().getTime()}.csv`);
+    link.setAttribute("download", `comprehensive_log_report_${new Date().getTime()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

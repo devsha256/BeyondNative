@@ -9,14 +9,30 @@ import os
 import json
 import requests
 
-db_utils.init_db()
+from json_logic import JSONLogicArchitect
 
+db_utils.init_db()
 app = Flask(__name__)
 CORS(app) 
 
+# Managers
 devops = AzureDevOpsManager()
 mule = MuleSoftManager()
 postman = PostmanManager()
+jq_architect = JSONLogicArchitect()
+
+# --- JQ Logic APIs ---
+@app.route('/api/jq/filter', methods=['POST'])
+def jq_filter_api():
+    data = request.json
+    raw_json = data.get('data')
+    filter_str = data.get('filter', '.')
+    
+    if not raw_json:
+        return jsonify({"error": "Raw data is required for filtering"}), 400
+        
+    result = jq_architect.search_json(raw_json, filter_str)
+    return jsonify(result)
 
 # --- Navigation ---
 @app.route('/')
