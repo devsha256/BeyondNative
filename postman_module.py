@@ -93,11 +93,10 @@ class PostmanManager:
 
     def run_request(self, request_data, environment_path=None, custom_script=None):
         """
-        Runs a single request using Newman.
-        Captures the x-correlation-id from response headers or environment variables.
+        Runs a single request and extracts x-correlation-id.
+        Features triple-redundancy: Console Log Grep, JSON Header Scan, and Env Var Scan.
         """
         debug_mode = os.getenv("POSTMAN_DEBUG", "false").lower() == "true"
-        # Phase 1: Create a temporary focused collection containing ONLY the target request
         temp_col_path = os.path.join(tempfile.gettempdir(), f"temp_req_{uuid.uuid4()}.json")
         
         try:
@@ -115,106 +114,73 @@ class PostmanManager:
 
             target_item = find_item_by_name(original.get('item', []), request_data['name'])
             if not target_item:
-                log.error(f"Could not find request '{request_data['name']}' in collection.")
                 return None
 
-            # INJECT SCRIPT: If custom_script is provided, replace or add the 'test' event
+            # AUTO-INJECTION: We ALWAYS inject a console.log script for ultimate reliability
+            # This works even if JSON reporters fail or omit data
+            extraction_script = 'console.log("CID_CAPTURE:" + pm.response.headers.get("x-correlation-id"));'
             if custom_script:
-                if 'event' not in target_item:
-                    target_item['event'] = []
-                # Remove existing test scripts
-                target_item['event'] = [e for e in target_item['event'] if e.get('listen') != 'test']
-                # Add the new one
-                target_item['event'].append({
-                    "listen": "test",
-                    "script": {
-                        "exec": custom_script.split('\n'),
-                        "type": "text/javascript"
-                    }
-                })
+                extraction_script += "\n" + custom_script
+
+            if 'event' not in target_item: target_item['event'] = []
+            target_item['event'] = [e for e in target_item['event'] if e.get('listen') != 'test']
+            target_item['event'].append({
+                "listen": "test",
+                "script": { "exec": extraction_script.split('\n'), "type": "text/javascript" }
+            })
 
             mini_col = {
-                "info": {
-                    "name": "Temp Execution",
-                    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-                },
+                "info": { "name": "AutoExtract", "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json" },
                 "item": [target_item]
             }
-            
-            with open(temp_col_path, 'w') as f:
-                json.dump(mini_col, f)
+            with open(temp_col_path, 'w') as f: json.dump(mini_col, f)
 
-            # Phase 2: Execute via Newman
             report_path = os.path.join(tempfile.gettempdir(), f"report_{uuid.uuid4()}.json")
-            
             cmd_parts = [
                 "newman", "run", f'"{temp_col_path}"',
-                "--reporters", "json",
-                "--reporter-json-export", f'"{report_path}"'
+                "--reporters", "json", "--reporter-json-export", f'"{report_path}"'
             ]
-            
             if environment_path and os.path.exists(environment_path):
                 cmd_parts.extend(["-e", f'"{environment_path}"'])
             
             cmd_str = " ".join(cmd_parts)
-            if debug_mode: log.info(f"Executing: {cmd_str}")
-            
             result = subprocess.run(cmd_str, capture_output=True, text=True, timeout=45, shell=True)
-            
-            if debug_mode:
-                if result.stdout: log.info(f"Newman STDOUT:\n{result.stdout}")
-                if result.stderr: log.info(f"Newman STDERR:\n{result.stderr}")
-            
-            # Note: Newman often exits with code 1 if a request fails, but the report might still exist
-            if not os.path.exists(report_path):
-                log.error(f"Newman failed to generate report (Exit {result.returncode}).")
-                if not debug_mode: # If not already printed, show stderr for troubleshooting
-                    log.error(f"Newman Error Output: {result.stderr}")
-                
+
+            # STRATEGY 1: Grep Stdout for the captured string (Most reliable)
+            if "CID_CAPTURE:" in result.stdout:
+                line = [l for l in result.stdout.split('\n') if "CID_CAPTURE:" in l][0]
+                cid = line.split("CID_CAPTURE:")[1].strip()
+                if cid and cid != "undefined" and cid != "null":
+                    if debug_mode: log.info(f"Captured via Stdout Grep: {cid}")
+                    return cid
+
+            # STRATEGY 2 & 3: Fallback to JSON Report
             if os.path.exists(report_path):
                 with open(report_path, 'r') as f:
                     report = json.load(f)
                 
-                if debug_mode:
-                    log.info(f"Report structure: {list(report.keys())}")
-                    if 'environment' in report:
-                        log.info(f"Env values: {report['environment'].get('values', [])}")
-
-                # Cleanup temp files
-                try: os.remove(temp_col_path)
-                except: pass
-                try: os.remove(report_path)
-                except: pass
-
-                # Extraction Strategy A: Check Response Headers
+                # Check Headers
                 executions = report.get('run', {}).get('executions', [])
                 for exe in executions:
                     headers = exe.get('response', {}).get('header', [])
-                    
-                    if debug_mode:
-                        all_keys = [h.get('key') for h in headers]
-                        log.info(f"Available Headers: {all_keys}")
-
                     for h in headers:
                         if h.get('key', '').lower() == 'x-correlation-id':
                             val = h.get('value')
-                            if debug_mode: log.info(f"Found via Header: {val}")
-                            return val
+                            if val: return val
                 
-                # Extraction Strategy B: Check Environment Variables
+                # Check Environment
                 env_vars = report.get('environment', {}).get('values', [])
                 for var in env_vars:
                     if var.get('key', '').lower() in ['correlationid', 'x-correlation-id']:
                         val = var.get('value')
-                        if debug_mode: log.info(f"Found via Env Var: {val}")
-                        return val
-            else:
-                log.error(f"Newman report file not found at {report_path}")
+                        if val: return val
+            
+            if debug_mode: log.error(f"Extraction failed. Newman Output: {result.stdout[:200]}")
                 
         except Exception as e:
             log.error(f"Postman execution exception: {e}")
-            if os.path.exists(temp_col_path):
-                try: os.remove(temp_col_path)
-                except: pass
+        finally:
+            if os.path.exists(temp_col_path): os.remove(temp_col_path)
+            # report_path cleanup handled above or left for OS temp cleanup
 
         return None
