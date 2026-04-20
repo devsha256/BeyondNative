@@ -94,75 +94,82 @@ class PostmanManager:
     def run_request(self, request_data, environment_path=None):
         """
         Runs a single request using Newman.
-        Captures the x-correlation-id from the response header.
+        Captures the x-correlation-id from response headers or environment variables.
         """
-        # Create a mini collection for this single request to run via Newman
-        # Or we can run the whole collection and filter by request name.
-        # Filtering by request name is safer to maintain context/variables if any.
-        
-        # For simplicity and speed for "Log Report", we create a temporary collection 
-        # containing only this request.
-        
+        # Phase 1: Create a temporary focused collection containing ONLY the target request
+        # This ensures we run only what we need and avoid large collection overhead
         temp_col_path = os.path.join(tempfile.gettempdir(), f"temp_req_{uuid.uuid4()}.json")
         
-        # We need the original collection to get the info and variables
-        with open(request_data['collection_path'], 'r', encoding='utf-8') as f:
-            original = json.load(f)
-        
-        # Find the actual item in the original to preserve its exact structure (headers, body, etc.)
-        def find_item(items, target_name):
-             for item in items:
-                 if item.get('name') == target_name and 'request' in item:
-                     return item
-                 if 'item' in item:
-                     found = find_item(item['item'], target_name)
-                     if found: return found
-             return None
-
-        # Re-extracting exactly what we need
-        target_item = None
-        # In a real scenario, we'd use a unique ID, but here we'll use name matching for now.
-        # A better way is to pass the whole item data from frontend.
-        
-        # Let's assume the request_data has enough info to reconstruct or we just run newman on the full collection with --folder
-        # Newman --folder is better.
-        
-        cmd = ["newman", "run", request_data['collection_path']]
-        if environment_path and os.path.exists(environment_path):
-            cmd.extend(["-e", environment_path])
-        
-        # Filter by request name (folder path in newman)
-        # However, newman doesn't have a direct "run only this request by name" if it's deeply nested easily
-        # So we use --folder if it's in a folder, but if it's a request...
-        
-        # BETTER: Use a library or create a temp collection with just one item.
-        # Let's skip the complexity for now and assume we run the collection and we want the x-correlation-id.
-        
-        # To capture the header, we can use a custom reporter or just the json reporter.
-        report_path = os.path.join(tempfile.gettempdir(), f"report_{uuid.uuid4()}.json")
-        cmd.extend(["--reporters", "json", "--reporter-json-export", report_path])
-        
-        # Run it
         try:
-            subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            with open(request_data['collection_path'], 'r', encoding='utf-8') as f:
+                original = json.load(f)
+            
+            # Helper to find the specific item by name (deep search)
+            def find_item_by_name(items, target_name):
+                for item in items:
+                    if item.get('name') == target_name and 'request' in item:
+                        return item
+                    if 'item' in item:
+                        res = find_item_by_name(item['item'], target_name)
+                        if res: return res
+                return None
+
+            target_item = find_item_by_name(original.get('item', []), request_data['name'])
+            if not target_item:
+                log.error(f"Could not find request '{request_data['name']}' in collection.")
+                return None
+
+            # Build a minimal collection shell
+            mini_col = {
+                "info": {
+                    "name": "Temp Execution",
+                    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+                },
+                "item": [target_item]
+            }
+            
+            with open(temp_col_path, 'w') as f:
+                json.dump(mini_col, f)
+
+            # Phase 2: Execute via Newman
+            report_path = os.path.join(tempfile.gettempdir(), f"report_{uuid.uuid4()}.json")
+            cmd = ["newman", "run", temp_col_path, "--reporters", "json", "--reporter-json-export", report_path]
+            
+            if environment_path and os.path.exists(environment_path):
+                cmd.extend(["-e", environment_path])
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=45)
+            
             if os.path.exists(report_path):
                 with open(report_path, 'r') as f:
                     report = json.load(f)
-                os.remove(report_path) # Cleanup
                 
-                # Extract x-correlation-id from the first execution (since we expect one)
+                # Cleanup temp files
+                try: os.remove(temp_col_path)
+                except: pass
+                try: os.remove(report_path)
+                except: pass
+
+                # Extraction Strategy A: Check Response Headers
                 executions = report.get('run', {}).get('executions', [])
                 for exe in executions:
-                    # Match name if possible
                     headers = exe.get('response', {}).get('header', [])
-                    correlation_id = None
                     for h in headers:
                         if h.get('key', '').lower() == 'x-correlation-id':
-                            correlation_id = h.get('value')
-                            break
-                    if correlation_id:
-                        return correlation_id
+                            return h.get('value')
+                
+                # Extraction Strategy B: Check Environment Variables (if set by script)
+                # User's script might do: pm.environment.set("correlationId", ...)
+                env_vars = report.get('environment', {}).get('values', [])
+                for var in env_vars:
+                    if var.get('key', '').lower() in ['correlationid', 'x-correlation-id']:
+                        return var.get('value')
+
+            else:
+                log.error(f"Newman failed to generate report. Stderr: {result.stderr}")
+                
         except Exception as e:
-            log.error(f"Newman execution failed: {e}")
-        
+            log.error(f"Postman execution exception: {e}")
+            if os.path.exists(temp_col_path): os.remove(temp_col_path)
+
         return None
