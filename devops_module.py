@@ -123,8 +123,7 @@ class AzureDevOpsManager:
             "sourceRefName": f"refs/heads/{from_branch}",
             "targetRefName": f"refs/heads/{to_branch}",
             "title": pr_title,
-            "description": f"Automated Deployment PR for {repo_name}.",
-            "isDraft": False
+            "description": f"Automated Deployment PR for {repo_name}."
         }
 
         if auto_complete:
