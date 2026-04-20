@@ -10,36 +10,39 @@
     </a>
 </div>
 
-<div class="m3-card" style="margin-top: 24px;">
-    <h3><i class="material-icons">settings</i> Phase 1: Configuration</h3>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px;">
-        <div class="m3-input-group">
-            <label>Collections Folder</label>
-            <div class="file-picker-m3" onclick="document.getElementById('pick-folder').click()">
-                <i class="material-icons">folder</i>
-                <span id="folder-label">Select Folder</span>
-                <input type="file" id="pick-folder" webkitdirectory directory multiple style="display:none;" onchange="handleFolderPick(this)">
+<!-- Phase 1: Configuration -->
+<div id="setup-section">
+    <div class="m3-card" style="margin-top: 24px;">
+        <h3><i class="material-icons">settings</i> Phase 1: Configuration</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px;">
+            <div class="m3-input-group">
+                <label>Collections Folder</label>
+                <div class="file-picker-m3" onclick="document.getElementById('pick-folder').click()">
+                    <i class="material-icons">folder</i>
+                    <span id="folder-label">Select Folder</span>
+                    <input type="file" id="pick-folder" webkitdirectory directory multiple style="display:none;" onchange="handleFolderPick(this)">
+                </div>
+                <small>Deep scan for .postman_collection.json files</small>
             </div>
-            <small>Deep scan for .postman_collection.json files</small>
-        </div>
-        <div class="m3-input-group">
-            <label>Environment File</label>
-            <div class="file-picker-m3" onclick="document.getElementById('pick-env').click()">
-                <i class="material-icons">description</i>
-                <span id="env-label">Select JSON</span>
-                <input type="file" id="pick-env" accept=".json" style="display:none;" onchange="handleFilePick(this, 'env-label')">
+            <div class="m3-input-group">
+                <label>Environment File</label>
+                <div class="file-picker-m3" onclick="document.getElementById('pick-env').click()">
+                    <i class="material-icons">description</i>
+                    <span id="env-label">Select JSON</span>
+                    <input type="file" id="pick-env" accept=".json" style="display:none;" onchange="handleFilePick(this, 'env-label')">
+                </div>
+                <small>Optional Postman Environment JSON</small>
             </div>
-            <small>Optional Postman Environment JSON</small>
         </div>
-    </div>
-    <div style="margin-top: 16px;">
-        <label>Log Extractor Collection</label>
-        <div class="file-picker-m3" onclick="document.getElementById('pick-extractor').click()">
-            <i class="material-icons">query_stats</i>
-            <span id="extractor-label">Select Collection</span>
-            <input type="file" id="pick-extractor" accept=".json" style="display:none;" onchange="handleFilePick(this, 'extractor-label')">
+        <div style="margin-top: 16px;">
+            <label>Log Extractor Collection</label>
+            <div class="file-picker-m3" onclick="document.getElementById('pick-extractor').click()">
+                <i class="material-icons">query_stats</i>
+                <span id="extractor-label">Select Collection</span>
+                <input type="file" id="pick-extractor" accept=".json" style="display:none;" onchange="handleFilePick(this, 'extractor-label')">
+            </div>
+            <small>The collection used to fetch logs once correlation IDs are extracted.</small>
         </div>
-        <small>The collection used to fetch logs once correlation IDs are extracted.</small>
     </div>
 </div>
 
@@ -62,8 +65,10 @@
 .file-picker-m3 i {
     color: var(--accent);
 }
+#report-table th { background: #f8f9fa; position: sticky; top: 0; z-index: 10; }
 </style>
 
+<!-- Phase 2: Discovered Requests -->
 <div id="results-section" style="display:none; margin-top: 24px;">
     <div class="m3-card" style="padding:0;">
         <div style="padding: 16px; border-bottom: 1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center; gap: 24px;">
@@ -103,6 +108,40 @@
     </div>
 </div>
 
+<!-- Phase 3: Report Results Table -->
+<div id="report-section" style="display:none; margin-top: 24px;">
+    <div class="m3-card" style="padding:0;">
+        <div style="padding: 16px; border-bottom: 1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center;">
+            <h3><i class="material-icons">summarize</i> Log Report Results</h3>
+            <div style="display:flex; gap:12px;">
+                <button onclick="downloadReportCSV()" class="m3-button secondary">
+                    <i class="material-icons">download</i> Download CSV
+                </button>
+                <button onclick="backToRequests()" class="m3-button">
+                    <i class="material-icons">arrow_back</i> Back to Requests
+                </button>
+            </div>
+        </div>
+        <div class="table-container" style="max-height: 600px; overflow-y: auto;">
+            <table id="report-table" class="m3-table">
+                <thead>
+                    <tr>
+                        <th>Correlation ID</th>
+                        <th>Env</th>
+                        <th>Process Name</th>
+                        <th>API Name</th>
+                        <th>Business Unit</th>
+                        <th>Status</th>
+                        <th>Timestamp</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody id="report-body"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <div class="progress-overlay" id="overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; flex-direction:column; color:white;">
     <div class="m3-loader"></div>
     <h3 id="overlay-text" style="margin-top:24px;">Processing...</h3>
@@ -114,33 +153,23 @@
 <script>
 let stateRequests = [];
 let correlationIds = [];
-let pickedFiles = {}; // Store File objects for upload
+let pickedFiles = {};
 
-const DEFAULT_SCRIPT = `// Default Extraction Script
-const correlationId = pm.response.headers.get("x-correlation-id");
-if (correlationId) {
-    console.log("Extracted Correlation ID: " + correlationId);
-    // Values will be collected by Beyond Native
-}`;
+const DEFAULT_SCRIPT = `const correlationId = pm.response.headers.get("x-correlation-id");
+if (correlationId) { pm.environment.set("correlationId", correlationId); }`;
 
 async function handleFilePick(input, labelId) {
     const file = input.files[0];
     if (file) {
         document.getElementById(labelId).innerText = file.name;
-        
-        // Sync to server
         const text = await file.text();
         const res = await fetch('/api/postman/sync', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                filename: file.name,
-                content: text,
-                type: labelId === 'env-label' ? 'environment' : 'collection'
-            })
+            body: JSON.stringify({ filename: file.name, content: text, type: labelId === 'env-label' ? 'environment' : 'collection' })
         });
         const data = await res.json();
-        pickedFiles[labelId] = data.path; // Store the server path
+        pickedFiles[labelId] = data.path;
     }
 }
 
@@ -149,32 +178,22 @@ async function handleFolderPick(input) {
     const collections = files.filter(f => f.name.endsWith('.postman_collection.json'));
     document.getElementById('folder-label').innerText = `${collections.length} Collections Found`;
     
-    // For large folders, we need to upload them to the server for scanner to work
-    // OR we parse them browser side. Let's parse them browser side for speed!
     stateRequests = [];
     showOverlay("Analyzing Collections...");
     
     for (const file of collections) {
         const text = await file.text();
         try {
-            // 1. Sync to server to get a local path for Newman
             const syncRes = await fetch('/api/postman/sync', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    filename: file.name,
-                    content: text,
-                    type: 'collection'
-                })
+                body: JSON.stringify({ filename: file.name, content: text, type: 'collection' })
             });
             const syncData = await syncRes.json();
-            
             const data = JSON.parse(text);
             const requests = extractRequestsFromData(data, syncData.path);
             stateRequests.push(...requests);
-        } catch (e) {
-            console.error("Failed to sync/parse", file.name);
-        }
+        } catch (e) { console.error("Sync failed", file.name); }
     }
     
     renderRequests();
@@ -191,24 +210,13 @@ function extractRequestsFromData(data, collectionPath) {
             if (item.request) {
                 let url = item.request.url || "";
                 if (typeof url === 'object') url = url.raw || "";
-                
-                let script = "";
-                if (item.event) {
-                    item.event.forEach(ev => {
-                        if (ev.listen === 'test' && ev.script) {
-                            script = (ev.script.exec || []).join('\n');
-                        }
-                    });
-                }
-
                 requests.push({
                     id: Math.random().toString(36).substr(2, 9),
                     name: name,
                     full_name: fullName,
                     method: item.request.method,
                     url: url,
-                    collection_path: collectionPath, 
-                    script: script || DEFAULT_SCRIPT
+                    collection_path: collectionPath
                 });
             }
             if (item.item) recurse(item.item, fullName);
@@ -218,17 +226,12 @@ function extractRequestsFromData(data, collectionPath) {
     return requests;
 }
 
-// We don't need scanCollections() anymore as it's handled by handleFolderPick
-async function scanCollections() {} // Placeholder
-
 function filterRequests() {
     const term = document.getElementById('req-search').value.toLowerCase();
     const rows = document.querySelectorAll('#request-body tr');
-    
     rows.forEach(row => {
         const url = row.querySelector('.req-url').innerText.toLowerCase();
         const checkbox = row.querySelector('.req-check');
-        
         if (url.includes(term)) {
             row.style.display = 'table-row';
             if (term.length > 0) checkbox.checked = true;
@@ -242,21 +245,12 @@ function filterRequests() {
 function renderRequests() {
     const tbody = document.getElementById('request-body');
     document.getElementById('request-count').innerText = `${stateRequests.length} Requests`;
-    
     tbody.innerHTML = stateRequests.map((req, idx) => `
         <tr id="row-${req.id}">
             <td><input type="checkbox" class="req-check" checked data-idx="${idx}"></td>
-            <td>
-                <div style="font-weight:600;">${req.name}</div>
-                <div style="font-size:11px; color:#666;">${req.full_name}</div>
-            </td>
-            <td>
-                <span class="status-badge" style="background:#eee; color:#333; font-size:10px;">${req.method}</span>
-                <span class="req-url" style="font-size:12px; color:#666;">${req.url}</span>
-            </td>
-            <td class="status-cell">
-                <span class="status-badge">Ready</span>
-            </td>
+            <td><div style="font-weight:600;">${req.name}</div><div style="font-size:11px; color:#666;">${req.full_name}</div></td>
+            <td><span class="status-badge" style="background:#eee; color:#333; font-size:10px;">${req.method}</span><span class="req-url" style="font-size:12px; color:#666;">${req.url}</span></td>
+            <td class="status-cell"><span class="status-badge">Ready</span></td>
         </tr>
     `).join('');
 }
@@ -271,25 +265,19 @@ async function executeRequests() {
 
     const toExecute = selectedIndices.map(i => stateRequests[i]);
     const envPath = pickedFiles['env-label'] || null;
-    
     const execBtn = document.getElementById('btn-execute');
     execBtn.disabled = true;
     
     correlationIds = [];
     let completed = 0;
-    
     showOverlay(`Executing ${toExecute.length} requests...`);
     
-    // Concurrency control: Execute in parallel with a limit
     const CONCURRENCY_LIMIT = 5;
-    let executing = 0;
     let queue = [...toExecute];
     
     async function runNext() {
         if (queue.length === 0) return;
         const req = queue.shift();
-        
-        executing++;
         const row = document.getElementById(`row-${req.id}`);
         const statusCell = row.querySelector('.status-cell');
         statusCell.innerHTML = '<i class="material-icons rotating" style="font-size:16px;">sync</i>';
@@ -298,47 +286,31 @@ async function executeRequests() {
             const res = await fetch('/api/postman/execute-single', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ 
-                    request: req, 
-                    environment: envPath,
-                    script: DEFAULT_SCRIPT
-                })
+                body: JSON.stringify({ request: req, environment: envPath, script: DEFAULT_SCRIPT })
             });
             const data = await res.json();
             if (data.correlation_id) {
                 correlationIds.push(data.correlation_id);
                 statusCell.innerHTML = `<span class="status-badge status-success" style="font-size:10px;">${data.correlation_id}</span>`;
-            } else {
-                statusCell.innerHTML = `<span class="status-badge status-error" style="font-size:10px;">No ID</span>`;
-            }
-        } catch (e) {
-            statusCell.innerHTML = `<span class="status-badge status-error" style="font-size:10px;">Failed</span>`;
-        } finally {
+            } else { statusCell.innerHTML = `<span class="status-badge status-error" style="font-size:10px;">No ID</span>`; }
+        } catch (e) { statusCell.innerHTML = `<span class="status-badge status-error" style="font-size:10px;">Failed</span>`; }
+        finally {
             completed++;
-            executing--;
             execBtn.innerHTML = `<i class="material-icons rotating">sync</i> Executing ${completed}/${toExecute.length}...`;
             updateOverlay(`Processed ${completed}/${toExecute.length}...`, (completed / toExecute.length) * 100);
             await runNext();
         }
     }
 
-    const workers = [];
-    for (let i = 0; i < Math.min(CONCURRENCY_LIMIT, toExecute.length); i++) {
-        workers.push(runNext());
-    }
+    const workers = Array(Math.min(CONCURRENCY_LIMIT, toExecute.length)).fill(0).map(() => runNext());
     await Promise.all(workers);
     
     hideOverlay();
     execBtn.innerHTML = `<i class="material-icons">check_circle</i> Execution Done`;
     execBtn.classList.add('status-success');
-    
     if (correlationIds.length > 0) {
         document.getElementById('btn-generate').style.display = 'inline-flex';
         document.getElementById('btn-generate').innerHTML = `<i class="material-icons">receipt_long</i> Generate Log Report (${correlationIds.length} IDs)`;
-    } else {
-        alert("No Correlation IDs were extracted. Check your collections or endpoint responses.");
-        execBtn.disabled = false;
-        execBtn.innerHTML = `<i class="material-icons">play_arrow</i> Execute & Extract IDs`;
     }
 }
 
@@ -347,36 +319,63 @@ async function generateReport() {
     const logExtractorPath = pickedFiles['extractor-label'] || null;
     const envPath = pickedFiles['env-label'] || null;
     
-    showOverlay("Generating Log Report...");
-    
+    showOverlay("Aggregating Detailed Logs...");
     try {
         const res = await fetch('/api/postman/generate-logs', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ 
-                correlation_ids: correlationIds,
-                extractor_path: logExtractorPath,
-                environment: envPath
-            })
+            body: JSON.stringify({ correlation_ids: correlationIds, extractor_path: logExtractorPath, environment: envPath })
         });
-        
-        if (res.ok) {
-            const blob = await res.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `log_report_${new Date().toISOString().slice(0,10)}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-        } else {
-            alert("Failed to generate report.");
-        }
-    } catch (e) {
-        alert("Error generating report.");
-    } finally {
-        hideOverlay();
+        const data = await res.json();
+        if (data.results && data.results.length > 0) {
+            renderReportTable(data.results);
+            document.getElementById('results-section').style.display = 'none';
+            document.getElementById('setup-section').style.display = 'none';
+            document.getElementById('report-section').style.display = 'block';
+        } else { alert("No log metadata found."); }
+    } catch (e) { alert("Failed to fetch logs."); }
+    finally { hideOverlay(); }
+}
+
+function renderReportTable(results) {
+    const tbody = document.getElementById('report-body');
+    tbody.innerHTML = results.map(row => `
+        <tr>
+            <td style="font-size:11px; font-family:monospace;">${row.correlationId || '-'}</td>
+            <td>${row.env || '-'}</td>
+            <td>${row.processname || '-'}</td>
+            <td>${row.apiname || '-'}</td>
+            <td>${row.businessunit || '-'}</td>
+            <td><span class="status-badge ${row.status === 'SUCCESS' ? 'status-success' : 'status-error'}">${row.status || '-'}</span></td>
+            <td style="font-size:11px;">${row.datetimestamp || '-'}</td>
+            <td title="${row.message}" style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${row.message || '-'}</td>
+        </tr>
+    `).join('');
+}
+
+function backToRequests() {
+    document.getElementById('report-section').style.display = 'none';
+    document.getElementById('results-section').style.display = 'block';
+    document.getElementById('setup-section').style.display = 'block';
+}
+
+function downloadReportCSV() {
+    const table = document.getElementById('report-table');
+    let csv = [];
+    const rows = table.querySelectorAll('tr');
+    for (const row of rows) {
+        const cols = row.querySelectorAll('td, th');
+        const rowData = [];
+        for (const col of cols) rowData.push(`"${col.innerText.replace(/"/g, '""')}"`);
+        csv.push(rowData.join(','));
     }
+    const blob = new Blob([csv.join("\n")], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", `log_report_${new Date().getTime()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 function showOverlay(text) {
@@ -384,14 +383,10 @@ function showOverlay(text) {
     document.getElementById('overlay-bar').style.width = '0%';
     document.getElementById('overlay').style.display = 'flex';
 }
-
 function updateOverlay(text, percent) {
     document.getElementById('overlay-text').innerText = text;
     document.getElementById('overlay-bar').style.width = `${percent}%`;
 }
-
-function hideOverlay() {
-    document.getElementById('overlay').style.display = 'none';
-}
+function hideOverlay() { document.getElementById('overlay').style.display = 'none'; }
 </script>
 {% endblock %}
