@@ -86,6 +86,9 @@
                         <button id="btn-raise-all" class="m3-button" onclick="raiseAll()">
                             <i class="material-icons">rocket_launch</i> Raise All PRs
                         </button>
+                        <button id="btn-export-prs" class="m3-button" onclick="exportPRsToCSV()" style="display:none; background: var(--success);">
+                            <i class="material-icons">download</i> Export PRs
+                        </button>
                         <button class="m3-button-outline" style="margin-left: 8px;" onclick="backToDiscovery()">
                             Back
                         </button>
@@ -107,6 +110,7 @@
 // ======== STATE & UTILS ========
 const repoState = {};
 let selectedReposForPR = [];
+let prResults = []; // Array of {repo, url}
 
 // ======== DISCOVERY STEP ========
 async function searchRepos() {
@@ -282,7 +286,17 @@ async function raiseSinglePR(repoName, btn) {
     });
 
     if (res.ok) {
-        btn.innerHTML = 'Created'; btn.className = 'm3-button status-success';
+        const data = await res.json();
+        const prUrl = data.pr_url || '#';
+        prResults.push({ repo: repoName, url: prUrl });
+        btn.innerHTML = 'Created'; 
+        btn.className = 'm3-button status-success';
+        
+        // Show view link
+        const cell = btn.parentElement;
+        cell.innerHTML = `<a href="${prUrl}" target="_blank" class="m3-button-outline" style="margin-right:8px;"><i class="material-icons" style="font-size:16px;">open_in_new</i> View PR</a>` + cell.innerHTML;
+        
+        document.getElementById('btn-export-prs').style.display = 'inline-flex';
     } else {
         btn.innerHTML = 'Error'; btn.className = 'm3-button status-error';
     }
@@ -298,8 +312,49 @@ async function raiseAll() {
     const btn = document.getElementById('btn-raise-all');
     btn.disabled = true; btn.innerHTML = 'Processing...';
     const res = await fetch('/api/bulk-create-pr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ operations: payload }) });
-    if (res.ok) { alert("Bulk PR Completed."); location.reload(); }
-    else { alert("Error in Bulk PR."); btn.disabled = false; btn.innerHTML = 'Raise All PRs'; }
+    if (res.ok) { 
+        const data = await res.json();
+        // data should contain results list with pr_url
+        prResults = data.results.map(r => ({ repo: r.repo_id, url: r.pr_url }));
+        alert("Bulk PR Completed."); 
+        
+        // Update UI to show links
+        prResults.forEach(res => {
+            const row = document.getElementById(`row-main-${res.repo}`);
+            if (row) {
+                const actionCell = row.querySelector('td:last-child');
+                actionCell.innerHTML = `<a href="${res.url}" target="_blank" class="m3-button status-success" style="width:100%; justify-content:center;"><i class="material-icons">open_in_new</i> View PR</a>`;
+            }
+        });
+
+        document.getElementById('btn-export-prs').style.display = 'inline-flex';
+        btn.innerHTML = 'Success';
+        btn.style.background = 'var(--success)';
+    }
+    else { 
+        alert("Error in Bulk PR."); 
+        btn.disabled = false; 
+        btn.innerHTML = 'Raise All PRs'; 
+    }
+}
+
+function exportPRsToCSV() {
+    if (prResults.length === 0) return;
+    
+    let csv = "Repository Name,PR Link\\n";
+    prResults.forEach(row => {
+        csv += `"${row.repo}","${row.url}"\\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', `azure_prs_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 }
 </script>
 {% endblock %}
