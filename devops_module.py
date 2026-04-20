@@ -4,6 +4,7 @@ import requests
 import fnmatch
 import urllib.parse
 from dotenv import load_dotenv
+import db_utils
 
 load_dotenv()
 
@@ -122,7 +123,8 @@ class AzureDevOpsManager:
             "sourceRefName": f"refs/heads/{from_branch}",
             "targetRefName": f"refs/heads/{to_branch}",
             "title": pr_title,
-            "description": f"Automated Deployment PR for {repo_name}."
+            "description": f"Automated Deployment PR for {repo_name}.",
+            "isDraft": False
         }
 
         if auto_complete:
