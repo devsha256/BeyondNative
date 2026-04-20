@@ -146,8 +146,23 @@ class PostmanManager:
             cmd_str = " ".join(cmd_parts)
             result = subprocess.run(cmd_str, capture_output=True, text=True, timeout=45, shell=True)
 
+            # DIAGNOSTIC: Log full failure details if report doesn't exist
+            if not os.path.exists(report_path):
+                log.error(f"Newman execution failed (Exit {result.returncode})")
+                log.error(f"CMD attempted: {cmd_str}")
+                if result.stderr: log.error(f"Newman STDERR: {result.stderr.strip()}")
+                if result.stdout: log.error(f"Newman STDOUT: {result.stdout.strip()[:500]}")
+                
+                # OPTIONAL FALLBACK: Try npx if the system can't find 'newman'
+                if "not found" in result.stderr.lower() or "not recognized" in result.stderr.lower():
+                    log.info("Attempting fallback via npx...")
+                    npx_cmd = "npx " + cmd_str
+                    result = subprocess.run(npx_cmd, capture_output=True, text=True, timeout=60, shell=True)
+                    if os.path.exists(report_path):
+                        log.info("npx fallback successful!")
+
             # STRATEGY 1: Grep Stdout for the captured string (Most reliable)
-            if "CID_CAPTURE:" in result.stdout:
+            if result.stdout and "CID_CAPTURE:" in result.stdout:
                 line = [l for l in result.stdout.split('\n') if "CID_CAPTURE:" in l][0]
                 cid = line.split("CID_CAPTURE:")[1].strip()
                 if cid and cid != "undefined" and cid != "null":
