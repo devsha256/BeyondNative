@@ -140,15 +140,26 @@ function handleFileUpload(input) {
     const reader = new FileReader();
     reader.onload = async (e) => {
         const text = e.target.result;
-        const repoNames = text.split(/\\r?\\n/).map(line => line.trim()).filter(line => line.length > 0);
+        // Correctly split by any newline combination and clean up common delimiters
+        const repoNames = text.split(/\r?\n/)
+                              .map(line => line.trim().replace(/,$/, '').replace(/^"/, '').replace(/"$/, ''))
+                              .filter(line => line.length > 0);
+        
         document.getElementById('prog-cont').style.display = 'block';
-        const res = await fetch('/api/extract-by-file', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({repos: repoNames})
-        });
-        const data = await res.json();
-        renderResults(data.repositories);
+        document.getElementById('prog-bar').style.width = '40%';
+        
+        try {
+            const res = await fetch('/api/extract-by-file', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({repos: repoNames})
+            });
+            const data = await res.json();
+            renderResults(data.repositories);
+        } catch (err) {
+            alert("Discovery failed: " + err);
+            document.getElementById('prog-cont').style.display = 'none';
+        }
     };
     reader.readAsText(file);
 }
