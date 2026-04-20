@@ -287,8 +287,10 @@ async function raiseSinglePR(repoName, btn) {
 
     if (res.ok) {
         const data = await res.json();
-        // User pointed out the url is in 'result.url'
-        const prUrl = (data.result && data.result.url) || '#';
+        // Extract the human-readable Web URL
+        const pr = data.result || {};
+        const prUrl = pr.webUrl || (pr._links && pr._links.html && pr._links.html.href) || pr.url || '#';
+        
         prResults.push({ repo: repoName, url: prUrl });
         btn.innerHTML = 'Created'; 
         btn.className = 'm3-button status-success';
@@ -316,10 +318,11 @@ async function raiseAll() {
     if (res.ok) { 
         const results = await res.json();
         // bulk-create-pr returns a list of {repo: '...', details: {url: '...'}}
-        prResults = results.map(r => ({ 
-            repo: r.repo, 
-            url: (r.details && r.details.url) || '#' 
-        }));
+        prResults = results.map(r => {
+            const pr = r.details || {};
+            const prUrl = pr.webUrl || (pr._links && pr._links.html && pr._links.html.href) || pr.url || '#';
+            return { repo: r.repo, url: prUrl };
+        });
         alert("Bulk PR Completed."); 
         
         // Update UI to show links
