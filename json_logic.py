@@ -1,4 +1,9 @@
-import pyjq
+try:
+    import jq
+    JQ_AVAILABLE = True
+except ImportError:
+    JQ_AVAILABLE = False
+
 from logger import log
 
 class JSONLogicArchitect:
@@ -11,19 +16,17 @@ class JSONLogicArchitect:
     def search_json(data, jq_filter):
         """
         Safely executes a jq filter on a Python object.
-        Uses LaTeX-grade precision for logical extraction.
-        
-        Args:
-            data (dict|list): The raw JSON structure.
-            jq_filter (str): Valid JQ syntax for transformation.
-        
-        Returns:
-            list: Transformed results or error message.
         """
+        if not JQ_AVAILABLE:
+            err_msg = "JQ Engine not installed. Please try: pip install jq"
+            log.error(err_msg)
+            return {"error": err_msg}
+
         try:
-            # We use .all() to capture the full result set across the stream
-            # Error suppression '?' is encouraged in the filter string for robustness
-            results = pyjq.all(jq_filter, data)
+            # The 'jq' package uses a compile/input/all flow
+            # This is more modern and efficient than pyjq
+            program = jq.compile(jq_filter)
+            results = program.input(data).all()
             log.info(f"JQ Extraction successful. Matches found: {len(results)}")
             return results
         except Exception as e:
