@@ -5,9 +5,14 @@
 {% block content %}
 <div class="m3-header" style="display:flex; justify-content:space-between; align-items:center;">
     <h1>Postman: Log Report Generator</h1>
-    <a href="/postman" class="m3-button-outline">
-        <i class="material-icons">arrow_back</i> Suite Home
-    </a>
+    <div style="display:flex; gap:12px;">
+        <button onclick="openHistory()" class="m3-button-outline">
+            <i class="material-icons">history</i> History
+        </button>
+        <a href="/postman" class="m3-button-outline">
+            <i class="material-icons">arrow_back</i> Suite Home
+        </a>
+    </div>
 </div>
 
 <!-- Phase 1: Configuration -->
@@ -124,6 +129,9 @@
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <h3><i class="material-icons">summarize</i> Log Report Results</h3>
                 <div style="display:flex; gap:12px;">
+                    <button id="btn-save-history" onclick="showSaveHistoryModal()" class="m3-button" style="background:var(--accent);">
+                        <i class="material-icons">save</i> Save to History
+                    </button>
                     <button onclick="downloadReportCSV()" class="m3-button secondary">
                         <i class="material-icons">download</i> Download CSV
                     </button>
@@ -163,6 +171,45 @@
                 </thead>
                 <tbody id="report-body"></tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- Phase 4: History Section -->
+<div id="history-section" style="display:none; margin-top: 24px;">
+    <div class="m3-card" style="padding:0;">
+        <div style="padding: 16px; border-bottom: 1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center;">
+            <h3><i class="material-icons">history</i> Log Report History</h3>
+            <button onclick="backToSetup()" class="m3-button-outline">
+                <i class="material-icons">close</i> Close History
+            </button>
+        </div>
+        <div class="table-container">
+            <table class="m3-table">
+                <thead>
+                    <tr>
+                        <th>Report Title</th>
+                        <th>Generated On</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="history-body"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Save to History Modal -->
+<div id="save-history-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10001; justify-content:center; align-items:center;">
+    <div class="m3-card" style="width:400px; padding:24px;">
+        <h3>Save Report to History</h3>
+        <div class="m3-input-group" style="margin-top:16px;">
+            <label>Report Title</label>
+            <input type="text" id="history-report-title" class="m3-input" placeholder="e.g. Morning Sanity Check">
+        </div>
+        <div style="display:flex; gap:12px; margin-top:24px; justify-content:flex-end;">
+            <button onclick="closeSaveHistoryModal()" class="m3-button-outline">Cancel</button>
+            <button onclick="persistReportToHistory()" class="m3-button">Save Report</button>
         </div>
     </div>
 </div>
@@ -361,6 +408,7 @@ async function generateReport() {
             document.getElementById('results-section').style.display = 'none';
             document.getElementById('setup-section').style.display = 'none';
             document.getElementById('report-section').style.display = 'block';
+            document.getElementById('btn-save-history').style.display = 'inline-flex';
         } else { alert("No log metadata found."); }
     } catch (e) { alert("Failed to fetch logs."); }
     finally { hideOverlay(); }
@@ -459,5 +507,87 @@ function updateOverlay(text, percent) {
     document.getElementById('overlay-bar').style.width = `${percent}%`;
 }
 function hideOverlay() { document.getElementById('overlay').style.display = 'none'; }
+
+function backToSetup() {
+    document.getElementById('report-section').style.display = 'none';
+    document.getElementById('results-section').style.display = 'none';
+    document.getElementById('history-section').style.display = 'none';
+    document.getElementById('setup-section').style.display = 'block';
+}
+
+function backToRequests() {
+    document.getElementById('report-section').style.display = 'none';
+    document.getElementById('results-section').style.display = 'block';
+}
+
+async function openHistory() {
+    showOverlay("Loading History...");
+    try {
+        const res = await fetch('/api/postman/history');
+        const history = await res.json();
+        const tbody = document.getElementById('history-body');
+        tbody.innerHTML = history.map(h => `
+            <tr>
+                <td style="font-weight:600;">${h.title}</td>
+                <td style="font-size:12px; color:#666;">${h.timestamp}</td>
+                <td>
+                    <button onclick="loadHistoryItem(${h.id})" class="m3-button-outline" style="padding:4px 12px; font-size:12px;">
+                        <i class="material-icons" style="font-size:16px;">visibility</i> View
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+        
+        document.getElementById('setup-section').style.display = 'none';
+        document.getElementById('results-section').style.display = 'none';
+        document.getElementById('report-section').style.display = 'none';
+        document.getElementById('history-section').style.display = 'block';
+    } catch (e) { alert("Failed to load history"); }
+    finally { hideOverlay(); }
+}
+
+async function loadHistoryItem(id) {
+    showOverlay("Retrieving Report...");
+    try {
+        const res = await fetch(`/api/postman/history/${id}`);
+        const report = await res.json();
+        
+        fullReportData = report.data;
+        renderReportTable(fullReportData);
+        
+        document.getElementById('history-section').style.display = 'none';
+        document.getElementById('report-section').style.display = 'block';
+        // Hide save button when viewing history
+        document.getElementById('btn-save-history').style.display = 'none';
+    } catch (e) { alert("Failed to load report detail"); }
+    finally { hideOverlay(); }
+}
+
+function showSaveHistoryModal() {
+    document.getElementById('history-report-title').value = `Report ${new Date().toLocaleString()}`;
+    document.getElementById('save-history-modal').style.display = 'flex';
+}
+
+function closeSaveHistoryModal() {
+    document.getElementById('save-history-modal').style.display = 'none';
+}
+
+async function persistReportToHistory() {
+    const title = document.getElementById('history-report-title').value;
+    if (!title) return alert("Please provide a title.");
+    
+    showOverlay("Saving to Database...");
+    try {
+        const res = await fetch('/api/postman/history/save', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ title: title, data: fullReportData })
+        });
+        const result = await res.json();
+        alert(result.message);
+        closeSaveHistoryModal();
+    } catch (e) { alert("Failed to save report"); }
+    finally { hideOverlay(); }
+}
 </script>
 {% endblock %}

@@ -279,6 +279,36 @@ def postman_generate_logs():
         return jsonify(report_result), 500
         
     return jsonify(report_result)
+    
+@app.route('/api/postman/history/save', methods=['POST'])
+def save_report_history():
+    data = request.json
+    title = data.get('title', 'Untitled Report')
+    report_data = data.get('data', [])
+    
+    if not report_data:
+        return jsonify({"error": "No report data to save"}), 400
+        
+    with db_utils.get_db() as conn:
+        conn.execute("INSERT INTO log_report_history (title, data) VALUES (?, ?)", (title, json.dumps(report_data)))
+        conn.commit()
+    return jsonify({"status": "success", "message": "Report saved to history!"})
+
+@app.route('/api/postman/history', methods=['GET'])
+def get_report_history_list():
+    with db_utils.get_db() as conn:
+        rows = conn.execute("SELECT id, title, timestamp FROM log_report_history ORDER BY timestamp DESC").fetchall()
+        return jsonify([dict(row) for row in rows])
+
+@app.route('/api/postman/history/<int:report_id>', methods=['GET'])
+def get_report_history_detail(report_id):
+    with db_utils.get_db() as conn:
+        row = conn.execute("SELECT * FROM log_report_history WHERE id = ?", (report_id,)).fetchone()
+        if row:
+            data = dict(row)
+            data['data'] = json.loads(data['data'])
+            return jsonify(data)
+    return jsonify({"error": "Report not found"}), 404
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001, threaded=True)

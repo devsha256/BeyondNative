@@ -12,6 +12,12 @@ def init_db():
             key TEXT PRIMARY KEY,
             value TEXT
         )''')
+        conn.execute('''CREATE TABLE IF NOT EXISTS log_report_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            data TEXT
+        )''')
         conn.commit()
 
 def get_setting(key, default=""):
