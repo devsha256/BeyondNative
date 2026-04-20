@@ -97,7 +97,8 @@ def get_repo_details():
 def create_pr():
     data = request.json
     status, result = devops.create_pull_request(
-        data['repo_id'], data['from_branch'], data['to_branch'], data.get('last_msg')
+        data['repo_id'], data['from_branch'], data['to_branch'], data.get('last_msg'),
+        auto_complete=data.get('auto_complete', False)
     )
     return jsonify({"status": status, "result": result})
 
@@ -107,7 +108,8 @@ def bulk_create_pr():
     operations = data.get('operations', [])
     def run_op(op):
         status, res = devops.create_pull_request(
-            op['repo_id'], op['from_branch'], op['to_branch'], op.get('last_msg')
+            op['repo_id'], op['from_branch'], op['to_branch'], op.get('last_msg'),
+            auto_complete=op.get('auto_complete', False)
         )
         return {"repo": op['repo_id'], "status": status, "details": res}
     with ThreadPoolExecutor(max_workers=10) as executor:

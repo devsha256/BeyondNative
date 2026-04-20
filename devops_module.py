@@ -13,6 +13,7 @@ class AzureDevOpsManager:
         self.org = db_utils.get_setting('azure_org') or os.getenv("AZURE_ORG")
         self.project = db_utils.get_setting('azure_project') or os.getenv("AZURE_PROJECT")
         self.pat = db_utils.get_setting('azure_pat') or os.getenv("AZURE_PAT")
+        self.identity_id = None # Cache for auto-complete identity
         self.base_url = f"https://dev.azure.com/{self.org}/{self.project}/_apis"
         self.headers = self._get_headers()
 
@@ -34,6 +35,17 @@ class AzureDevOpsManager:
             "Authorization": f"Basic {b64_auth}",
             "Content-Type": "application/json"
         }
+
+    def _get_identity_id(self):
+        if self.identity_id: return self.identity_id
+        url = f"https://dev.azure.com/{self.org}/_apis/connectionData"
+        try:
+            res = requests.get(url, headers=self.headers)
+            if res.status_code == 200:
+                self.identity_id = res.json().get('authenticatedUser', {}).get('id')
+                return self.identity_id
+        except: pass
+        return None
 
     def get_repositories(self, pattern=""):
         url = f"{self.base_url}/git/repositories?api-version=7.1"
@@ -103,7 +115,7 @@ class AzureDevOpsManager:
             }
         return {"commits": [], "files": [], "aheadCount": 0, "last_commit_message": "N/A"}
 
-    def create_pull_request(self, repo_name, from_branch, to_branch, last_msg):
+    def create_pull_request(self, repo_name, from_branch, to_branch, last_msg, auto_complete=False):
         url = f"{self.base_url}/git/repositories/{repo_name}/pullrequests?api-version=7.1"
         pr_title = f"{to_branch} Deployment: {last_msg}"
         payload = {
@@ -112,6 +124,17 @@ class AzureDevOpsManager:
             "title": pr_title,
             "description": f"Automated Deployment PR for {repo_name}."
         }
+
+        if auto_complete:
+            id_val = self._get_identity_id()
+            if id_val:
+                payload["autoCompleteSetBy"] = {"id": id_val}
+                payload["completionOptions"] = {
+                    "deleteSourceBranch": False,
+                    "mergeStrategy": "squash", # Common for automated deployments
+                    "transitionWorkItems": True
+                }
+
         response = requests.post(url, headers=self.headers, json=payload)
         data = response.json()
         if response.status_code in [200, 201]:

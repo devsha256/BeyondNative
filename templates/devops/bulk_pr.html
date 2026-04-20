@@ -82,6 +82,12 @@
                             <option value="main">main</option>
                         </select>
                     </th>
+                    <th>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <input type="checkbox" id="master-autocomplete" onchange="bulkUpdate('autocomplete', this.checked)">
+                            <label for="master-autocomplete" style="margin:0; font-size:11px;">AUTO-COMPLETE</label>
+                        </div>
+                    </th>
                     <th style="text-align:right; padding-right:24px;">
                         <button id="btn-raise-all" class="m3-button" onclick="raiseAll()">
                             <i class="material-icons">rocket_launch</i> Raise All PRs
@@ -98,6 +104,7 @@
                     <th style="padding: 16px;">Repository</th>
                     <th>Source (From)</th>
                     <th>Target (To)</th>
+                    <th>Auto-Complete</th>
                     <th style="text-align:right; padding-right:24px;">Action</th>
                 </tr>
             </thead>
@@ -218,6 +225,7 @@ async function initPRPhase() {
                 <td><strong>${name}</strong></td>
                 <td><select class="m3-input from-select">${branches.map(b => `<option value="${b}">${b}</option>`).join('')}</select></td>
                 <td><select class="m3-input to-select">${branches.map(b => `<option value="${b}">${b}</option>`).join('')}</select></td>
+                <td><input type="checkbox" class="autocomplete-check"></td>
                 <td style="text-align:right; padding-right:24px;">
                     <button class="m3-button-outline btn-review" onclick="review('${name}', this)">Review</button>
                     <button class="m3-button btn-raise" onclick="raiseSinglePR('${name}', this)">Raise PR</button>
@@ -230,8 +238,12 @@ async function initPRPhase() {
 }
 
 function bulkUpdate(type, val) {
-    if(!val) return;
-    document.querySelectorAll(`.${type}-select`).forEach(s => s.value = val);
+    if(val === undefined || val === null) return;
+    if(type === 'autocomplete') {
+        document.querySelectorAll('.autocomplete-check').forEach(c => c.checked = val);
+    } else {
+        document.querySelectorAll(`.${type}-select`).forEach(s => s.value = val);
+    }
 }
 
 async function review(name, btn) {
@@ -282,7 +294,13 @@ async function raiseSinglePR(repoName, btn) {
     const res = await fetch('/api/create-pr', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ repo_id: repoName, from_branch: from, to_branch: to, last_msg: lastMsg })
+        body: JSON.stringify({ 
+            repo_id: repoName, 
+            from_branch: from, 
+            to_branch: to, 
+            last_msg: lastMsg,
+            auto_complete: mainRow.querySelector('.autocomplete-check').checked
+        })
     });
 
     if (res.ok) {
@@ -310,7 +328,13 @@ async function raiseAll() {
     const payload = [];
     rows.forEach(row => {
         const name = row.querySelector('strong').innerText;
-        payload.push({ repo_id: name, from_branch: row.querySelector('.from-select').value, to_branch: row.querySelector('.to-select').value, last_msg: repoState[name] || "Bulk Sync" });
+        payload.push({ 
+            repo_id: name, 
+            from_branch: row.querySelector('.from-select').value, 
+            to_branch: row.querySelector('.to-select').value, 
+            last_msg: repoState[name] || "Bulk Sync",
+            auto_complete: row.querySelector('.autocomplete-check').checked
+        });
     });
     const btn = document.getElementById('btn-raise-all');
     btn.disabled = true; btn.innerHTML = 'Processing...';
