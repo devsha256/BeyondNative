@@ -53,9 +53,9 @@ class MuleSoftManager:
         except:
             return False
 
-    def authenticate_from_db(self):
+    def authenticate_from_db(self, ignore_bearer=False):
         bearer = db_utils.get_setting('mule_bearer')
-        if bearer:
+        if bearer and not ignore_bearer:
             self.access_token = bearer.replace('Bearer ', '').strip()
             self.using_bearer_override = True
             return True
@@ -136,12 +136,11 @@ class MuleSoftManager:
             res = self.http_session.get(url_me, headers=self.get_headers())
             
             if res.status_code == 401:
-                if self.using_bearer_override:
-                    log.error("Manual Bearer Token Expired. Skipping fallback.")
-                    raise MuleSoftAuthError("Bearer Token Expired")
-                
-                log.warning("OAuth Token expired. Re-auth...")
-                self.access_token = None
+                # If bearer failed, try to clear it and fall back to Client Credentials
+                log.warning("Primary token rejected. Attempting OAuth2 fallback...")
+                self.access_token = None # Force fresh auth
+                if not self.authenticate_from_db(ignore_bearer=True):
+                    raise MuleSoftAuthError("Authentication Failed")
                 res = self.http_session.get(url_me, headers=self.get_headers())
 
             log.debug(f"MuleSoft Org Fetch Status (me): {res.status_code}")
@@ -293,7 +292,9 @@ class MuleSoftManager:
         return {
             "id": a.get("id"),
             "name": name,
-            "fullDomain": name, # Ensure JS finds it in either property
+            "fullDomain": name,
+            "status": a.get("status") or a.get("application", {}).get("status", "UNKNOWN"),
+            "target": a.get("target", {}),
             "muleVersion": a.get("muleVersion"),
             "appVersion": v or a.get("filename") or a.get("fileName") or "Unknown Artifact",
             "targetType": a.get("target", {}).get("type")
