@@ -451,7 +451,7 @@ def export_session(session_id):
     si = StringIO()
     cw = csv.writer(si)
     
-    cw.writerow(["Timestamp", "Collection/Request", "Method", "Status", "Match %", "Mismatched", "Exempted", "Only A", "Only B", "Details"])
+    cw.writerow(["Timestamp", "Collection/Request", "Method", "Status", "Match %", "Mismatched", "Exempted", "Only A", "Only B", "Details", "Response A", "Response B"])
     
     for r in results:
         stats = json.loads(r['stats_json'] or '{}')
@@ -465,7 +465,9 @@ def export_session(session_id):
             stats.get('totalExempted', 0),
             stats.get('totalOnlyA', 0),
             stats.get('totalOnlyB', 0),
-            r['curl_details']
+            r['curl_details'],
+            r['resp_a_raw'],
+            r['resp_b_raw']
         ])
     
     return Response(

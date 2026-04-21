@@ -228,6 +228,18 @@
                 <div class="diff-content" id="diff-body">
                     <!-- Clean icon-based rows -->
                 </div>
+                <div class="diff-footer">
+                    <div class="curl-code-block">
+                        <label>Execution cURL Audit</label>
+                        <div class="code-pair">
+                            <code id="res-curl-text">N/A</code>
+                            <button onclick="copyToClipboard('res-curl-text')" class="m3-icon-button tiny"
+                                title="Copy cURL">
+                                <i class="material-icons">content_copy</i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
     <!-- Unsaved Work Modal -->
@@ -797,6 +809,45 @@
         box-shadow: 0 8px 16px rgba(103, 80, 164, 0.2);
     }
 
+    .diff-footer {
+        padding: 16px 32px;
+        background: rgba(0,0,0,0.02);
+        border-top: 1px solid var(--border-light);
+    }
+
+    .curl-code-block label {
+        display: block;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        opacity: 0.5;
+        margin-bottom: 8px;
+    }
+
+    .code-pair {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--bg-main);
+        padding: 8px 16px;
+        border-radius: 12px;
+        border: 1px solid var(--border-light);
+    }
+
+    .code-pair code {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        color: var(--primary);
+        word-break: break-all;
+        flex: 1;
+    }
+
+    .m3-icon-button.tiny {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+    }
+
     .m3-field-card {
         background: rgba(255, 255, 255, 0.05);
         border-radius: 16px;
@@ -1278,7 +1329,24 @@
             body.appendChild(div);
         });
 
+        // cURL Audit
+        document.getElementById('res-curl-text').innerText = data.curl || 'N/A';
+
         document.getElementById('results-canvas').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function copyToClipboard(elementId) {
+        const text = document.getElementById(elementId).innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = event.currentTarget.querySelector('i');
+            const original = btn.innerText;
+            btn.innerText = 'done';
+            btn.style.color = 'var(--success)';
+            setTimeout(() => {
+                btn.innerText = original;
+                btn.style.color = '';
+            }, 2000);
+        });
     }
 
     function toggleFullscreen() {
