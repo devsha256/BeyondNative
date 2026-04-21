@@ -132,8 +132,16 @@
                             <i class="material-icons">search_off</i>
                             <p>No collection loaded yet</p>
                         </div>
-                        <div id="coll-request-list" class="m3-req-list hidden">
-                            <!-- Requests populated here -->
+                        <div id="coll-list-container" class="hidden" style="display:flex; flex-direction:column; height:100%;">
+                            <div class="selection-toolbar">
+                                <div class="m3-checkbox" onclick="selectAllRequests(!this.classList.contains('checked')); this.classList.toggle('checked');">
+                                    <i class="material-icons">check</i>
+                                </div>
+                                <span class="lbl-select-all">Select All Results</span>
+                            </div>
+                            <div id="coll-request-list" class="m3-req-list">
+                                <!-- Requests populated here -->
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -814,6 +822,107 @@
     .view-panel.active {
         display: block;
     }
+    /* Selection Workspace */
+    .collection-workspace {
+        display: grid;
+        grid-template-columns: 350px 1fr;
+        gap: 20px;
+        min-height: 480px;
+    }
+
+    .list-side {
+        padding: 0 !important;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .m3-req-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .req-item {
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1px solid var(--border-light);
+        display: flex;
+        align-items: center;
+        transition: 0.2s;
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .req-item:hover {
+        border-color: var(--primary);
+        transform: translateX(4px);
+    }
+
+    .req-item.active {
+        background: rgba(103, 80, 164, 0.1);
+        border-color: var(--primary);
+    }
+
+    .req-checkbox-wrapper {
+        margin-right: 16px;
+        display: flex;
+        align-items: center;
+    }
+
+    .m3-checkbox {
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--border-light);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .m3-checkbox.checked {
+        background: var(--primary);
+        border-color: var(--primary);
+    }
+
+    .m3-checkbox i {
+        font-size: 14px;
+        color: white;
+    }
+
+    .selection-toolbar {
+        padding: 12px 16px;
+        background: var(--surface-m3);
+        border-bottom: 1px solid var(--border-light);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .lbl-select-all {
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 700;
+        opacity: 0.7;
+    }
+
+    .empty-state {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        opacity: 0.5;
+        gap: 12px;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+    }
 </style>
 
 <script>
@@ -875,9 +984,31 @@
             payload.curl_a = document.getElementById('curl-a').value;
             payload.curl_b = document.getElementById('curl-b').value;
         } else if (currentMode === 'collection') {
-            if (!selectedRequest) return alert("Please select a request from the list first!");
-            payload.request_details = selectedRequest.request;
-            payload.collection_name = selectedRequest.name;
+            if (selectedRequests.size === 0) return alert("Please select one or more requests!");
+            const reqIds = Array.from(selectedRequests);
+            for (let i = 0; i < reqIds.length; i++) {
+                const req = collectionRequests.find(r => r.id === reqIds[i]);
+                const batchPayload = { 
+                    ...payload, 
+                    request_details: req.request, 
+                    collection_name: req.name 
+                };
+                btn.querySelector('span').innerText = `Batch: ${i+1}/${reqIds.length} (${req.name})`;
+                
+                try {
+                    const res = await fetch('/api/postman/compare/execute', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(batchPayload)
+                    });
+                    const data = await res.json();
+                    if (data.error) console.error("Batch Error:", data.error);
+                    else renderResults(data);
+                } catch (e) { console.error(e); }
+            }
+            btn.disabled = false;
+            btn.querySelector('span').innerText = originalText;
+            return;
         }
 
         try {
@@ -1016,7 +1147,7 @@
         a.href = url; a.download = `structural_diff_${Date.now()}.csv`; a.click();
     }
     let collectionRequests = [];
-    let selectedRequest = null;
+    let selectedRequests = new Set();
 
     async function handleCollectionUpload(input) {
         const file = input.files[0];
@@ -1027,6 +1158,7 @@
         try {
             const data = JSON.parse(text);
             collectionRequests = [];
+            selectedRequests.clear();
             
             function recurse(items, path = "") {
                 items.forEach(item => {
@@ -1047,7 +1179,7 @@
             
             renderCollectionRequests(collectionRequests);
             document.getElementById('coll-empty-state').classList.add('hidden');
-            document.getElementById('coll-request-list').classList.remove('hidden');
+            document.getElementById('coll-list-container').classList.remove('hidden');
             document.getElementById('coll-filters').classList.remove('hidden');
         } catch (e) {
             alert("Failed to parse collection: " + e.message);
@@ -1059,9 +1191,14 @@
         list.innerHTML = requests.map(req => {
             let url = req.request.url || "";
             if (typeof url === 'object') url = url.raw || "";
-            const isActive = selectedRequest && selectedRequest.id === req.id ? 'active' : '';
+            const isSelected = selectedRequests.has(req.id);
             return `
-                <div class="req-item ${isActive}" id="req-${req.id}" onclick="selectCollectionRequest('${req.id}')">
+                <div class="req-item ${isSelected ? 'active' : ''}" onclick="toggleRequestSelection('${req.id}')">
+                    <div class="req-checkbox-wrapper">
+                        <div class="m3-checkbox ${isSelected ? 'checked' : ''}">
+                            <i class="material-icons">${isSelected ? 'check' : ''}</i>
+                        </div>
+                    </div>
                     <div class="info">
                         <span class="name">${req.name}</span>
                         <span class="meta">
@@ -1069,17 +1206,37 @@
                             <span class="path" title="${url}">${url.substring(0, 50)}${url.length > 50 ? '...' : ''}</span>
                         </span>
                     </div>
-                    <i class="material-icons">${isActive ? 'check_circle' : 'chevron_right'}</i>
                 </div>
             `;
         }).join('');
     }
 
-    function selectCollectionRequest(id) {
-        document.querySelectorAll('.req-item').forEach(el => el.classList.remove('active'));
-        const el = document.getElementById(`req-${id}`);
-        if (el) el.classList.add('active');
-        selectedRequest = collectionRequests.find(r => r.id === id);
+    let selectedRequests = new Set();
+    function toggleRequestSelection(id) {
+        if (selectedRequests.has(id)) {
+            selectedRequests.delete(id);
+        } else {
+            selectedRequests.add(id);
+        }
+        renderCollectionRequests(collectionRequests.filter(r => {
+             const term = document.getElementById('coll-search').value.toLowerCase();
+             let url = r.request.url || "";
+             if (typeof url === 'object') url = url.raw || "";
+             return r.name.toLowerCase().includes(term) || url.toLowerCase().includes(term);
+        }));
+    }
+
+    function selectAllRequests(check) {
+        const term = document.getElementById('coll-search').value.toLowerCase();
+        collectionRequests.forEach(r => {
+            let url = r.request.url || "";
+            if (typeof url === 'object') url = url.raw || "";
+            if (r.name.toLowerCase().includes(term) || url.toLowerCase().includes(term)) {
+                if (check) selectedRequests.add(r.id);
+                else selectedRequests.delete(r.id);
+            }
+        });
+        filterCollectionRequests();
     }
 
     function filterCollectionRequests() {
@@ -1089,12 +1246,6 @@
             if (typeof url === 'object') url = url.raw || "";
             return r.name.toLowerCase().includes(term) || url.toLowerCase().includes(term);
         });
-
-        // Auto-select if only one result
-        if (filtered.length === 1) {
-            selectedRequest = filtered[0];
-        }
-
         renderCollectionRequests(filtered);
     }
 
