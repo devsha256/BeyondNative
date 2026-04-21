@@ -1,24 +1,54 @@
 {% extends "base.html" %}
-{% block title %}MuleSoft Suite{% endblock %}
+{% block title %}MuleSoft Suite | Beyond Native{% endblock %}
 {% block content %}
-<div class="m3-header">
-    <h1>MuleSoft Suite</h1>
-    <p>Comprehensive Anypoint Platform Management</p>
+<div class="m3-page-wrapper">
+    <header class="m3-hero-header">
+        <div class="header-left">
+            <span class="m3-badge-new">ANYPOINT COMMAND CENTER</span>
+            <h1>Runtime <span class="text-gradient">MuleSoft Suite</span></h1>
+            <p>Direct orchestration of CloudHub assets and version synchronization across environments.</p>
+        </div>
+    </header>
+
+    <div class="suite-grid">
+        <a href="/mulesoft/runtime-control" class="suite-card mule">
+            <div class="card-icon"><i class="material-icons">settings_input_component</i></div>
+            <div class="card-body">
+                <h3>Runtime Control</h3>
+                <p>Real-time lifecycle management and health monitoring for CloudHub 1.0 and 2.0 applications.</p>
+            </div>
+            <div class="card-action">
+                <span>Engage Control</span>
+                <i class="material-icons">arrow_forward</i>
+            </div>
+        </a>
+        <a href="/mulesoft/version-comparator" class="suite-card mule">
+            <div class="card-icon"><i class="material-icons">difference</i></div>
+            <div class="card-body">
+                <h3>Version Comparator</h3>
+                <p>Deep-audit comparison of application versions and property configurations across business groups.</p>
+            </div>
+            <div class="card-action">
+                <span>View Comparison</span>
+                <i class="material-icons">arrow_forward</i>
+            </div>
+        </a>
+    </div>
 </div>
 
-<div class="suite-grid">
-    <a href="/mulesoft/runtime-control" class="app-card">
-        <i class="material-icons">power_settings_new</i>
-        <h3>Runtime Control</h3>
-        <p>Start, Stop, and Manage application states in bulk across environments.</p>
-        <span class="m3-button">Open App</span>
-    </a>
-
-    <a href="/mulesoft/version-comparator" class="app-card">
-        <i class="material-icons">compare</i>
-        <h3>Version Comparator</h3>
-        <p>Compare runtime and app versions across Sandbox and Production environments.</p>
-        <span class="m3-button">Open App</span>
-    </a>
-</div>
+<style>
+    .m3-page-wrapper { padding: 40px; display: flex; flex-direction: column; gap: 40px; }
+    .m3-hero-header h1 { font-size: 3.5rem; letter-spacing: -2px; margin: 0; font-weight: 800; }
+    .m3-hero-header p { opacity: 0.7; max-width: 600px; margin-top: 12px; font-size: 1.1rem; }
+    .text-gradient { background: linear-gradient(90deg, #00A2DF, #00D1FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    
+    .suite-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 24px; }
+    .suite-card { background: var(--surface-m3); backdrop-filter: blur(20px); border: 1px solid var(--border-light); border-radius: 32px; padding: 40px; text-decoration: none; color: var(--text-main); display: flex; flex-direction: column; gap: 24px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 12px 40px var(--glass-shadow); position: relative; overflow: hidden; }
+    .suite-card:hover { transform: translateY(-8px); background: rgba(0, 162, 223, 0.05); border-color: #00A2DF; }
+    .card-icon { width: 64px; height: 64px; border-radius: 20px; display: flex; align-items: center; justify-content: center; background: rgba(0, 162, 223, 0.1); color: #00A2DF; }
+    .card-icon i { font-size: 36px; }
+    .suite-card h3 { font-size: 24px; font-weight: 800; margin: 0; }
+    .suite-card p { font-size: 14px; opacity: 0.7; line-height: 1.6; margin: 0; }
+    .card-action { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #00A2DF; }
+</style>
 {% endblock %}

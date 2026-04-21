@@ -1,17 +1,43 @@
 {% extends "base.html" %}
-{% block title %}DevOps Suite{% endblock %}
+{% block title %}DevOps Suite | Beyond Native{% endblock %}
 {% block content %}
-<div class="m3-header">
-    <h1>DevOps Suite</h1>
-    <p>Automate Azure DevOps workflows and repository management.</p>
+<div class="m3-page-wrapper">
+    <header class="m3-hero-header">
+        <div class="header-left">
+            <span class="m3-badge-new">AUTOMATION STACK</span>
+            <h1>Azure <span class="text-gradient">DevOps Suite</span></h1>
+            <p>High-scale repository discovery and automated Pull Request orchestration for enterprise deployments.</p>
+        </div>
+    </header>
+
+    <div class="suite-grid">
+        <a href="/devops/bulk-pr" class="suite-card azure">
+            <div class="card-icon"><i class="material-icons">reorder</i></div>
+            <div class="card-body">
+                <h3>Bulk PR Deployer</h3>
+                <p>Execute and track hundreds of Pull Requests across diverse repositories in a single, unified operation.</p>
+            </div>
+            <div class="card-action">
+                <span>Start Deployment</span>
+                <i class="material-icons">arrow_forward</i>
+            </div>
+        </a>
+    </div>
 </div>
 
-<div class="suite-grid">
-    <a href="/devops/bulk-pr" class="app-card">
-        <i class="material-icons">rocket_launch</i>
-        <h3>Bulk PR Automator</h3>
-        <p>Discover repositories and raise multiple Pull Requests simultaneously.</p>
-        <span class="m3-button">Open App</span>
-    </a>
-</div>
+<style>
+    .m3-page-wrapper { padding: 40px; display: flex; flex-direction: column; gap: 40px; }
+    .m3-hero-header h1 { font-size: 3.5rem; letter-spacing: -2px; margin: 0; font-weight: 800; }
+    .m3-hero-header p { opacity: 0.7; max-width: 600px; margin-top: 12px; font-size: 1.1rem; }
+    .text-gradient { background: linear-gradient(90deg, #0078D4, #2899F5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    
+    .suite-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 24px; }
+    .suite-card { background: var(--surface-m3); backdrop-filter: blur(20px); border: 1px solid var(--border-light); border-radius: 32px; padding: 40px; text-decoration: none; color: var(--text-main); display: flex; flex-direction: column; gap: 24px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 12px 40px var(--glass-shadow); position: relative; overflow: hidden; }
+    .suite-card:hover { transform: translateY(-8px); background: rgba(0, 120, 212, 0.05); border-color: #0078D4; }
+    .card-icon { width: 64px; height: 64px; border-radius: 20px; display: flex; align-items: center; justify-content: center; background: rgba(0, 120, 212, 0.1); color: #0078D4; }
+    .card-icon i { font-size: 36px; }
+    .suite-card h3 { font-size: 24px; font-weight: 800; margin: 0; }
+    .suite-card p { font-size: 14px; opacity: 0.7; line-height: 1.6; margin: 0; }
+    .card-action { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #0078D4; }
+</style>
 {% endblock %}

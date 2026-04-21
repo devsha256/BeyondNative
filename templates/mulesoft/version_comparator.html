@@ -1,192 +1,258 @@
 {% extends "base.html" %}
-{% block title %}Version Comparator{% endblock %}
+
+{% block title %}Version Comparator | Beyond Native{% endblock %}
+
 {% block content %}
-<div class="m3-header">
-    <h1>Version Comparator</h1>
-    <p>Select a Base Environment and compare application deployments across other Target Environments.</p>
-</div>
-
-<div class="m3-card" id="settings-check-card"
-    style="display: none; background: rgba(255, 100, 100, 0.1); border-left: 4px solid var(--error-color);">
-    <h3 style="color: var(--error-color); margin-bottom: 8px;">Authentication Missing</h3>
-    <p>Please configure your Anypoint Connected App via the Settings page before proceeding.</p>
-    <a href="/settings" class="m3-button" style="margin-top: 12px; display: inline-block;">Go to Settings</a>
-</div>
-
-<div class="m3-card" id="comparator-card">
-    <h3><i class="material-icons" style="vertical-align: middle;">compare_arrows</i> Environment Setup</h3>
-
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px;">
-        <div style="grid-column: span 2;">
-            <label>Organization (Business Group)</label>
-            <select id="org-select" class="m3-input" onchange="handleOrgSelection(this.value)">
-                <option value="">Loading Organizations...</option>
-            </select>
+<div class="m3-page-wrapper">
+    <!-- Elite Header -->
+    <header class="m3-hero-header">
+        <div class="header-left">
+            <span class="m3-badge-new mule">ANYPOINT AUDIT STACK</span>
+            <h1>Version <span class="text-gradient">Comparator</span></h1>
+            <p>Cross-environment deployment auditing and semver synchronization analysis.</p>
         </div>
-
-        <div>
-            <label>Base Environment</label>
-            <select id="base-env-select" class="m3-input" onchange="populateTargetEnvs()">
-                <option value="">Select an Org first...</option>
-            </select>
+        <div class="header-right">
+            <a href="/mulesoft" class="m3-icon-button" title="Back to Suite">
+                <i class="material-icons">home</i>
+            </a>
         </div>
+    </header>
 
-        <div>
-            <label>Target Environments (Multi-Select)</label>
-            <select id="target-envs-select" class="m3-input" multiple style="height: 120px;" onchange="enableCompare()">
-                <option value="" disabled>Select Base Environment first...</option>
-            </select>
-            <p style="font-size: 0.75rem; color: #888; margin-top: 4px;">Hold Ctrl/Cmd to select multiple environments.
-            </p>
+    <!-- Auth Warning -->
+    <div class="m3-card glass auth-warning hidden" id="settings-check-card">
+        <div class="warning-content">
+            <i class="material-icons">no_accounts</i>
+            <div>
+                <h3>Authentication Required</h3>
+                <p>Configure your Anypoint Connected App in settings to enable cross-environment auditing.</p>
+            </div>
+            <a href="/settings" class="m3-fab-extend small">Go to Settings</a>
         </div>
     </div>
 
-    <button id="compare-btn" class="m3-button" style="margin-top: 24px;" onclick="executeComparison()" disabled>
-        <i class="material-icons">analytics</i> Compare Versions
-    </button>
-</div>
+    <!-- Phase 1: Comparison Setup -->
+    <div id="comparator-card" class="m3-card glass">
+        <div class="section-title">
+            <i class="material-icons">compare_arrows</i>
+            <div>
+                <h3>Environment Configuration</h3>
+                <p>Establish your base environment and comparison targets</p>
+            </div>
+        </div>
 
-<div id="results-card" class="m3-card table-container" style="display: none; padding: 0; margin-top: 24px;">
-    <div style="padding: 24px; border-bottom: 1px solid var(--border-light); display: flex; flex-direction: column; gap: 16px;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="margin: 0;"><i class="material-icons" style="vertical-align: middle;">grid_view</i> Comparison Matrix</h3>
-            <div style="display: flex; gap: 12px; align-items: center;">
-                <select id="version-type" class="m3-input" style="width: auto; padding: 6px 12px; font-size: 0.9rem;" onchange="renderMatrix()">
-                    <option value="appVersion" selected>Application Versions</option>
+        <div class="m3-config-grid">
+            <div class="input-group full">
+                <label>Organization (Business Group)</label>
+                <select id="org-select" class="m3-input-v2" onchange="handleOrgSelection(this.value)">
+                    <option value="">Authenticating Session...</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Base Environment (Source of Truth)</label>
+                <select id="base-env-select" class="m3-input-v2" onchange="populateTargetEnvs()">
+                    <option value="">Select Organization First...</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Target Environments (Multi-Select)</label>
+                <select id="target-envs-select" class="m3-input-v2 select-multiple" multiple onchange="enableCompare()">
+                    <option value="" disabled>Awaiting Base Scope...</option>
+                </select>
+                <span class="caption">Hold Cmd/Ctrl to select multiple scopes</span>
+            </div>
+        </div>
+
+        <div class="action-footer">
+            <button id="compare-btn" class="m3-fab-extend" onclick="executeComparison()" disabled>
+                <i class="material-icons">analytics</i>
+                <span>Execute Matrix Comparison</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Phase 2: Results Matrix Canvas -->
+    <div id="results-card" class="m3-card glass no-padding hidden" style="margin-top: 24px;">
+        <div class="table-toolbar matrix-toolbar">
+            <div class="toolbar-left">
+                <i class="material-icons">grid_view</i>
+                <h3>Comparison Matrix</h3>
+            </div>
+            <div class="toolbar-controls">
+                <select id="version-type" class="m3-input-v2 mini" onchange="renderMatrix()">
+                    <option value="appVersion">Application Artifacts</option>
                     <option value="muleVersion">Runtime Versions</option>
                 </select>
-                <button class="m3-button" onclick="exportToCSV()" style="background: var(--success); color: white; padding: 8px 16px;">
-                    <i class="material-icons">download</i> Export CSV
+                <div class="control-divider"></div>
+                <button class="m3-button outline" id="toggle-mismatch" onclick="toggleMismatchFilter()">
+                    <i class="material-icons">filter_alt</i>
+                    <span id="toggle-text">Show All Rows</span>
+                </button>
+                <div class="control-divider"></div>
+                <button class="m3-icon-button" onclick="exportToCSV()" title="Export CSV Report">
+                    <i class="material-icons">download</i>
                 </button>
             </div>
         </div>
         
-        <div style="display: flex; gap: 16px; align-items: center;">
-            <div style="position: relative; flex: 1;">
-                <i class="material-icons" style="position: absolute; left: 12px; top: 10px; font-size: 20px; color: var(--text-muted);">search</i>
-                <input type="text" id="search-apps" class="m3-input" placeholder="Search applications..." oninput="renderMatrix()" style="padding-left: 40px; margin: 0;">
+        <div class="matrix-filter-bar">
+            <div class="toolbar-search">
+                <i class="material-icons">search</i>
+                <input type="text" id="search-apps" placeholder="Filter applications by name..." oninput="renderMatrix()">
             </div>
-            <button class="m3-button" id="toggle-mismatch" onclick="toggleMismatchFilter()" style="background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border-light); min-width: 180px;">
-                <i class="material-icons" id="toggle-icon">filter_list</i> 
-                <span id="toggle-text">Show All Rows</span>
-            </button>
+        </div>
+
+        <div class="modern-table-container">
+            <table class="m3-table-v2 matrix-table" id="matrix-table">
+                <thead id="matrix-head"></thead>
+                <tbody id="matrix-body"></tbody>
+            </table>
         </div>
     </div>
-    <div style="overflow-x: auto; width: 100%;">
-        <table class="m3-table" id="matrix-table" style="min-width: 800px;">
-            <thead id="matrix-head"></thead>
-            <tbody id="matrix-body"></tbody>
-        </table>
-    </div>
 </div>
+
+<style>
+    /* Absolute Theme & Palette Consistency */
+    :root {
+        --primary-m3: #00A2DF;
+        --accent-m3: #00D1FF;
+        --surface-m3: rgba(254, 247, 255, 0.7);
+        --error-tint: rgba(179, 38, 30, 0.1);
+    }
+
+    [data-theme='dark'] {
+        --surface-m3: rgba(28, 27, 31, 0.85);
+        --bg-panel: rgba(20, 20, 20, 0.5);
+    }
+
+    .m3-page-wrapper { padding: 40px; display: flex; flex-direction: column; gap: 40px; min-height: 100vh; }
+    
+    /* Hero Header */
+    .m3-hero-header h1 { font-size: 3.5rem; letter-spacing: -2px; margin: 0; font-weight: 800; }
+    .m3-hero-header p { opacity: 0.6; margin-top: 12px; font-size: 1.1rem; }
+    .text-gradient { background: linear-gradient(90deg, #00A2DF, #00D1FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    
+    .m3-badge-new.mule { background: rgba(0, 162, 223, 0.1); color: #00A2DF; }
+
+    /* M3 Cards */
+    .m3-card.glass {
+        background: var(--surface-m3);
+        backdrop-filter: blur(20px);
+        border-radius: 32px;
+        border: 1px solid var(--border-light);
+        padding: 32px;
+        box-shadow: 0 12px 40px var(--glass-shadow);
+    }
+    .m3-card.no-padding { padding: 0; }
+
+    /* Forms */
+    .section-title { display: flex; align-items: center; gap: 20px; margin-bottom: 32px; }
+    .section-title i { font-size: 2.2rem; color: var(--primary-m3); background: rgba(0, 162, 223, 0.1); padding: 12px; border-radius: 16px; }
+    .section-title h3 { margin: 0; font-size: 1.3rem; font-weight: 800; }
+    .section-title p { margin: 0; opacity: 0.6; font-size: 0.85rem; }
+
+    .m3-config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .input-group { display: flex; flex-direction: column; gap: 8px; }
+    .input-group.full { grid-column: span 2; }
+    .input-group label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--primary-m3); opacity: 0.7; letter-spacing: 0.5px; }
+    .caption { font-size: 10px; opacity: 0.5; margin-top: 4px; }
+
+    .m3-input-v2 { background: rgba(0,0,0,0.03); border: 1px solid var(--m3-outline); border-radius: 14px; padding: 12px 16px; color: var(--text-main); font-family: inherit; font-size: 14px; width: 100%; outline: none; transition: 0.2s; }
+    .m3-input-v2:focus { border-color: var(--primary-m3); background: transparent; box-shadow: 0 0 0 4px rgba(0, 162, 223, 0.1); }
+    .m3-input-v2.mini { padding: 8px 12px; font-size: 12px; width: auto; }
+    .select-multiple { height: 120px; }
+
+    .action-footer { margin-top: 32px; }
+
+    /* Matrix Toolbar */
+    .table-toolbar { padding: 24px 32px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); }
+    .toolbar-left { display: flex; align-items: center; gap: 16px; }
+    .toolbar-left h3 { margin: 0; font-size: 1.1rem; font-weight: 800; }
+    .toolbar-controls { display: flex; align-items: center; gap: 16px; }
+    .control-divider { width: 1px; height: 32px; background: var(--border-light); }
+
+    .matrix-filter-bar { padding: 16px 32px; background: rgba(0,0,0,0.02); border-bottom: 1px solid var(--border-light); }
+    .toolbar-search { display: flex; align-items: center; gap: 12px; opacity: 0.6; }
+    .toolbar-search input { flex: 1; background: transparent; border: none; font-size: 14px; color: var(--text-main); font-family: inherit; outline: none; }
+
+    /* Tables */
+    .m3-table-v2 { width: 100%; border-collapse: collapse; }
+    .m3-table-v2 th { text-align: left; padding: 16px 24px; font-size: 11px; font-weight: 800; opacity: 0.5; border-bottom: 1px solid var(--border-light); color: var(--primary-m3); }
+    .m3-table-v2 td { padding: 16px 24px; border-bottom: 1px solid var(--border-light); font-size: 13px; vertical-align: middle; }
+
+    .base-col { border-right: 2px solid var(--border-light); background: rgba(103, 80, 164, 0.02); }
+
+    /* Status Pills */
+    .status-badge { font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 4px; display: inline-flex; align-items: center; gap: 6px; }
+    .mismatch-row { background: rgba(179, 38, 30, 0.05) !important; }
+    .mismatch-cell { color: #E57373 !important; font-weight: 800; }
+
+    /* FABs & Buttons */
+    .m3-fab-extend { padding: 16px 32px; background: var(--primary-m3); color: white; border: none; border-radius: 28px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: 0.3s; font-weight: 700; font-family: inherit; font-size: 14px; }
+    .m3-fab-extend:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0, 162, 223, 0.3); }
+    .m3-fab-extend.small { padding: 8px 16px; font-size: 12px; }
+
+    .m3-icon-button { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--border-light); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; color: var(--text-main); background: transparent; }
+    .m3-icon-button:hover { background: var(--primary-m3); color: white; }
+
+    .m3-button.outline { background: transparent; border: 1px solid var(--border-light); padding: 8px 16px; border-radius: 100px; cursor: pointer; transition: 0.2s; font-family: inherit; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 8px; color: var(--text-main); }
+    .m3-button.outline.active { background: rgba(179, 38, 30, 0.1); border-color: #E57373; color: #E57373; }
+
+    /* Icons */
+    .material-icons { font-family: 'Material Icons' !important; }
+    .rotating { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+</style>
 
 <script>
     const defaultOrgId = "{{ default_org }}";
     const defaultEnvId = "{{ default_env }}";
-
     let globalEnvs = [];
-    let comparisonData = {
-        baseEnv: null,
-        targetEnvs: [],
-        baseApps: [],
-        targetAppsData: {} // Dictionary matching targetEnvId -> Array of Apps
-    };
-
+    let comparisonData = { baseEnv: null, targetEnvs: [], baseApps: null, targetAppsData: {} };
     let showOnlyMismatches = false;
 
-    function toggleMismatchFilter() {
-        showOnlyMismatches = !showOnlyMismatches;
-        const btn = document.getElementById('toggle-mismatch');
-        const text = document.getElementById('toggle-text');
-        const icon = document.getElementById('toggle-icon');
-        if (showOnlyMismatches) {
-            btn.style.background = "rgba(255, 61, 113, 0.2)";
-            btn.style.borderColor = "#ff3d71";
-            text.innerText = "Mismatched Only";
-            icon.innerText = "filter_alt";
-        } else {
-            btn.style.background = "rgba(255,255,255,0.05)";
-            btn.style.borderColor = "var(--border-light)";
-            text.innerText = "Show All Rows";
-            icon.innerText = "filter_list";
-        }
-        renderMatrix();
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        initOrgs();
-    });
+    document.addEventListener('DOMContentLoaded', () => initOrgs());
 
     async function initOrgs() {
         try {
+            const select = document.getElementById('org-select');
             const res = await fetch('/api/mule/orgs');
-            if (!res.ok) throw new Error("API Failure");
             const orgs = await res.json();
-
             if (orgs.length === 0) {
-                document.getElementById('org-select').style.display = 'none';
-                document.getElementById('settings-check-card').style.display = 'block';
+                document.getElementById('comparator-card').classList.add('hidden');
+                document.getElementById('settings-check-card').classList.remove('hidden');
                 return;
             }
-
-            const select = document.getElementById('org-select');
-            select.innerHTML = '<option value="">Select Organization...</option>' +
+            select.innerHTML = '<option value="">Select Organization...</option>' + 
                 orgs.map(o => `<option value="${o.id}">${o.name}</option>`).join('');
-
+            
             if (defaultOrgId) {
-                let matchedOrg = orgs.find(o => o.id === defaultOrgId || o.name === defaultOrgId);
-                if (matchedOrg) {
-                    select.value = matchedOrg.id;
-                    handleOrgSelection(matchedOrg.id);
-                }
+                let matched = orgs.find(o => o.id === defaultOrgId || o.name === defaultOrgId);
+                if (matched) { select.value = matched.id; handleOrgSelection(matched.id); }
             }
-
-        } catch (e) {
-            document.getElementById('org-select').innerHTML = '<option value="">Error Loading Orgs. Check Settings.</option>';
-        }
+        } catch (e) { console.error(e); }
     }
 
     async function handleOrgSelection(orgId) {
         if (!orgId) return;
-        document.getElementById('base-env-select').innerHTML = '<option>Loading...</option>';
-        document.getElementById('target-envs-select').innerHTML = '';
-
-        try {
-            const res = await fetch(`/api/mule/envs/${orgId}`);
-            globalEnvs = await res.json();
-
-            const select = document.getElementById('base-env-select');
-            select.innerHTML = '<option value="">Select Base Environment...</option>' +
-                globalEnvs.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
-
-            document.getElementById('compare-btn').disabled = true;
-
-            if (defaultEnvId) {
-                let matchedEnv = globalEnvs.find(e => e.id === defaultEnvId || e.name === defaultEnvId);
-                if (matchedEnv) {
-                    select.value = matchedEnv.id;
-                    populateTargetEnvs();
-                }
-            }
-        } catch (e) {
-            alert("Failed to load environments.");
+        const res = await fetch(`/api/mule/envs/${orgId}`);
+        globalEnvs = await res.json();
+        const select = document.getElementById('base-env-select');
+        select.innerHTML = '<option value="">Select Base Environment...</option>' + 
+            globalEnvs.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+        if (defaultEnvId) {
+            let matched = globalEnvs.find(e => e.id === defaultEnvId || e.name === defaultEnvId);
+            if (matched) { select.value = matched.id; populateTargetEnvs(); }
         }
     }
 
     function populateTargetEnvs() {
         const baseId = document.getElementById('base-env-select').value;
         const targetSelect = document.getElementById('target-envs-select');
-
-        if (!baseId) {
-            targetSelect.innerHTML = '<option value="" disabled>Select Base Environment first...</option>';
-            return;
-        }
-
-        targetSelect.innerHTML = globalEnvs
-            .filter(e => e.id !== baseId)
-            .map(e => `<option value="${e.id}">${e.name}</option>`)
-            .join('');
-
+        targetSelect.innerHTML = globalEnvs.filter(e => e.id !== baseId).map(e => `<option value="${e.id}">${e.name}</option>`).join('');
         enableCompare();
     }
 
@@ -196,282 +262,99 @@
         document.getElementById('compare-btn').disabled = !baseId || targets.length === 0;
     }
 
-    // Utility to normalize app names by stripping standard suffixes or "-envName"
-    function normalizeName(name) {
-        if (!name) return "Unknown";
-        return String(name).toLowerCase()
-            .replace(/-(dev|qa|test|uat|prod|stg|sandbox|np|dr|preprod).*$/, '')
-            .trim();
+    async function executeComparison() {
+        const btn = document.getElementById('compare-btn');
+        btn.disabled = true; btn.innerHTML = '<i class="material-icons rotating">sync</i> <span>Processing Matrix...</span>';
+        
+        const baseId = document.getElementById('base-env-select').value;
+        const targets = Array.from(document.getElementById('target-envs-select').selectedOptions).map(o => ({ id: o.value, name: o.text }));
+        
+        comparisonData = { baseEnv: globalEnvs.find(e => e.id === baseId), targetEnvs: targets, baseApps: null, targetAppsData: {} };
+        document.getElementById('results-card').classList.remove('hidden');
+        renderMatrix();
+
+        try {
+            const orgId = document.getElementById('org-select').value;
+            await fetchEnv(orgId, baseId, true);
+            for (const t of targets) await fetchEnv(orgId, t.id, false);
+        } catch(e) { console.error(e); }
+        btn.disabled = false; btn.innerHTML = '<i class="material-icons">analytics</i> <span>Execute Matrix Comparison</span>';
+    }
+
+    async function fetchEnv(orgId, envId, isBase) {
+        const res = await fetch('/api/mule/apps', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ org_id: orgId, env_id: envId, extract_details: true })
+        });
+        const data = await res.json();
+        if (isBase) comparisonData.baseApps = data;
+        else comparisonData.targetAppsData[envId] = data;
+        renderMatrix();
     }
 
     function toggleMismatchFilter() {
         showOnlyMismatches = !showOnlyMismatches;
         const btn = document.getElementById('toggle-mismatch');
-        const text = document.getElementById('toggle-text');
-        if (showOnlyMismatches) {
-            btn.style.background = "rgba(255, 61, 113, 0.2)";
-            btn.style.borderColor = "var(--error-color)";
-            text.innerText = "Mismatched Only";
-        } else {
-            btn.style.background = "rgba(255,255,255,0.05)";
-            btn.style.borderColor = "var(--border-light)";
-            text.innerText = "Show All";
-        }
+        btn.classList.toggle('active', showOnlyMismatches);
+        document.getElementById('toggle-text').innerText = showOnlyMismatches ? "Mismatched Only" : "Show All Rows";
         renderMatrix();
     }
 
-    async function executeComparison() {
-        const btn = document.getElementById('compare-btn');
-        btn.innerHTML = '<i class="material-icons" style="animation: spin 1s linear infinite;">refresh</i> Extracting...';
-        btn.disabled = true;
-
-        const orgId = document.getElementById('org-select').value;
-        const baseId = document.getElementById('base-env-select').value;
-        const targets = Array.from(document.getElementById('target-envs-select').selectedOptions).map(o => ({ id: o.value, name: o.text }));
-
-        // Create a single list of all Env IDs to fetch
-        const allEnvs = [{ id: baseId, isBase: true }, ...targets.map(t => ({ id: t.id, isBase: false }))];
-
-        // Clear previous state for a fresh run
-        comparisonData.baseApps = null;
-        comparisonData.targetAppsData = {};
-        comparisonData.baseEnv = globalEnvs.find(e => e.id === baseId);
-        comparisonData.targetEnvs = targets;
-
-        try {
-            // Sequential execution for environments to avoid backend flooding
-            for (const env of allEnvs) {
-                await fetchEnvData(env, orgId);
-            }
-
-        } catch (e) {
-            console.error(e);
-            alert("Exception in Matrix Processing: " + e.message);
-        } finally {
-            btn.innerHTML = '<i class="material-icons">analytics</i> Compare Versions';
-            btn.disabled = false;
-        }
-    }
-
-    async function fetchEnvData(env, orgId) {
-        try {
-            const res = await fetch('/api/mule/apps', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ org_id: orgId, env_id: env.id, extract_details: true })
-            });
-            
-            if (!res.ok) throw new Error("HTTP " + res.status);
-            const data = await res.json();
-
-            // Update global state for this specific env
-            if (env.isBase) {
-                comparisonData.baseApps = data;
-            } else {
-                comparisonData.targetAppsData[env.id] = data;
-            }
-
-            // Render immediately as each response arrives
-            renderMatrix();
-            document.getElementById('results-card').style.display = 'block';
-
-        } catch (err) {
-            console.error(`Env ${env.id} failed:`, err);
-        }
-    }
-
-    function normalizeName(name) {
-        if (!name) return "";
-        // Lowercase and strip common env suffixes (-dev, -qa, -prod, etc.)
-        return name.toLowerCase()
-            .replace(/-(?:dev|qa|prod|stg|uat|test|sandbox)$/, "")
-            .trim();
-    }
-
-    function compareVersions(v1, v2) {
-        if (!v1 || !v2) return 0;
-        // Extract semver-like strings from text or filenames
-        const extract = (s) => {
-            const match = s.match(/(\d+(?:\.\d+)+)/);
-            return match ? match[1] : s;
-        };
-        const s1 = extract(v1).split('.').map(n => parseInt(n) || 0);
-        const s2 = extract(v2).split('.').map(n => parseInt(n) || 0);
-        
-        for (let i = 0; i < Math.max(s1.length, s2.length); i++) {
-            const n1 = s1[i] || 0;
-            const n2 = s2[i] || 0;
-            if (n1 > n2) return 1;
-            if (n1 < n2) return -1;
-        }
-        return 0;
-    }
-
-    function extractVersion(appObj, versionType, baseValue = null) {
-        if (!appObj) return '<span style="color:var(--error-color); font-weight: 600;">Not Deployed</span>';
-
-        let v = 'N/A';
-        if (versionType === 'muleVersion') {
-            v = (appObj.muleVersion && appObj.muleVersion.version) || appObj.muleVersion || 'N/A';
-        } else {
-            v = appObj.appVersion || 'Unknown Artifact';
-        }
-
-        let isMismatch = baseValue && v !== baseValue && v !== 'N/A' && baseValue !== 'N/A' && v !== 'Unknown Artifact' && baseValue !== 'Unknown Artifact';
-        
-        let style = 'background:rgba(255,255,255,0.05);';
-        let mismatchIcon = '';
-        let title = '';
-
-        if (isMismatch) {
-            const diff = compareVersions(v, baseValue);
-            // Mismatch Style: Shade of Red/Black
-            style = 'background: rgba(20, 0, 0, 0.8); border: 1px solid #ff3d71; color: #ff3d71 !important; font-weight: 600; box-shadow: 0 0 8px rgba(255, 61, 113, 0.2);';
-            
-            if (diff > 0) {
-                mismatchIcon = '<i class="material-icons" style="font-size:14px; vertical-align:middle; margin-right:4px;">trending_up</i>';
-                title = `Higher: ${v} vs Base: ${baseValue}`;
-            } else {
-                mismatchIcon = '<i class="material-icons" style="font-size:14px; vertical-align:middle; margin-right:4px;">trending_down</i>';
-                title = `Lower: ${v} vs Base: ${baseValue}`;
-            }
-        }
-
-        return `<span class="status-badge" style="${style}" title="${title}">${mismatchIcon}${v}</span>`;
-    }
+    function normalize(n) { return n ? n.toLowerCase().replace(/-(?:dev|qa|prod|stg|uat|test|sandbox)$/, "").trim() : ""; }
 
     function renderMatrix() {
-        const versionType = document.getElementById('version-type').value;
-        const searchTerm = document.getElementById('search-apps').value.toLowerCase();
+        const type = document.getElementById('version-type').value;
+        const search = document.getElementById('search-apps').value.toLowerCase();
         const thead = document.getElementById('matrix-head');
         const tbody = document.getElementById('matrix-body');
 
         if (!comparisonData.baseEnv) return;
 
-        // Draw Header
-        let headHTML = `<tr>
-        <th style="padding-left: 24px; min-width: 250px;">Base Application Name</th>
-        <th style="border-right: 2px solid var(--border-light);">${comparisonData.baseEnv.name} (Base)</th>`;
+        thead.innerHTML = `<tr><th style="padding-left: 24px;">APPLICATION NAME</th><th class="base-col">${comparisonData.baseEnv.name} (BASE)</th>` + 
+            comparisonData.targetEnvs.map(e => `<th>${e.name}</th>`).join('') + `</tr>`;
 
-        comparisonData.targetEnvs.forEach(env => {
-            headHTML += `<th>${env.name}</th>`;
-        });
-        headHTML += `</tr>`;
-        thead.innerHTML = headHTML;
-
-        // Loading and Empty states
         if (comparisonData.baseApps === null) {
-            tbody.innerHTML = `<tr><td colspan="${2 + comparisonData.targetEnvs.length}" style="text-align: center; padding: 48px; color: var(--text-muted);"><i class="material-icons" style="animation: spin 1s linear infinite; vertical-align: middle; margin-right: 8px;">refresh</i> Gathering metadata from Base Environment...</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="${comparisonData.targetEnvs.length + 2}" style="text-align:center; padding:48px;"><i class="material-icons rotating">sync</i> Collecting Base Metadata...</td></tr>`;
             return;
         }
 
-        if (comparisonData.baseApps.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${2 + comparisonData.targetEnvs.length}" style="text-align: center; padding: 48px; color: var(--text-muted);">No applications found in the selected Base Environment.</td></tr>`;
-            return;
-        }
-
-        let bodyHTML = '';
-
-        // Draw Rows
-        comparisonData.baseApps.forEach(baseApp => {
-            const baseRawName = (baseApp.name || baseApp.fullDomain || 'Unknown App');
-            
-            // Search Filter
-            if (searchTerm && !baseRawName.toLowerCase().includes(searchTerm)) return;
-
-            const baseVersionValue = (versionType === 'muleVersion') ? 
-                ((baseApp.muleVersion && baseApp.muleVersion.version) || baseApp.muleVersion || 'N/A') :
-                (baseApp.appVersion || 'Unknown Artifact');
-
-            const baseVersionBadge = extractVersion(baseApp, versionType);
-
-            const targetResults = [];
-            let rowHasMismatch = false;
+        tbody.innerHTML = comparisonData.baseApps.filter(app => !search || (app.name || "").toLowerCase().includes(search)).map(baseApp => {
+            const baseV = type === 'muleVersion' ? (baseApp.muleVersion?.version || baseApp.muleVersion || 'N/A') : (baseApp.appVersion || 'Unknown');
+            const targetCells = [];
+            let mismatch = false;
 
             comparisonData.targetEnvs.forEach(env => {
-                const targetApps = comparisonData.targetAppsData[env.id] || [];
-                const baseNorm = normalizeName(baseRawName);
+                const targets = comparisonData.targetAppsData[env.id] || [];
+                const match = targets.find(t => normalize(t.name) === normalize(baseApp.name));
+                const targetV = type === 'muleVersion' ? (match?.muleVersion?.version || match?.muleVersion || 'N/A') : (match?.appVersion || 'Unknown');
                 
-                const match = targetApps.find(a => {
-                    const targetName = a.fullDomain || a.name || (a.artifact && a.artifact.name);
-                    return normalizeName(targetName) === baseNorm || a.id === baseApp.id;
-                });
+                const isDiff = match && targetV !== baseV && targetV !== 'N/A' && baseV !== 'N/A';
+                if (isDiff || !match) mismatch = true;
                 
-                const targetV = match ? ((versionType === 'muleVersion') ? ((match.muleVersion && match.muleVersion.version) || match.muleVersion || 'N/A') : (match.appVersion || 'Unknown Artifact')) : 'Missing';
-                
-                if (!match || targetV !== baseVersionValue) rowHasMismatch = true;
-                targetResults.push({ match: match });
+                targetCells.push(`<td class="${isDiff ? 'mismatch-cell' : ''}">${match ? targetV : '<span style="opacity:0.3">Not Deployed</span>'}</td>`);
             });
 
-            // Mismatch Filter
-            if (showOnlyMismatches && !rowHasMismatch) return;
+            if (showOnlyMismatches && !mismatch) return '';
 
-            const rowStyle = rowHasMismatch ? 'background: rgba(255, 61, 113, 0.08);' : '';
-            const borderStyle = rowHasMismatch ? 'border-left: 4px solid var(--error-color);' : 'border-left: 4px solid transparent;';
-
-            let rowHTML = `<tr style="${rowStyle}">
-                <td style="padding-left: 24px; font-weight: 600; ${borderStyle}">${baseRawName}</td>
-                <td style="border-right: 2px solid var(--border-light); opacity: 0.8;">${baseVersionBadge}</td>
-            `;
-
-            targetResults.forEach(res => {
-                rowHTML += `<td>${extractVersion(res.match, versionType, baseVersionValue)}</td>`;
-            });
-
-            rowHTML += `</tr>`;
-            bodyHTML += rowHTML;
-        });
-
-        if (bodyHTML === '') {
-            tbody.innerHTML = `<tr><td colspan="${2 + comparisonData.targetEnvs.length}" style="text-align: center; padding: 48px; color: var(--text-muted);">No results match your filters.</td></tr>`;
-        } else {
-            tbody.innerHTML = bodyHTML;
-        }
+            return `<tr class="${mismatch ? 'mismatch-row' : ''}"><td style="padding-left: 24px;"><strong>${baseApp.name}</strong></td><td class="base-col">${baseV}</td>${targetCells.join('')}</tr>`;
+        }).join('');
     }
 
     function exportToCSV() {
-        const versionType = document.getElementById('version-type').value;
-        if (!comparisonData.baseApps) return;
-
-        let csv = `App Name,Base (${comparisonData.baseEnv.name}),` + 
-                  comparisonData.targetEnvs.map(e => e.name).join(',') + "\n";
-
-        comparisonData.baseApps.forEach(baseApp => {
-            const baseRawName = (baseApp.name || baseApp.fullDomain || 'Unknown App');
-            const baseV = (versionType === 'muleVersion') ? ((baseApp.muleVersion && baseApp.muleVersion.version) || baseApp.muleVersion || 'N/A') : (baseApp.appVersion || 'Unknown Artifact');
-            
-            let row = `"${baseRawName}","${baseV}"`;
-
-            comparisonData.targetEnvs.forEach(env => {
-                const targetApps = comparisonData.targetAppsData[env.id] || [];
-                const baseNorm = normalizeName(baseRawName);
-                const match = targetApps.find(a => {
-                    const targetName = a.fullDomain || a.name || (a.artifact && a.artifact.name);
-                    return normalizeName(targetName) === baseNorm || a.id === baseApp.id;
-                });
-                const v = match ? ((versionType === 'muleVersion') ? ((match.muleVersion && match.muleVersion.version) || match.muleVersion || 'N/A') : (match.appVersion || 'Unknown Artifact')) : 'Not Deployed';
-                row += `,"${v}"`;
-            });
-            csv += row + "\n";
+        const type = document.getElementById('version-type').value;
+        let csv = "App," + comparisonData.baseEnv.name + "," + comparisonData.targetEnvs.map(e => e.name).join(",") + "\n";
+        comparisonData.baseApps.forEach(b => {
+            const bv = type === 'muleVersion' ? (b.muleVersion?.version || b.muleVersion || 'N/A') : (b.appVersion || 'Unknown');
+            csv += `"${b.name}","${bv}"` + comparisonData.targetEnvs.map(env => {
+                const match = (comparisonData.targetAppsData[env.id] || []).find(t => normalize(t.name) === normalize(b.name));
+                return `,"${match ? (type === 'muleVersion' ? (match.muleVersion?.version || 'N/A') : (match.appVersion || 'Unknown')) : 'N/A'}"`;
+            }).join('') + "\n";
         });
-
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.setAttribute('hidden', '');
-        a.setAttribute('href', url);
-        a.setAttribute('download', `mule_comparison_${new Date().toISOString().slice(0,10)}.csv`);
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        a.href = url; a.download = 'version_matrix.csv'; a.click();
     }
 </script>
-
-<style>
-    @keyframes spin {
-        100% {
-            transform: rotate(360deg);
-        }
-    }
-</style>
 {% endblock %}

@@ -41,9 +41,15 @@ def jq_filter_api():
 # --- Navigation ---
 @app.route('/')
 def home():
-    devops_status = devops.check_connection()
-    mule_status = mule.check_connection()
-    return render_template('index.html', devops_status=devops_status, mule_status=mule_status)
+    return render_template('index.html')
+
+@app.route('/api/health-check')
+def health_check_api():
+    # Execute checks (could be in parallel but even sequential here is better than blocking index)
+    return jsonify({
+        "devops": devops.check_connection(),
+        "mulesoft": mule.check_connection()
+    })
 
 @app.route('/devops')
 def devops_index():
@@ -532,48 +538,65 @@ def postman_sync():
     
     return jsonify({"status": "success", "path": path})
 
-@app.route('/api/postman/runner/run', methods=['POST'])
-def postman_runner_run():
+@app.route('/api/postman/execute-stream', methods=['POST'])
+def postman_execute_stream():
+    import time
     data = request.json
     collection = data.get('collection')
     environment = data.get('environment', {})
     iterations = int(data.get('iterations', 1))
-    delay = int(data.get('delay', 0)) / 1000.0 # to seconds
+    delay_ms = int(data.get('delay', 0))
 
     if not collection: return jsonify({"error": "No collection provided"}), 400
     
-    # Simple variables merge
+    # 1. Merge Variables
     base_vars = {}
+    # Collection variables
     for v in collection.get('variable', []):
         base_vars[v.get('key')] = v.get('value')
-    for v in environment.get('values', []):
-        if v.get('enabled', True):
-            base_vars[v.get('key')] = v.get('value')
-    
+    # Environment variables override
+    if environment and isinstance(environment, dict):
+        for v in environment.get('values', []):
+            if v.get('enabled', True):
+                base_vars[v.get('key')] = v.get('value')
+            
+    # 2. Extract linear list of requests
+    items = []
+    def recurse(obj_items):
+        for i in obj_items:
+            if 'request' in i: items.append(i)
+            if 'item' in i: recurse(i['item'])
+    recurse(collection.get('item', []))
+
     def generate():
-        import time
-        items = []
-        def recurse(obj_items):
-            for i in obj_items:
-                if 'request' in i: items.append(i)
-                if 'item' in i: recurse(i['item'])
-        recurse(collection.get('item', []))
-        
-        yield json.dumps({"type": "start", "total": len(items) * iterations}) + "\n"
-        
         for it in range(iterations):
-            for i, item in enumerate(items):
-                # We could support iteration-specific variables here if needed
+            for item in items:
+                # Signal request start
+                yield json.dumps({"type": "request_start", "item_name": item.get('name')}) + "\n"
+                
+                # Execute
+                start_time = time.time()
                 res = postman.execute_collection_item(item, base_vars)
+                end_time = time.time()
+                
+                duration = int((end_time - start_time) * 1000)
+                
+                # Signal completion
+                status_text = "OK" if res.get('status_code', 0) < 400 else "ERROR"
                 yield json.dumps({
-                    "type": "item",
-                    "index": (it * len(items)) + i + 1,
-                    "name": item.get('name'),
-                    "result": res
+                    "type": "request_complete",
+                    "item_name": item.get('name'),
+                    "method": res.get('method', '???'),
+                    "status_code": res.get('status_code', 500),
+                    "status_text": status_text,
+                    "duration": duration,
+                    "response": res.get('response', '')[:500] 
                 }) + "\n"
-                if delay > 0: time.sleep(delay)
-        
-        yield json.dumps({"type": "end"}) + "\n"
+                
+                if delay_ms > 0:
+                    time.sleep(delay_ms / 1000.0)
+                    
+        yield json.dumps({"type": "run_complete"}) + "\n"
 
     return Response(generate(), mimetype='application/x-ndjson')
 

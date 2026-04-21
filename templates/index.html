@@ -1,59 +1,176 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}Dashboard | Beyond Native{% endblock %}
 
 {% block content %}
-<div class="m3-header">
-    <h1 style="font-size: 48px; background: linear-gradient(90deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Beyond Native</h1>
-    <p style="font-size: 18px; max-width: 600px;">The unified gateway for managing your enterprise Azure DevOps and Anypoint MuleSoft ecosystems. Select a suite to begin.</p>
-</div>
+<div class="m3-page-wrapper">
+    <!-- Hero Header -->
+    <header class="m3-hero-header">
+        <div class="header-left">
+            <span class="m3-badge-new">BEYOND NATIVE ECOSYSTEM</span>
+            <h1>Unified <span class="text-gradient">Dashboard</span></h1>
+            <p>Orchestrate your enterprise DevOps and MuleSoft environments from a single, high-performance gateway.</p>
+        </div>
+    </header>
 
-<div class="suite-grid" style="margin-top: 48px;">
-    <a href="/devops" class="app-card" style="padding: 40px;">
-        <i class="material-icons" style="font-size: 48px; margin-bottom: 8px;">lan</i>
-        <h3 style="font-size: 28px;">Azure DevOps Suite</h3>
-        <p style="font-size: 16px;">Automate repository discovery, lifecycle management, and bulk Pull Requests deployment across your organization.</p>
-        <span class="m3-button" style="margin-top: 16px;">Launch Suite <i class="material-icons" style="font-size:18px;">arrow_forward</i></span>
-    </a>
-
-    <a href="/mulesoft" class="app-card" style="padding: 40px;">
-        <i class="material-icons" style="font-size: 48px; margin-bottom: 8px;">api</i>
-        <h3 style="font-size: 28px;">MuleSoft Suite</h3>
-        <p style="font-size: 16px;">Control your Anypoint Platform with ease. Sync sessions, manage runtime states, and compare application versions seamlessly.</p>
-        <span class="m3-button" style="margin-top: 16px;">Launch Suite <i class="material-icons" style="font-size:18px;">arrow_forward</i></span>
-    </a>
-
-    <a href="/postman" class="app-card" style="padding: 40px;">
-        <i class="material-icons" style="font-size: 48px; margin-bottom: 8px; color: var(--accent);">send</i>
-        <h3 style="font-size: 28px;">Postman Suite</h3>
-        <p style="font-size: 16px;">Execute automated Postman collections via Newman, manage global environments, and analyze API test results in real-time.</p>
-        <span class="m3-button" style="margin-top: 16px; background: linear-gradient(135deg, var(--accent), var(--secondary));">Launch Suite <i class="material-icons" style="font-size:18px;">arrow_forward</i></span>
-    </a>
-</div>
-
-<div class="m3-card" style="margin-top: 48px; padding: 40px; background: linear-gradient(145deg, var(--bg-card), var(--primary-glow)); border: 1px solid var(--border-light); position: relative; overflow: hidden;">
-    <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: var(--primary-glow); border-radius: 50%; filter: blur(60px); z-index: 0;"></div>
-    
-    <h3 style="position: relative; z-index: 1;"><i class="material-icons" style="vertical-align: middle; color: var(--primary); margin-right: 8px;">insights</i> System Connectivity</h3>
-    
-    <div style="display: flex; gap: 60px; margin-top: 32px; position: relative; z-index: 1;">
-        <div>
-            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700;">Azure DevOps Status</div>
-            <div style="font-size: 24px; font-weight: 700; color: {% if devops_status %}var(--success){% else %}var(--error){% endif %}; margin-top: 8px; display: flex; align-items: center; gap: 10px;">
-                <i class="material-icons" style="font-size: 28px;">{% if devops_status %}check_circle{% else %}error_outline{% endif %}</i> 
-                {% if devops_status %}Healthy{% else %}Disconnected{% endif %}
+    <!-- Suite Selection Grid -->
+    <div class="suite-grid">
+        <a href="/devops" class="suite-card azure">
+            <div class="card-icon"><i class="material-icons">lan</i></div>
+            <div class="card-body">
+                <h3>Azure DevOps Suite</h3>
+                <p>Bulk PR automation, repository discovery, and lifecycle management for enterprise scale.</p>
             </div>
+            <div class="card-action">
+                <span>Engage Suite</span>
+                <i class="material-icons">arrow_forward</i>
+            </div>
+        </a>
+
+        <a href="/mulesoft" class="suite-card mule">
+            <div class="card-icon"><i class="material-icons">api</i></div>
+            <div class="card-body">
+                <h3>MuleSoft Suite</h3>
+                <p>Runtime control, session synchronization, and version comparison for Anypoint assets.</p>
+            </div>
+            <div class="card-action">
+                <span>Engage Suite</span>
+                <i class="material-icons">arrow_forward</i>
+            </div>
+        </a>
+
+        <a href="/postman" class="suite-card postman">
+            <div class="card-icon"><i class="material-icons">send</i></div>
+            <div class="card-body">
+                <h3>Postman Suite</h3>
+                <p>High-fidelity response comparison, automated collection runs, and log analytics.</p>
+            </div>
+            <div class="card-action">
+                <span>Engage Suite</span>
+                <i class="material-icons">arrow_forward</i>
+            </div>
+        </a>
+    </div>
+
+    <!-- System Health -->
+    <div class="m3-card glass health-card">
+        <div class="health-header">
+            <i class="material-icons">insights</i>
+            <h3>System Connectivity Status</h3>
+            <button class="m3-icon-button small" onclick="loadHealth()" title="Refresh Status">
+                <i class="material-icons" id="refresh-icon">refresh</i>
+            </button>
         </div>
         
-        <div style="width: 1px; background: var(--border-light); height: 50px; align-self: center;"></div>
+        <div class="health-metrics">
+            <div class="metric-item">
+                <span class="m-label">Azure DevOps Environment</span>
+                <div id="devops-health" class="m-value loading">
+                    <i class="material-icons rotating">sync</i>
+                    <span>Checking Connection...</span>
+                </div>
+            </div>
 
-        <div>
-            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700;">MuleSoft Anypoint Status</div>
-            <div style="font-size: 24px; font-weight: 700; color: {% if mule_status %}var(--success){% else %}var(--text-muted){% endif %}; margin-top: 8px; display: flex; align-items: center; gap: 10px;">
-                <i class="material-icons" style="font-size: 28px;">{% if mule_status %}verified_user{% else %}hourglass_empty{% endif %}</i> 
-                {% if mule_status %}Active Session{% else %}Awaiting Auth{% endif %}
+            <div class="metric-divider"></div>
+
+            <div class="metric-item">
+                <span class="m-label">MuleSoft Anypoint Platform</span>
+                <div id="mule-health" class="m-value loading">
+                    <i class="material-icons rotating">sync</i>
+                    <span>Authenticating...</span>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .m3-page-wrapper { padding: 40px; display: flex; flex-direction: column; gap: 40px; }
+    .m3-hero-header h1 { font-size: 3.5rem; letter-spacing: -2px; margin: 0; font-weight: 800; }
+    .m3-hero-header p { opacity: 0.7; max-width: 600px; margin-top: 12px; font-size: 1.1rem; }
+    .text-gradient { background: linear-gradient(90deg, var(--m3-primary), #E800D6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    
+    .suite-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 24px; }
+    .suite-card { background: var(--surface-m3); backdrop-filter: blur(20px); border: 1px solid var(--border-light); border-radius: 32px; padding: 40px; text-decoration: none; color: var(--text-main); display: flex; flex-direction: column; gap: 24px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 12px 40px var(--glass-shadow); position: relative; overflow: hidden; }
+    .suite-card:hover { transform: translateY(-8px); background: var(--m3-primary-container); border-color: var(--m3-primary); }
+
+    .card-icon { width: 64px; height: 64px; border-radius: 20px; display: flex; align-items: center; justify-content: center; background: rgba(103, 80, 164, 0.1); color: var(--m3-primary); }
+    .card-icon i { font-size: 36px; }
+    .azure .card-icon { background: rgba(0, 120, 212, 0.1); color: #0078D4; }
+    .mule .card-icon { background: rgba(0, 162, 223, 0.1); color: #00A2DF; }
+    .postman .card-icon { background: rgba(255, 108, 55, 0.1); color: #FF6C37; }
+
+    .suite-card h3 { font-size: 24px; font-weight: 800; margin: 0; }
+    .suite-card p { font-size: 14px; opacity: 0.7; line-height: 1.6; margin: 0; }
+    .card-action { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-top: auto; }
+
+    /* Health Card */
+    .health-card { padding: 40px; background: var(--surface-m3); border-radius: 32px; border: 1px solid var(--border-light); }
+    .health-header { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
+    .health-header i { font-size: 32px; color: var(--m3-primary); }
+    .health-header h3 { font-size: 20px; font-weight: 800; margin: 0; flex: 1; }
+
+    .health-metrics { display: flex; gap: 80px; align-items: center; }
+    .metric-item { display: flex; flex-direction: column; gap: 12px; }
+    .m-label { font-size: 11px; font-weight: 800; text-transform: uppercase; opacity: 0.5; letter-spacing: 1px; }
+    
+    .m-value { display: flex; align-items: center; gap: 12px; font-size: 22px; font-weight: 700; transition: 0.3s; }
+    .m-value.healthy { color: #81C784; }
+    .m-value.disconnected { color: #E57373; opacity: 0.8; }
+    .m-value.loading { opacity: 0.3; }
+    .m-value i { font-size: 28px; }
+
+    .metric-divider { width: 1px; height: 60px; background: var(--border-light); }
+
+    .m3-icon-button.small { width: 32px; height: 32px; border-radius: 8px; border: none; background: rgba(0,0,0,0.05); color: var(--m3-primary); cursor: pointer; }
+    .rotating { animation: spin 2s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    @media (max-width: 900px) {
+        .health-metrics { flex-direction: column; gap: 40px; align-items: flex-start; }
+        .metric-divider { display: none; }
+    }
+</style>
+
+<script>
+    async function loadHealth() {
+        const devopsEl = document.getElementById('devops-health');
+        const muleEl = document.getElementById('mule-health');
+        const refreshIcon = document.getElementById('refresh-icon');
+
+        refreshIcon.classList.add('rotating');
+        devopsEl.className = 'm-value loading';
+        muleEl.className = 'm-value loading';
+        
+        try {
+            const res = await fetch('/api/health-check');
+            const data = await res.json();
+            
+            // DevOps Update
+            if (data.devops) {
+                devopsEl.innerHTML = '<i class="material-icons">verified_user</i><span>Healthy Connection</span>';
+                devopsEl.className = 'm-value healthy';
+            } else {
+                devopsEl.innerHTML = '<i class="material-icons">report_problem</i><span>Offline / Disconnected</span>';
+                devopsEl.className = 'm-value disconnected';
+            }
+
+            // MuleUpdate
+            if (data.mulesoft) {
+                muleEl.innerHTML = '<i class="material-icons">cloud_done</i><span>Active Session</span>';
+                muleEl.className = 'm-value healthy';
+            } else {
+                muleEl.innerHTML = '<i class="material-icons">cloud_off</i><span>Awaiting Authentication</span>';
+                muleEl.className = 'm-value disconnected';
+            }
+        } catch (e) {
+            console.error("Health check failed", e);
+        } finally {
+            refreshIcon.classList.remove('rotating');
+        }
+    }
+
+    // Auto-load on entry
+    document.addEventListener('DOMContentLoaded', loadHealth);
+</script>
 {% endblock %}

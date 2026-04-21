@@ -1,90 +1,193 @@
 {% extends "base.html" %}
 
-{% block title %}MuleSoft Runtime Control{% endblock %}
+{% block title %}Runtime Control | Beyond Native{% endblock %}
 
 {% block content %}
-<div class="m3-header">
-    <h1>MuleSoft: Runtime Control</h1>
-    <p>Manage applications using configured Anypoint Settings.</p>
-</div>
-
-<div id="discovery-section" class="m3-card">
-    <h3><i class="material-icons" style="vertical-align: middle;">hub</i> Select Environment Context</h3>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px;">
-        <div>
-            <label>Organization (Business Group)</label>
-            <select id="org-select" class="m3-input" onchange="loadEnvironments(this.value)">
-                <option value="">Sync to load Orgs...</option>
-            </select>
+<div class="m3-page-wrapper">
+    <!-- Elite Header -->
+    <header class="m3-hero-header">
+        <div class="header-left">
+            <span class="m3-badge-new mule">ANYPOINT RUNTIME STACK</span>
+            <h1>Runtime <span class="text-gradient">Control</span></h1>
+            <p>Direct orchestration of CloudHub assets and real-time lifecycle management.</p>
         </div>
-        <div>
-            <label>Environment</label>
-            <select id="env-select" class="m3-input" onchange="enableFetch()">
-                <option value="">Select Org first...</option>
-            </select>
+        <div class="header-right">
+            <a href="/mulesoft" class="m3-icon-button" title="Back to Suite">
+                <i class="material-icons">home</i>
+            </a>
+        </div>
+    </header>
+
+    <!-- Phase 1: Context Selection -->
+    <div id="discovery-section" class="m3-card glass">
+        <div class="section-title">
+            <i class="material-icons">hub</i>
+            <div>
+                <h3>Environment Context</h3>
+                <p>Select your target business group and environment scope</p>
+            </div>
+        </div>
+
+        <div class="m3-config-grid">
+            <div class="input-group">
+                <label>Organization (Business Group)</label>
+                <select id="org-select" class="m3-input-v2" onchange="loadEnvironments(this.value)">
+                    <option value="">Connecting to Anypoint...</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Target Environment</label>
+                <select id="env-select" class="m3-input-v2" onchange="enableFetch()">
+                    <option value="">Select Organization First...</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="action-footer">
+            <button id="fetch-btn" class="m3-fab-extend" onclick="loadApps()" disabled>
+                <i class="material-icons">cloud_download</i>
+                <span>Fetch Deployment Manifest</span>
+            </button>
         </div>
     </div>
-    <button id="fetch-btn" class="m3-button" style="margin-top: 20px;" onclick="loadApps()" disabled>
-        <i class="material-icons">cloud_download</i> Fetch Applications
-    </button>
-</div>
 
-<div id="app-section" class="table-container m3-card" style="display:none; padding:0; margin-top: 24px;">
-    
-    <div style="padding: 16px 24px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.1);">
-        <h3 style="margin: 0; font-size: 1.1rem;">Runtime Applications</h3>
-        <div style="display: flex; gap: 12px;">
-            <button class="m3-button" id="btn-start-multi" style="background: rgba(40,167,69,0.15); color: #2ea043; border-color: transparent; padding: 8px 16px;" onclick="triggerMulti('START')" disabled>
-                <i class="material-icons">play_arrow</i> Start Selected
-            </button>
-            <button class="m3-button" id="btn-stop-multi" style="background: rgba(220,53,69,0.15); color: #d73a49; border-color: transparent; padding: 8px 16px;" onclick="triggerMulti('STOP')" disabled>
-                <i class="material-icons">stop</i> Stop Selected
-            </button>
+    <!-- Phase 2: Application Control Canvas -->
+    <div id="app-section" class="m3-card glass no-padding hidden" style="margin-top: 24px;">
+        <div class="table-toolbar">
+            <div class="toolbar-left">
+                <i class="material-icons">lan</i>
+                <h3>Discovered Applications</h3>
+                <span id="app-count-badge" class="badge-mini">0 Apps</span>
+            </div>
+            <div class="toolbar-actions">
+                <button class="m3-button status-success outline" id="btn-start-multi" onclick="triggerMulti('START')" disabled>
+                    <i class="material-icons">play_arrow</i> Start Selected
+                </button>
+                <button class="m3-button status-error outline" id="btn-stop-multi" onclick="triggerMulti('STOP')" disabled>
+                    <i class="material-icons">stop</i> Stop Selected
+                </button>
+            </div>
+        </div>
+
+        <div class="modern-table-container">
+            <table class="m3-table-v2">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;"><input type="checkbox" id="check-all" onclick="toggleAllCheckboxes(this)"></th>
+                        <th>APPLICATION SPECIFICATION</th>
+                        <th>CURRENT STATUS</th>
+                        <th>INFRASTRUCTURE</th>
+                        <th>RUNTIME</th>
+                        <th style="text-align: right">OPERATION</th>
+                    </tr>
+                </thead>
+                <tbody id="app-body"></tbody>
+            </table>
         </div>
     </div>
-
-    <table class="m3-table" style="margin: 0; width: 100%;">
-        <thead>
-            <tr>
-                <th style="padding-left: 24px; width: 40px;">
-                    <input type="checkbox" id="check-all" onclick="toggleAllCheckboxes(this)">
-                </th>
-                <th>Application Name</th>
-                <th>Status</th>
-                <th>Target Type</th>
-                <th>Mule Version</th>
-                <th style="text-align: right; padding-right: 24px;">Operation</th>
-            </tr>
-        </thead>
-        <tbody id="app-body"></tbody>
-    </table>
 </div>
 
 <style>
-@keyframes spin { 100% { transform: rotate(360deg); } }
-.row-disabled { opacity: 0.6; pointer-events: none; }
+    /* Absolute Theme & Palette Consistency */
+    :root {
+        --primary-m3: #00A2DF; /* MuleSoft Cyan */
+        --accent-m3: #00D1FF;
+        --surface-m3: rgba(254, 247, 255, 0.7);
+    }
+
+    [data-theme='dark'] {
+        --surface-m3: rgba(28, 27, 31, 0.85);
+        --bg-panel: rgba(20, 20, 20, 0.5);
+    }
+
+    .m3-page-wrapper { padding: 40px; display: flex; flex-direction: column; gap: 40px; min-height: 100vh; }
+    
+    /* Hero Header */
+    .m3-hero-header h1 { font-size: 3.5rem; letter-spacing: -2px; margin: 0; font-weight: 800; }
+    .m3-hero-header p { opacity: 0.6; margin-top: 12px; font-size: 1.1rem; }
+    .text-gradient { background: linear-gradient(90deg, #00A2DF, #00D1FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    
+    .m3-badge-new.mule { background: rgba(0, 162, 223, 0.1); color: #00A2DF; }
+
+    /* M3 Cards */
+    .m3-card.glass {
+        background: var(--surface-m3);
+        backdrop-filter: blur(20px);
+        border-radius: 32px;
+        border: 1px solid var(--border-light);
+        padding: 32px;
+        box-shadow: 0 12px 40px var(--glass-shadow);
+    }
+    .m3-card.no-padding { padding: 0; }
+
+    /* Forms */
+    .section-title { display: flex; align-items: center; gap: 20px; margin-bottom: 32px; }
+    .section-title i { font-size: 2.2rem; color: var(--primary-m3); background: rgba(0, 162, 223, 0.1); padding: 12px; border-radius: 16px; }
+    .section-title h3 { margin: 0; font-size: 1.3rem; font-weight: 800; }
+    .section-title p { margin: 0; opacity: 0.6; font-size: 0.85rem; }
+
+    .m3-config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .input-group { display: flex; flex-direction: column; gap: 8px; }
+    .input-group label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--primary-m3); opacity: 0.7; letter-spacing: 0.5px; }
+
+    .m3-input-v2 { background: rgba(0,0,0,0.03); border: 1px solid var(--m3-outline); border-radius: 14px; padding: 12px 16px; color: var(--text-main); font-family: inherit; font-size: 14px; width: 100%; outline: none; transition: 0.2s; }
+    .m3-input-v2:focus { border-color: var(--primary-m3); background: transparent; box-shadow: 0 0 0 4px rgba(0, 162, 223, 0.1); }
+
+    .action-footer { margin-top: 32px; }
+
+    /* Tables */
+    .table-toolbar { padding: 24px 32px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); }
+    .toolbar-left { display: flex; align-items: center; gap: 16px; }
+    .toolbar-left h3 { margin: 0; font-size: 1.1rem; font-weight: 800; }
+    
+    .toolbar-actions { display: flex; gap: 12px; }
+
+    .m3-table-v2 { width: 100%; border-collapse: collapse; }
+    .m3-table-v2 th { text-align: left; padding: 16px 24px; font-size: 11px; font-weight: 800; opacity: 0.5; border-bottom: 1px solid var(--border-light); color: var(--primary-m3); }
+    .m3-table-v2 td { padding: 16px 24px; border-bottom: 1px solid var(--border-light); font-size: 14px; vertical-align: middle; }
+
+    /* Status Pills */
+    .status-pill { font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; }
+    .status-success { background: rgba(46, 125, 50, 0.1); color: #81C784; }
+    .status-error { background: rgba(179, 38, 30, 0.1); color: #E57373; }
+    .status-neutral { background: rgba(0,0,0,0.05); opacity: 0.6; }
+
+    /* FABs & Buttons */
+    .m3-fab-extend { padding: 16px 32px; background: var(--primary-m3); color: white; border: none; border-radius: 28px; display: flex; align-items: center; gap: 16px; cursor: pointer; box-shadow: 0 12px 32px rgba(0, 162, 223, 0.3); transition: 0.3s; font-weight: 700; font-family: inherit; font-size: 14px; }
+    .m3-fab-extend:hover:not(:disabled) { transform: scale(1.02); box-shadow: 0 16px 40px rgba(0, 162, 223, 0.4); }
+    .m3-fab-extend:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+
+    .m3-button.outline { background: transparent; border: 1px solid var(--border-light); padding: 8px 16px; border-radius: 100px; cursor: pointer; transition: 0.2s; font-family: inherit; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .m3-button.outline:hover:not(:disabled) { background: rgba(0,0,0,0.03); }
+    .m3-button.outline:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .m3-button.status-success.outline { border-color: rgba(46, 125, 50, 0.3); color: #81C784; }
+    .m3-button.status-error.outline { border-color: rgba(179, 38, 30, 0.3); color: #E57373; }
+
+    /* Icons Fix */
+    .material-icons { font-family: 'Material Icons' !important; }
+    .rotating { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+    .row-disabled { opacity: 0.6; pointer-events: none; }
 </style>
 
 <script>
 const defaultOrgId = "{{ default_org }}";
 const defaultEnvId = "{{ default_env }}";
-
 let currentApps = [];
 
-document.addEventListener('DOMContentLoaded', () => {
-    initDiscovery();
-});
+document.addEventListener('DOMContentLoaded', () => initDiscovery());
 
 async function initDiscovery() {
     try {
         const select = document.getElementById('org-select');
-        select.innerHTML = '<option value="">Loading Organizations...</option>';
         const res = await fetch('/api/mule/orgs');
-        if (!res.ok) throw new Error("API Failure");
         const orgs = await res.json();
         
         if (orgs.length === 0) {
-            select.innerHTML = '<option value="">No Orgs Found (Check Settings)</option>';
+            select.innerHTML = '<option value="">Configuration Required</option>';
             return;
         }
         
@@ -98,17 +201,13 @@ async function initDiscovery() {
                 loadEnvironments(matchedOrg.id);
             }
         }
-            
-    } catch (e) {
-        document.getElementById('org-select').innerHTML = '<option value="">Error Loading Orgs. Check Database Auth.</option>';
-    }
+    } catch (e) { console.error("Discovery failed", e); }
 }
 
 async function loadEnvironments(orgId) {
     if (!orgId) return;
     const res = await fetch(`/api/mule/envs/${orgId}`);
     const envs = await res.json();
-    
     const select = document.getElementById('env-select');
     select.innerHTML = '<option value="">Select Environment...</option>' + 
         envs.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
@@ -124,17 +223,17 @@ async function loadEnvironments(orgId) {
 }
 
 function enableFetch() {
-    const envId = document.getElementById('env-select').value;
-    document.getElementById('fetch-btn').disabled = !envId;
+    document.getElementById('fetch-btn').disabled = !document.getElementById('env-select').value;
 }
 
 async function loadApps() {
     const orgId = document.getElementById('org-select').value;
     const envId = document.getElementById('env-select').value;
     const tbody = document.getElementById('app-body');
+    const badge = document.getElementById('app-count-badge');
     
-    document.getElementById('app-section').style.display = 'block';
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:32px;"><i class="material-icons" style="animation: spin 1s linear infinite; vertical-align: middle;">autorenew</i> Loading Runtime Manager data...</td></tr>';
+    document.getElementById('app-section').classList.remove('hidden');
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:60px;"><div class="rotating"><i class="material-icons" style="font-size:32px; color:var(--primary-m3)">sync</i></div><div style="margin-top:16px; font-weight:700;">Scanning CloudHub Manifest...</div></td></tr>';
     
     const res = await fetch('/api/mule/apps', {
         method: 'POST',
@@ -142,103 +241,76 @@ async function loadApps() {
         body: JSON.stringify({ org_id: orgId, env_id: envId })
     });
     const apps = await res.json();
-    currentApps = apps || []; // Save globally
+    currentApps = apps || [];
+    badge.innerText = `${currentApps.length} Apps`;
     
     if (currentApps.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:32px;">No applications found in this environment.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px;">No applications found.</td></tr>';
         return;
     }
 
     tbody.innerHTML = currentApps.map((app, idx) => {
-        const appName = app.fullDomain || app.name || (app.artifact && app.artifact.name) || 'Unknown App';
-        const appStatus = (app.application && app.application.status) || app.status || app.lastReportedStatus || 'UNKNOWN';
-        const appMule = (app.muleVersion && app.muleVersion.version) || app.muleVersion || 'N/A';
-        const platformType = (app.target && app.target.type) || 'CH';
-        const isStarted = appStatus === 'STARTED' || appStatus === 'RUNNING';
-        const actionText = isStarted ? 'Stop' : 'Start';
-        const actionIcon = isStarted ? 'stop' : 'play_arrow';
-        const actionColor = isStarted ? 'rgba(220,53,69,0.1)' : 'rgba(40,167,69,0.1)';
-        const actionTextColor = isStarted ? '#d73a49' : '#2ea043';
+        const appName = app.fullDomain || app.name || 'Unknown';
+        const status = app.status || app.application?.status || 'UNKNOWN';
+        const isStarted = status === 'STARTED' || status === 'RUNNING';
         
         return `
         <tr id="app-row-${idx}">
-            <td style="padding-left: 24px;">
-                <input type="checkbox" class="app-checkbox" value="${idx}" onclick="updateActionButtons()">
-            </td>
+            <td><input type="checkbox" class="app-checkbox" value="${idx}" onclick="updateActionButtons()"></td>
             <td><strong>${appName}</strong></td>
             <td id="status-col-${idx}">
-                <span class="status-badge ${isStarted ? 'status-success' : 'status-error'}">${appStatus}</span>
+                <span class="status-pill ${isStarted ? 'status-success' : 'status-error'}">${status}</span>
             </td>
-            <td><span class="status-badge" style="background:rgba(255,255,255,0.05);">${platformType}</span></td>
-            <td>${appMule}</td>
-            <td style="text-align: right; padding-right: 24px;">
-                <button class="m3-button" style="background:${actionColor}; color: ${actionTextColor}; border: none; padding: 6px 14px; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;" onclick="triggerSingle(${idx}, '${isStarted ? 'STOP' : 'START'}')">
-                    <i class="material-icons" style="font-size: 16px;">${actionIcon}</i> ${actionText}
+            <td><span class="status-pill status-neutral">${app.target?.type || 'CloudHub'}</span></td>
+            <td><code>${app.muleVersion?.version || 'N/A'}</code></td>
+            <td style="text-align: right">
+                <button class="m3-button outline ${isStarted ? 'status-error' : 'status-success'}" onclick="triggerSingle(${idx}, '${isStarted ? 'STOP' : 'START'}')">
+                    <i class="material-icons">${isStarted ? 'stop' : 'play_arrow'}</i>
+                    ${isStarted ? 'Stop' : 'Start'}
                 </button>
             </td>
-        </tr>
-    `}).join('');
-    
+        </tr>`}).join('');
     updateActionButtons();
 }
 
 function updateActionButtons() {
-    const checkboxes = document.querySelectorAll('.app-checkbox:checked');
-    document.getElementById('btn-start-multi').disabled = checkboxes.length === 0;
-    document.getElementById('btn-stop-multi').disabled = checkboxes.length === 0;
+    const count = document.querySelectorAll('.app-checkbox:checked').length;
+    document.getElementById('btn-start-multi').disabled = count === 0;
+    document.getElementById('btn-stop-multi').disabled = count === 0;
 }
 
 function toggleAllCheckboxes(source) {
-    const checkboxes = document.querySelectorAll('.app-checkbox');
-    checkboxes.forEach(cb => { cb.checked = source.checked; });
+    document.querySelectorAll('.app-checkbox').forEach(cb => cb.checked = source.checked);
     updateActionButtons();
 }
 
 async function triggerSingle(index, action) {
-    const orgId = document.getElementById('org-select').value;
-    const envId = document.getElementById('env-select').value;
-    const app = currentApps[index];
     const row = document.getElementById(`app-row-${index}`);
     const statusCol = document.getElementById(`status-col-${index}`);
-    
     row.classList.add('row-disabled');
-    statusCol.innerHTML = '<i class="material-icons" style="animation: spin 1s linear infinite; vertical-align: middle; font-size: 16px;">autorenew</i> <span>Requesting...</span>';
+    statusCol.innerHTML = '<i class="material-icons rotating" style="font-size:16px;">sync</i> <span>Processing...</span>';
     
-    try {
-        const res = await fetch('/api/mule/app-action', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ org_id: orgId, env_id: envId, app: app, action: action })
-        });
-        const result = await res.json();
-        
-        if (result.status === 'success') {
-            statusCol.innerHTML = `<span style="color: #2ea043; font-weight: bold;">${action} INITIATED</span>`;
-        } else {
-            statusCol.innerHTML = `<span style="color: #d73a49; font-weight: bold;">FAILED</span>`;
-            alert(`Error on App [${app.id}]: ` + result.message);
-        }
-    } catch(e) {
-        statusCol.innerHTML = `<span style="color: #d73a49; font-weight: bold;">NET ERROR</span>`;
-    }
+    const res = await fetch('/api/mule/app-action', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ 
+            org_id: document.getElementById('org-select').value, 
+            env_id: document.getElementById('env-select').value, 
+            app: currentApps[index], 
+            action: action 
+        })
+    });
+    const result = await res.json();
+    statusCol.innerHTML = `<span class="status-pill ${result.status === 'success' ? 'status-success' : 'status-error'}">${action} SENT</span>`;
 }
 
 async function triggerMulti(action) {
     const checkboxes = document.querySelectorAll('.app-checkbox:checked');
-    if (checkboxes.length === 0) return;
-    
-    // Disable multi buttons so they cant spam
     document.getElementById('btn-start-multi').disabled = true;
     document.getElementById('btn-stop-multi').disabled = true;
     
-    const promises = Array.from(checkboxes).map(cb => {
-        const index = parseInt(cb.value);
-        return triggerSingle(index, action);
-    });
-    
-    await Promise.all(promises);
-    
-    setTimeout(() => { alert(`Bulk ${action} operations successfully triggered! Allow up to 30 seconds for the cloud status to officially update and then click Fetch Applications again.`); }, 500);
+    await Promise.all(Array.from(checkboxes).map(cb => triggerSingle(parseInt(cb.value), action)));
+    alert(`Bulk ${action} triggered! Manifest will update in ~30s.`);
 }
 </script>
 {% endblock %}
