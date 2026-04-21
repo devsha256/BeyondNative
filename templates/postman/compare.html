@@ -40,23 +40,28 @@
                     <div class="dual-input">
                         <div class="m3-input-wrapper">
                             <span>Reference</span>
-                            <input type="text" id="source-host" value="https://boomi-api.com">
+                            <input type="text" id="source-host" value="{{ settings.source_host }}">
                         </div>
                         <div class="m3-input-wrapper">
                             <span>Target</span>
-                            <input type="text" id="target-host" value="https://mule-api.com">
+                            <input type="text" id="target-host" value="{{ settings.target_host }}">
                         </div>
                     </div>
                 </div>
                 <div class="m3-field-card" style="margin-top:16px;">
                     <label>Comparison Exemptions (Regex Supported)</label>
                     <textarea id="exempted-fields"
-                        placeholder='["timestamp", "uuid", "/.*Id$/"]'>["timestamp", "uuid", "transactionId"]</textarea>
+                        placeholder='["timestamp", "uuid", "/.*Id$/"]'>{{ settings.exemptions }}</textarea>
                 </div>
                 <div class="m3-field-card" style="margin-top:16px;">
                     <label>Collection Context (Optional)</label>
                     <input type="text" id="collection-name" placeholder="Name of the source collection">
                 </div>
+            </div>
+            <div class="drawer-footer">
+                <button onclick="saveDrawerSettings()" class="m3-button-m3" id="btn-save-drawer">
+                    <i class="material-icons">save</i> <span>Save & Apply</span>
+                </button>
             </div>
         </div>
     </div>
@@ -341,6 +346,9 @@
             opacity: 0.8;
         }
     }
+
+    .rotating { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
     /* Workspace & Editors */
     .m3-workspace {
@@ -681,6 +689,43 @@
     .m3-drawer.open {
         right: 0;
         box-shadow: -20px 0 60px rgba(0, 0, 0, 0.1);
+    }
+
+    .drawer-content {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .drawer-body {
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .drawer-footer {
+        padding-top: 24px;
+        display: flex;
+        justify-content: flex-end;
+        border-top: 1px solid var(--border-light);
+    }
+
+    .m3-button-m3 {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 16px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .m3-button-m3:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(103, 80, 164, 0.2);
     }
 
     .m3-field-card {
@@ -1051,6 +1096,41 @@
         }
 
         renderCollectionRequests(filtered);
+    }
+
+    async function saveDrawerSettings() {
+        const btn = document.getElementById('btn-save-drawer');
+        const originalContent = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="material-icons rotating">sync</i> <span>Saving...</span>';
+
+        const payload = {
+            postman_source_host: document.getElementById('source-host').value,
+            postman_target_host: document.getElementById('target-host').value,
+            postman_exemptions: document.getElementById('exempted-fields').value
+        };
+
+        try {
+            const res = await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                btn.innerHTML = '<i class="material-icons">check</i> <span>Saved!</span>';
+                setTimeout(() => {
+                    btn.innerHTML = originalContent;
+                    btn.disabled = false;
+                    toggleGlobalConfig();
+                }, 1000);
+            } else {
+                throw new Error("Failed to save");
+            }
+        } catch (e) {
+            alert("Persistence Error: " + e.message);
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
+        }
     }
 </script>
 {% endblock %}

@@ -262,7 +262,13 @@ def parse_curl(curl_command):
 # Compare UI
 @app.route('/postman/compare')
 def postman_compare_page():
-    return render_template('postman/compare.html')
+    import db_utils
+    settings = {
+        'source_host': db_utils.get_setting('postman_source_host') or 'https://boomi-api.com',
+        'target_host': db_utils.get_setting('postman_target_host') or 'https://mule-api.com',
+        'exemptions': db_utils.get_setting('postman_exemptions') or '["timestamp", "uuid", "transactionId"]'
+    }
+    return render_template('postman/compare.html', settings=settings)
 
 # Compare API - Execute
 @app.route('/api/postman/compare/execute', methods=['POST'])
