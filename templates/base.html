@@ -411,6 +411,19 @@
             }
         }
 
+        function formatCSVValue(val) {
+            if (val === null || val === undefined) return '';
+            let str = (typeof val === 'object') ? JSON.stringify(val) : String(val);
+            // Attempt to minify JSON if detected
+            if ((str.trim().startsWith('{') && str.trim().endsWith('}')) || 
+                (str.trim().startsWith('[') && str.trim().endsWith(']'))) {
+                try {
+                    str = JSON.stringify(JSON.parse(str));
+                } catch (e) {}
+            }
+            return `"${str.replace(/"/g, '""')}"`;
+        }
+
         function toggleTheme() {
             const current = document.documentElement.getAttribute('data-theme');
             const target = current === 'dark' ? 'light' : 'dark';

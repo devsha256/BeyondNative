@@ -590,11 +590,7 @@ function downloadReportCSV() {
     const headers = Array.from(allKeys);
     let csvRows = [headers.join(',')];
     for (const row of fullReportData) {
-        const values = headers.map(header => {
-            const val = row[header] === undefined ? "" : row[header];
-            const escaped = ('' + val).replace(/"/g, '""');
-            return `"${escaped}"`;
-        });
+        const values = headers.map(header => formatCSVValue(row[header]));
         csvRows.push(values.join(','));
     }
     const blob = new Blob([csvRows.join("\n")], { type: 'text/csv;charset=utf-8;' });

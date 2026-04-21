@@ -479,16 +479,16 @@
         
         runResults.forEach(r => {
             csvRows.push([
-                new Date().toISOString(),
-                r.item_name,
-                r.method,
-                r.url,
-                r.status_code,
-                r.status_text,
-                r.duration,
-                `"${r.curl.replace(/"/g, '""')}"`,
-                `"${JSON.stringify(r.headers).replace(/"/g, '""')}"`,
-                `"${r.response.replace(/"/g, '""')}"`
+                formatCSVValue(new Date().toISOString()),
+                formatCSVValue(r.item_name),
+                formatCSVValue(r.method),
+                formatCSVValue(r.url),
+                formatCSVValue(r.status_code),
+                formatCSVValue(r.status_text),
+                formatCSVValue(r.duration),
+                formatCSVValue(r.curl),
+                formatCSVValue(r.headers),
+                formatCSVValue(r.response)
             ]);
         });
 
