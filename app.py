@@ -215,6 +215,114 @@ def postman_home():
 def postman_runner():
     return render_template('postman/runner.html')
 
+from postman_compare_module import PostmanComparator, validate_urls, compare_responses as compare_raw_responses
+
+# Help resolve host replacement and cURL parsing
+def parse_curl(curl_command):
+    # Basic cURL parser for comparison tool
+    components = {
+        'url': '',
+        'method': 'GET',
+        'headers': {},
+        'body': None
+    }
+    
+    # Extract URL
+    url_match = re.search(r"curl\s+(?:--location\s+)?['\"]?([^'\"]+)['\"]?", curl_command)
+    if url_match:
+        components['url'] = url_match.group(1).split(' ')[0]
+        
+    # Extract Method
+    method_match = re.search(r"--request\s+(\w+)", curl_command)
+    if method_match:
+        components['method'] = method_match.group(1)
+    elif "--data" in curl_command or "--data-raw" in curl_command:
+        components['method'] = 'POST'
+        
+    # Extract Headers
+    header_matches = re.finditer(r"--header\s+['\"]([^:]+):\s*([^'\"]+)['\"]", curl_command)
+    for match in header_matches:
+        components['headers'][match.group(1).strip()] = match.group(2).strip()
+        
+    # Extract Body
+    body_match = re.search(r"--data(?:-raw)?\s+'([\s\S]*?)'", curl_command)
+    if body_match:
+        components['body'] = body_match.group(1).replace("\\'", "'").replace("\\\\", "\\")
+        
+    return components
+
+# Compare UI
+@app.route('/postman/compare')
+def postman_compare_page():
+    return render_template('postman/compare.html')
+
+# Compare API - Execute
+@app.route('/api/postman/compare/execute', methods=['POST'])
+def postman_compare_execute():
+    data = request.json
+    mode = data.get('mode', 'json') # 'json', 'curl', 'collection'
+    exempted = data.get('exempted_fields', [])
+    source_host = data.get('source_host') # e.g. http://boomi-api.com
+    target_host = data.get('target_host') # e.g. http://mule-api.com
+    
+    results = []
+    
+    if mode == 'json':
+        # Direct JSON comparison
+        resp_a = data.get('response_a', {})
+        resp_b = data.get('response_b', {})
+        comparator = PostmanComparator(exempted_fields=exempted)
+        return jsonify(comparator.compare(resp_a, resp_b))
+        
+    elif mode == 'curl':
+        curl_a = data.get('curl_a')
+        curl_b = data.get('curl_b')
+        
+        if not curl_a or not curl_b:
+            return jsonify({"error": "Both cURLs are required"}), 400
+            
+        comp_a = parse_curl(curl_a)
+        comp_b = parse_curl(curl_b)
+        
+        # Validation
+        valid, msg = validate_urls(comp_a['url'], comp_b['url'])
+        if not valid:
+            return jsonify({"error": msg}), 400
+            
+        # Execute both
+        try:
+            res_a = requests.request(comp_a['method'], comp_a['url'], headers=comp_a['headers'], data=comp_a['body'], timeout=15, verify=False)
+            res_b = requests.request(comp_b['method'], comp_b['url'], headers=comp_b['headers'], data=comp_b['body'], timeout=15, verify=False)
+            
+            data_a = res_a.json() if 'application/json' in res_a.headers.get('Content-Type', '') else res_a.text
+            data_b = res_b.json() if 'application/json' in res_b.headers.get('Content-Type', '') else res_b.text
+            
+            comparator = PostmanComparator(exempted_fields=exempted)
+            return jsonify(comparator.compare(data_a, data_b))
+        except Exception as e:
+            return jsonify({"error": f"Execution failed: {str(e)}"}), 500
+    
+    return jsonify({"error": "Unsupported mode"}), 400
+
+# Compare API - Storage
+@app.route('/api/postman/compare/save-artifact', methods=['POST'])
+def postman_compare_save_artifact():
+    data = request.json
+    type = data.get('type') # 'curl' or 'collection'
+    name = data.get('name')
+    content = data.get('content')
+    
+    if not name or not content:
+        return jsonify({"error": "Name and content required"}), 400
+        
+    folder = "curls" if type == "curl" else "collections"
+    path = os.path.join("post_work_dir", "compares", folder, name)
+    
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(content if isinstance(content, str) else json.dumps(content, indent=2))
+        
+    return jsonify({"status": "success", "path": path})
+
 @app.route('/postman/log-report')
 def postman_log_report():
     return render_template('postman/log_report.html')

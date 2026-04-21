@@ -1,0 +1,443 @@
+{% extends "base.html" %}
+
+{% block title %}Postman Compare Responses{% endblock %}
+
+{% block content %}
+<div class="m3-header" style="display:flex; justify-content:space-between; align-items:center;">
+    <div>
+        <h1>Postman: Side-by-Side Comparison</h1>
+        <p style="color:var(--text-muted); margin-top: -8px;">Deep JSON structural analysis with LCS-based field matching</p>
+    </div>
+    <div style="display:flex; gap:12px;">
+        <button id="btn-recorder" onclick="toggleRecorder()" class="m3-button-outline" style="border-color:var(--accent); color:var(--accent);">
+            <i class="material-icons">fiber_manual_record</i> Start Recorder
+        </button>
+        <button onclick="toggleGlobalConfig()" class="m3-button-outline">
+            <i class="material-icons">settings</i> Configuration
+        </button>
+        <a href="/postman" class="m3-button-outline">
+            <i class="material-icons">arrow_back</i> Suite Home
+        </a>
+    </div>
+</div>
+
+<!-- Global Configuration Card -->
+<div id="global-config-card" class="m3-card" style="display:none; margin-top:24px; padding:24px; border-left: 4px solid var(--accent);">
+    <h3 style="margin-bottom:16px;"><i class="material-icons">language</i> Global Environments</h3>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
+        <div class="m3-input-group">
+            <label>Source Host (Reference)</label>
+            <input type="text" id="source-host" class="m3-input" placeholder="e.g. https://boomi-api.com" value="https://boomi-api.com">
+        </div>
+        <div class="m3-input-group">
+            <label>Target Host (MuleSoft)</label>
+            <input type="text" id="target-host" class="m3-input" placeholder="e.g. https://mule-api.com" value="https://mule-api.com">
+        </div>
+    </div>
+    <div class="m3-input-group" style="margin-top:16px;">
+        <label>Exempted Fields (JSON Array)</label>
+        <input type="text" id="exempted-fields" class="m3-input" placeholder='["timestamp", "uuid", "transactionId"]' value='["timestamp", "uuid", "transactionId"]'>
+        <small>Regex support: <code>/pattern/</code> | Wildcards: <code>*</code> | Substrings: <code>field_name</code></small>
+    </div>
+</div>
+
+<!-- Input Section with Tabs -->
+<div class="m3-card" style="margin-top:24px; padding:0; overflow:hidden;">
+    <div style="display:flex; border-bottom: 1px solid var(--border-light);">
+        <div class="tab-btn active" onclick="switchTab('json')"><i class="material-icons">code</i> JSON Input</div>
+        <div class="tab-btn" onclick="switchTab('curl')"><i class="material-icons">terminal</i> cURL Import</div>
+        <div class="tab-btn" onclick="switchTab('collection')"><i class="material-icons">folder_zip</i> Postman Collection</div>
+    </div>
+
+    <!-- JSON Input -->
+    <div id="tab-json" class="tab-content" style="padding:24px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <div class="m3-input-group">
+                <label>Reference JSON (Environment A)</label>
+                <textarea id="resp-a" class="m3-input" rows="12" placeholder="Paste Reference JSON..." style="font-family:'JetBrains Mono', monospace; font-size:12px;"></textarea>
+            </div>
+            <div class="m3-input-group">
+                <label>Target JSON (Environment B)</label>
+                <textarea id="resp-b" class="m3-input" rows="12" placeholder="Paste Target JSON..." style="font-family:'JetBrains Mono', monospace; font-size:12px;"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- cURL Input -->
+    <div id="tab-curl" class="tab-content" style="padding:24px; display:none;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <div class="m3-input-group">
+                <label>Source cURL (Reference)</label>
+                <textarea id="curl-a" class="m3-input" rows="12" placeholder="Paste cURL for Reference Env..." style="font-family:'JetBrains Mono', monospace; font-size:12px;"></textarea>
+            </div>
+            <div class="m3-input-group">
+                <label>Target cURL (MuleSoft)</label>
+                <textarea id="curl-b" class="m3-input" rows="12" placeholder="Paste cURL for Target Env..." style="font-family:'JetBrains Mono', monospace; font-size:12px;"></textarea>
+            </div>
+        </div>
+        <p style="color:var(--text-muted); font-size:12px;"><i class="material-icons" style="font-size:14px;">info</i> Base URLs will be cross-validated. Only host substitution is allowed.</p>
+    </div>
+
+    <!-- Collection Input -->
+    <div id="tab-collection" class="tab-content" style="padding:24px; display:none;">
+        <div class="m3-input-group">
+            <label>Upload Postman Collection</label>
+            <div class="file-picker-m3" onclick="document.getElementById('pick-coll').click()">
+                <i class="material-icons">upload_file</i>
+                <span id="coll-label">Select .postman_collection.json</span>
+                <input type="file" id="pick-coll" accept=".json" style="display:none;" onchange="handleCollectionUpload(this)">
+            </div>
+        </div>
+        <div id="coll-req-list" style="margin-top:16px; max-height: 300px; overflow-y: auto; display:none;">
+            <!-- Requests from collection will show up here -->
+        </div>
+    </div>
+
+    <div style="padding:24px; background: rgba(var(--accent-rgb), 0.03); border-top: 1px solid var(--border-light); display:flex; justify-content:flex-end;">
+        <button id="btn-compare" class="m3-button" onclick="executeComparison()">
+            <i class="material-icons">analytics</i> Compare Now
+        </button>
+    </div>
+</div>
+
+<!-- Results Section -->
+<div id="results-container" style="display:none; margin-top:24px;">
+    <!-- Stats Row -->
+    <div style="display:grid; grid-template-columns: repeat(6, 1fr); gap:16px; margin-bottom:24px;">
+        <div class="stat-mini-card">
+            <span class="label">Matched</span>
+            <span id="res-matched" class="value" style="color:var(--success);">0</span>
+        </div>
+        <div class="stat-mini-card">
+            <span class="label">Mismatches</span>
+            <span id="res-mismatched" class="value" style="color:var(--error);">0</span>
+        </div>
+        <div class="stat-mini-card">
+            <span class="label">Exempted</span>
+            <span id="res-exempted" class="value" style="color:#eab308;">0</span>
+        </div>
+        <div class="stat-mini-card">
+            <span class="label">Only A</span>
+            <span id="res-only-a" class="value" style="color:var(--primary);">0</span>
+        </div>
+        <div class="stat-mini-card">
+            <span class="label">Only B</span>
+            <span id="res-only-b" class="value" style="color:var(--secondary);">0</span>
+        </div>
+        <div class="stat-mini-card" style="background:var(--primary); color:white;">
+            <span class="label" style="color:rgba(255,255,255,0.7);">Match %</span>
+            <span id="res-percent" class="value">0%</span>
+        </div>
+    </div>
+
+    <!-- Side-by-Side View -->
+    <div class="m3-card" style="padding:0; overflow:hidden;">
+        <div style="padding: 16px; border-bottom: 1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center; background: var(--table-header);">
+            <div style="display:flex; align-items:center; gap:16px;">
+                <h3 style="margin:0;">Side-by-Side Comparison</h3>
+                <div id="result-status" class="status-badge status-neutral">N/A</div>
+            </div>
+            <div style="display:flex; gap:12px;">
+                <button onclick="downloadDiffCSV()" class="m3-button-outline" style="padding:6px 12px; font-size:12px;">
+                    <i class="material-icons" style="font-size:18px;">download</i> Export CSV
+                </button>
+            </div>
+        </div>
+        <div class="diff-container" style="max-height: 800px; overflow-y: auto; background: var(--bg-main);">
+            <table class="diff-table">
+                <thead>
+                    <tr>
+                        <th style="width: 48%;">Reference (Environment A)</th>
+                        <th style="width: 4%; text-align: center;">Diff</th>
+                        <th style="width: 48%;">Target (Environment B)</th>
+                    </tr>
+                </thead>
+                <tbody id="diff-body"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.tab-btn {
+    padding: 16px 24px;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+.tab-btn:hover { background: rgba(var(--accent-rgb), 0.05); }
+.tab-btn.active { 
+    color: var(--accent); 
+    border-bottom-color: var(--accent); 
+    background: rgba(var(--accent-rgb), 0.03); 
+}
+
+.stat-mini-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    padding: 16px;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    backdrop-filter: var(--glass-blur);
+}
+.stat-mini-card .label { font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+.stat-mini-card .value { font-size: 24px; font-weight: 700; font-family: 'Outfit'; }
+
+.diff-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+.diff-table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(8px);
+    background: var(--table-header);
+}
+.diff-table td {
+    padding: 6px 16px;
+    border-bottom: 1px solid var(--table-border);
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+    vertical-align: top;
+}
+
+.diff-row:hover { background: rgba(var(--accent-rgb), 0.05); }
+.diff-row.match { background: transparent; }
+.diff-row.mismatch { background: rgba(220, 38, 38, 0.08); border-left: 4px solid var(--error); }
+.diff-row.exempted { border-left: 4px solid #eab308; background: rgba(234, 179, 8, 0.05); }
+.diff-row.only_a { background: rgba(0, 86, 210, 0.05); border-left: 4px solid var(--primary); }
+.diff-row.only_b { background: rgba(107, 0, 255, 0.05); border-left: 4px solid var(--secondary); }
+
+.diff-pointer {
+    text-align: center;
+    font-size: 18px;
+    color: var(--text-muted);
+    font-family: 'Roboto', sans-serif;
+    vertical-align: middle !important;
+}
+.mismatch .diff-pointer { color: var(--error); font-weight: 700; }
+.only_a .diff-pointer { color: var(--primary); }
+.only_b .diff-pointer { color: var(--secondary); }
+
+.file-picker-m3 {
+    border: 2px dashed var(--border-light);
+    border-radius: 12px;
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.2s;
+}
+.file-picker-m3:hover { border-color: var(--accent); background: rgba(var(--accent-rgb), 0.05); color: var(--accent); }
+</style>
+
+<script>
+let currentMode = 'json';
+let comparisonResults = null;
+let isRecording = false;
+let recordedSummaries = [];
+
+function toggleRecorder() {
+    isRecording = !isRecording;
+    const btn = document.getElementById('btn-recorder');
+    if (isRecording) {
+        btn.innerHTML = '<i class="material-icons" style="color:var(--error);">stop</i> Stop & Export';
+        btn.style.background = 'rgba(220, 38, 38, 0.05)';
+        recordedSummaries = [];
+        alert("Recorder started. Every subsequent comparison will be captured.");
+    } else {
+        btn.innerHTML = '<i class="material-icons">fiber_manual_record</i> Start Recorder';
+        btn.style.background = 'transparent';
+        exportRecordedSummaries();
+    }
+}
+
+function exportRecordedSummaries() {
+    if (recordedSummaries.length === 0) {
+        alert("No summaries were recorded.");
+        return;
+    }
+
+    const headers = ["Timestamp", "Mode", "Status", "Match %", "Mismatched", "Exempted", "Only A", "Only B"];
+    const csvContent = [
+        headers.join(","),
+        ...recordedSummaries.map(s => [
+            s.timestamp, s.mode, s.status, s.matchPercent, s.mismatched, s.exempted, s.onlyA, s.onlyB
+        ].join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `comparison_session_summary_${new Date().getTime()}.csv`);
+    link.click();
+}
+
+function switchTab(mode) {
+    currentMode = mode;
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+    
+    event.currentTarget.classList.add('active');
+    document.getElementById(`tab-${mode}`).style.display = 'block';
+}
+
+function toggleGlobalConfig() {
+    const card = document.getElementById('global-config-card');
+    card.style.display = card.style.display === 'none' ? 'block' : 'none';
+}
+
+async function executeComparison() {
+    const btn = document.getElementById('btn-compare');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="m3-loader" style="width:20px; height:20px; border-width:3px;"></span> Executing...';
+
+    const exempted = document.getElementById('exempted-fields').value;
+    const sourceHost = document.getElementById('source-host').value;
+    const targetHost = document.getElementById('target-host').value;
+
+    let payload = {
+        mode: currentMode,
+        source_host: sourceHost,
+        target_host: targetHost,
+        exempted_fields: JSON.parse(exempted || '[]')
+    };
+
+    if (currentMode === 'json') {
+        payload.response_a = JSON.parse(document.getElementById('resp-a').value || '{}');
+        payload.response_b = JSON.parse(document.getElementById('resp-b').value || '{}');
+    } else if (currentMode === 'curl') {
+        payload.curl_a = document.getElementById('curl-a').value;
+        payload.curl_b = document.getElementById('curl-b').value;
+    }
+
+    try {
+        const res = await fetch('/api/postman/compare/execute', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        
+        if (data.error) {
+            alert(data.error);
+        } else {
+            renderResults(data);
+        }
+    } catch (e) {
+        alert("Comparison failed: " + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="material-icons">analytics</i> Compare Now';
+    }
+}
+
+function renderResults(data) {
+    comparisonResults = data;
+    document.getElementById('results-container').style.display = 'block';
+    
+    // Capture for recorder if active
+    if (isRecording) {
+        recordedSummaries.push({
+            timestamp: new Date().toLocaleTimeString(),
+            mode: currentMode,
+            status: data.status,
+            matchPercent: data.match_percent,
+            mismatched: data.stats.totalMismatches,
+            exempted: data.stats.totalExempted,
+            onlyA: data.stats.totalOnlyA,
+            onlyB: data.stats.totalOnlyB
+        });
+    }
+
+    // Update Stats
+    document.getElementById('res-matched').innerText = data.stats.totalMatched;
+    document.getElementById('res-mismatched').innerText = data.stats.totalMismatches;
+    document.getElementById('res-exempted').innerText = data.stats.totalExempted;
+    document.getElementById('res-only-a').innerText = data.stats.totalOnlyA;
+    document.getElementById('res-only-b').innerText = data.stats.totalOnlyB;
+    document.getElementById('res-percent').innerText = data.match_percent + '%';
+
+    const statusBadge = document.getElementById('result-status');
+    statusBadge.innerText = data.status;
+    statusBadge.className = 'status-badge ' + (data.status === 'PASSED' ? 'status-success' : 'status-error');
+
+    // Render Diff Table
+    const tbody = document.getElementById('diff-body');
+    tbody.innerHTML = '';
+
+    const pointers = { 'mismatch': '↔', 'only_a': '→', 'only_b': '←' };
+
+    data.diff.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.className = `diff-row ${row.status}`;
+        
+        const indentA = row.indent_a * 16;
+        const indentB = row.indent_b * 16;
+        
+        tr.innerHTML = `
+            <td style="padding-left: ${indentA}px">${row.text_a || '&nbsp;'}</td>
+            <td class="diff-pointer">${pointers[row.status] || ''}</td>
+            <td style="padding-left: ${indentB}px">${row.text_b || '&nbsp;'}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+    document.getElementById('results-container').scrollIntoView({ behavior: 'smooth' });
+}
+
+function handleCollectionUpload(input) {
+    const file = input.files[0];
+    if (file) {
+        document.getElementById('coll-label').innerText = file.name;
+    }
+}
+
+function downloadDiffCSV() {
+    if (!comparisonResults || !comparisonResults.diff) {
+        alert("No comparison results to export.");
+        return;
+    }
+
+    const headers = ["Path", "Reference (A)", "Diff", "Target (B)", "Status"];
+    const rows = comparisonResults.diff.map(row => {
+        const pointers = { 'mismatch': '↔', 'only_a': '→', 'only_b': '←' };
+        return [
+            `"${row.path}"`,
+            `"${row.text_a.replace(/"/g, '""')}"`,
+            `"${pointers[row.status] || ''}"`,
+            `"${row.text_b.replace(/"/g, '""')}"`,
+            `"${row.status}"`
+        ].join(",");
+    });
+
+    const csvContent = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", `api_comparison_${new Date().getTime()}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+</script>
+{% endblock %}
