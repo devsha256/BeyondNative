@@ -147,9 +147,23 @@
         --secondary: #625B71;
         --error: #B3261E;
         --success: #2E7D32;
-        --surface-m3: rgba(254, 247, 255, 0.7);
-        --border-light: rgba(255, 255, 255, 0.1);
-        --bg-panel: rgba(20, 20, 20, 0.4);
+        
+        /* Light Mode Defaults */
+        --surface-m3: rgba(255, 255, 255, 0.7);
+        --bg-panel: rgba(255, 255, 255, 1);
+        --text-main: #1d1b20;
+        --border-light: rgba(0, 0, 0, 0.08);
+        --console-bg: rgba(0, 0, 0, 0.03);
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --surface-m3: rgba(28, 27, 31, 0.8);
+            --bg-panel: rgba(20, 20, 20, 0.6);
+            --text-main: #e6e1e5;
+            --border-light: rgba(255, 255, 255, 0.1);
+            --console-bg: rgba(0, 0, 0, 0.4);
+        }
     }
 
     .m3-page-wrapper {
@@ -159,6 +173,7 @@
         flex-direction: column;
         gap: 24px;
         background: transparent;
+        color: var(--text-main);
     }
 
     /* Header Glass */
@@ -171,7 +186,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
     }
 
     .header-left {
@@ -332,7 +347,7 @@
         padding: 24px 32px;
         font-family: 'JetBrains Mono', monospace;
         font-size: 13px;
-        background: rgba(0,0,0,0.1);
+        background: var(--console-bg);
         display: flex;
         flex-direction: column;
         gap: 12px;
@@ -361,11 +376,12 @@
         font-size: 11px;
         font-weight: 700;
         margin-bottom: 6px;
+        color: var(--text-main);
     }
 
     .progress-bar-bg {
         height: 6px;
-        background: rgba(255,255,255,0.05);
+        background: rgba(128,128,128,0.1);
         border-radius: 3px;
         overflow: hidden;
     }
@@ -380,7 +396,7 @@
     .log-item {
         padding: 12px 16px;
         border-radius: 8px;
-        background: rgba(255,255,255,0.02);
+        background: rgba(128,128,128,0.05);
         border-left: 4px solid var(--primary);
         display: flex;
         justify-content: space-between;
@@ -391,8 +407,8 @@
     .log-item.error { border-left-color: var(--error); }
 
     .log-content { display: flex; flex-direction: column; gap: 4px; }
-    .log-title { font-weight: 700; color: #fff; }
-    .log-meta { font-size: 12px; opacity: 0.5; display: flex; gap: 12px; }
+    .log-title { font-weight: 700; color: var(--text-main); }
+    .log-meta { font-size: 12px; opacity: 0.6; display: flex; gap: 12px; }
 
     .log-badge {
         padding: 2px 8px;

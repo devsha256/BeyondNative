@@ -7,60 +7,105 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-    <div class="app-container">
-        <nav class="nav-drawer">
-            <div class="nav-header">
-                <a href="/" style="text-decoration: none; color: inherit;">
-                    <h2>Beyond Native</h2>
+    <div class="m3-app-layout">
+        <aside class="m3-navigation-drawer">
+            <div class="m3-nav-brand">
+                <a href="/" class="brand-link">
+                    <div class="brand-logo">
+                        <i class="material-icons">rocket_launch</i>
+                    </div>
+                    <span class="brand-text">Beyond <span>Native</span></span>
                 </a>
             </div>
-            
-            <div class="accordion-item">
-                <div class="accordion-header" id="head-devops" onclick="toggleAccordion('content-devops', 'head-devops')">
-                    <span style="display:flex; align-items:center; gap:12px;"><i class="material-icons">lan</i> DevOps Suite</span>
-                    <i class="material-icons">expand_more</i>
+
+            <div class="m3-nav-content">
+                <!-- DevOps Suite -->
+                <div class="m3-nav-group" id="group-devops">
+                    <div class="m3-nav-item parent" onclick="toggleM3Nav('group-devops')">
+                        <div class="item-container">
+                            <i class="material-icons">lan</i>
+                            <span class="label">DevOps Suite</span>
+                        </div>
+                        <i class="material-icons chevron">expand_more</i>
+                    </div>
+                    <div class="m3-nav-sub">
+                        <a href="/devops" class="sub-item">
+                            <span class="indicator"></span>
+                            <span class="label">Overview</span>
+                        </a>
+                        <a href="/devops/bulk-pr" class="sub-item">
+                            <span class="indicator"></span>
+                            <span class="label">Bulk PRs</span>
+                        </a>
+                    </div>
                 </div>
-                <div id="content-devops" class="accordion-content">
-                    <a href="/devops" class="nav-sub-item">Overview</a>
-                    <a href="/devops/bulk-pr" class="nav-sub-item">Bulk PRs</a>
+
+                <!-- MuleSoft Suite -->
+                <div class="m3-nav-group" id="group-mulesoft">
+                    <div class="m3-nav-item parent" onclick="toggleM3Nav('group-mulesoft')">
+                        <div class="item-container">
+                            <i class="material-icons">api</i>
+                            <span class="label">MuleSoft Suite</span>
+                        </div>
+                        <i class="material-icons chevron">expand_more</i>
+                    </div>
+                    <div class="m3-nav-sub">
+                        <a href="/mulesoft" class="sub-item">
+                            <span class="indicator"></span>
+                            <span class="label">Overview</span>
+                        </a>
+                        <a href="/mulesoft/runtime-control" class="sub-item">
+                            <span class="indicator"></span>
+                            <span class="label">Runtime Control</span>
+                        </a>
+                        <a href="/mulesoft/version-comparator" class="sub-item">
+                            <span class="indicator"></span>
+                            <span class="label">Version Compare</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Postman Suite -->
+                <div class="m3-nav-group active" id="group-postman">
+                    <div class="m3-nav-item parent" onclick="toggleM3Nav('group-postman')">
+                        <div class="item-container">
+                            <i class="material-icons">send</i>
+                            <span class="label">Postman Suite</span>
+                        </div>
+                        <i class="material-icons chevron">expand_more</i>
+                    </div>
+                    <div class="m3-nav-sub">
+                        <a href="/postman" class="sub-item">
+                            <span class="indicator"></span>
+                            <span class="label">Overview</span>
+                        </a>
+                        <a href="/postman/runner" class="sub-item">
+                            <span class="indicator"></span>
+                            <span class="label">Runner</span>
+                        </a>
+                        <a href="/postman/log-report" class="sub-item">
+                            <span class="indicator"></span>
+                            <span class="label">Logs</span>
+                        </a>
+                        <a href="/postman/compare" class="sub-item">
+                            <span class="indicator"></span>
+                            <span class="label">Comparison</span>
+                        </a>
+                    </div>
                 </div>
             </div>
 
-            <div class="accordion-item">
-                <div class="accordion-header" id="head-mule" onclick="toggleAccordion('content-mule', 'head-mule')">
-                    <span style="display:flex; align-items:center; gap:12px;"><i class="material-icons">api</i> MuleSoft Suite</span>
-                    <i class="material-icons">expand_more</i>
-                </div>
-                <div id="content-mule" class="accordion-content">
-                    <a href="/mulesoft" class="nav-sub-item">Overview</a>
-                    <a href="/mulesoft/runtime-control" class="nav-sub-item">Runtime Control</a>
-                    <a href="/mulesoft/version-comparator" class="nav-sub-item">Version Compare</a>
-                </div>
-            </div>
-
-            <div class="accordion-item">
-                <div class="accordion-header" id="head-postman" onclick="toggleAccordion('content-postman', 'head-postman')">
-                    <span style="display:flex; align-items:center; gap:12px;"><i class="material-icons">send</i> Postman Suite</span>
-                    <i class="material-icons">expand_more</i>
-                </div>
-                <div id="content-postman" class="accordion-content">
-                    <a href="/postman" class="nav-sub-item">Overview</a>
-                    <a href="/postman/runner" class="nav-sub-item">Collection Runner</a>
-                    <a href="/postman/log-report" class="nav-sub-item">Log Report</a>
-                    <a href="/postman/compare" class="nav-sub-item">Compare Responses</a>
-                </div>
-            </div>
-            
-            <div style="margin-top: auto; padding: 24px; border-top: 1px solid var(--border-light); display: flex; gap: 12px;">
-                <button title="Toggle Theme" onclick="toggleTheme()" style="background: transparent; border: none; padding: 12px; border-radius: 12px; cursor: pointer; flex: 1; display: flex; justify-content: center; align-items: center; color: var(--text-main); transition: background 0.2s ease;">
-                    <i id="theme-icon" class="material-icons" style="font-size: 24px;">dark_mode</i> 
+            <div class="m3-nav-footer">
+                <button class="m3-rail-action" onclick="toggleTheme()" title="Toggle Theme">
+                    <i id="theme-icon" class="material-icons">dark_mode</i>
                 </button>
-                <a href="/settings" title="Settings" style="background: transparent; border: none; padding: 12px; border-radius: 12px; cursor: pointer; flex: 1; display: flex; justify-content: center; align-items: center; color: var(--text-main); text-decoration: none; transition: background 0.2s ease;">
-                    <i class="material-icons" style="font-size: 24px;">settings</i> 
+                <a href="/settings" class="m3-rail-action" title="Settings">
+                    <i class="material-icons">settings</i>
                 </a>
             </div>
-        </nav>
-        <main>
+        </aside>
+
+        <main class="m3-main-viewport">
             {% block content %}{% endblock %}
         </main>
     </div>
