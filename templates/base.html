@@ -5,6 +5,217 @@
     <title>Beyond Native | {% block title %}{% endblock %}</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+
+        :root {
+            --m3-primary: #6750A4;
+            --m3-surface: rgba(254, 247, 255, 0.9);
+            --m3-on-surface: #1D1B20;
+            --m3-outline: rgba(121, 116, 126, 0.2);
+            --m3-primary-container: #EADDFF;
+            --m3-on-primary-container: #21005D;
+            --bg-main: #fdf7ff;
+            --text-main: #1d1b20;
+        }
+
+        [data-theme='dark'] {
+            --m3-surface: rgba(28, 27, 31, 0.9);
+            --m3-on-surface: #E6E1E5;
+            --m3-primary-container: #4F378B;
+            --m3-on-primary-container: #EADDFF;
+            --bg-main: #141218;
+            --text-main: #e6e1e5;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-main);
+            color: var(--text-main);
+            overflow: hidden;
+        }
+
+        .m3-app-layout {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .m3-navigation-drawer {
+            width: 280px;
+            background: var(--m3-surface);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--m3-outline);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Brand Section */
+        .m3-nav-brand {
+            padding: 32px 24px;
+        }
+
+        .brand-link {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            text-decoration: none;
+            color: var(--m3-on-surface);
+        }
+
+        .brand-logo {
+            width: 40px;
+            height: 40px;
+            background: var(--m3-primary);
+            color: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(103, 80, 164, 0.3);
+        }
+
+        .brand-text {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-text span { color: var(--m3-primary); }
+
+        /* Nav Content */
+        .m3-nav-content {
+            flex: 1;
+            padding: 0 12px;
+            overflow-y: auto;
+        }
+
+        .m3-nav-group {
+            margin-bottom: 8px;
+        }
+
+        .m3-nav-item.parent {
+            height: 56px;
+            padding: 0 16px 0 24px;
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: 0.2s;
+            color: var(--m3-on-surface);
+            opacity: 0.8;
+        }
+
+        .m3-nav-item.parent:hover {
+            background: rgba(103, 80, 164, 0.05);
+            opacity: 1;
+        }
+
+        .item-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .item-container i { font-size: 24px; }
+        .item-container .label { font-size: 14px; font-weight: 600; }
+
+        .chevron { transition: 0.3s; font-size: 20px; opacity: 0.5; }
+
+        /* Sub Items */
+        .m3-nav-sub {
+            max-height: 0;
+            overflow: hidden;
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            padding-left: 20px;
+        }
+
+        .m3-nav-group.active .m3-nav-sub {
+            max-height: 500px;
+            margin-top: 4px;
+            margin-bottom: 12px;
+        }
+
+        .m3-nav-group.active .chevron { transform: rotate(180deg); }
+
+        .sub-item {
+            height: 48px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            text-decoration: none;
+            color: var(--m3-on-surface);
+            padding-left: 16px;
+            border-radius: 24px;
+            position: relative;
+            transition: 0.1s;
+            margin-bottom: 2px;
+        }
+
+        .sub-item .label { font-size: 13px; font-weight: 500; opacity: 0.7; }
+        
+        .sub-item .indicator {
+            position: absolute;
+            left: 0;
+            width: 4px;
+            height: 0;
+            background: var(--m3-primary);
+            border-radius: 0 4px 4px 0;
+            transition: 0.2s;
+        }
+
+        .sub-item:hover {
+            background: rgba(103, 80, 164, 0.05);
+        }
+
+        .sub-item.active {
+            background: var(--m3-primary-container);
+            color: var(--m3-on-primary-container) !important;
+        }
+
+        .sub-item.active .label { opacity: 1; font-weight: 700; }
+        .sub-item.active .indicator { height: 24px; }
+
+        /* Footer */
+        .m3-nav-footer {
+            padding: 16px;
+            border-top: 1px solid var(--m3-outline);
+            display: flex;
+            gap: 8px;
+        }
+
+        .m3-rail-action {
+            flex: 1;
+            height: 48px;
+            border-radius: 24px;
+            border: none;
+            background: transparent;
+            color: var(--m3-on-surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+            text-decoration: none;
+        }
+
+        .m3-rail-action:hover {
+            background: var(--m3-primary-container);
+            color: var(--m3-on-primary-container);
+        }
+
+        /* Main Viewport */
+        .m3-main-viewport {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+            background: var(--bg-main);
+        }
+    </style>
 </head>
 <body>
     <div class="m3-app-layout">
@@ -146,20 +357,29 @@
             }
         });
 
-        function toggleAccordion(contentId, headId) {
-            const content = document.getElementById(contentId);
-            const head = document.getElementById(headId);
-            const isShowing = content.classList.contains('show');
-            document.querySelectorAll('.accordion-content').forEach(el => el.classList.remove('show'));
-            document.querySelectorAll('.accordion-header').forEach(el => el.classList.remove('active'));
-            if (!isShowing) { content.classList.add('show'); head.classList.add('active'); }
+        function toggleM3Nav(groupId) {
+            const group = document.getElementById(groupId);
+            const isShowing = group.classList.contains('active');
+            document.querySelectorAll('.m3-nav-group').forEach(el => el.classList.remove('active'));
+            if (!isShowing) group.classList.add('active');
         }
 
         window.onload = () => {
             const path = window.location.pathname;
-            if (path.includes('devops')) toggleAccordion('content-devops', 'head-devops');
-            if (path.includes('mulesoft')) toggleAccordion('content-mule', 'head-mule');
-            if (path.includes('postman')) toggleAccordion('content-postman', 'head-postman');
+            // Clear current active
+            document.querySelectorAll('.sub-item').forEach(el => el.classList.remove('active'));
+            
+            // Set new active
+            const activeLink = document.querySelector(`.sub-item[href="${path}"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+                // Auto expand parent
+                const parentGroup = activeLink.closest('.m3-nav-group');
+                if (parentGroup) {
+                    document.querySelectorAll('.m3-nav-group').forEach(el => el.classList.remove('active'));
+                    parentGroup.classList.add('active');
+                }
+            }
         };
     </script>
 </body>
