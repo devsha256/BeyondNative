@@ -221,7 +221,9 @@ from postman_compare_module import PostmanComparator, validate_urls, compare_res
 
 # Help resolve host replacement and cURL parsing
 def parse_curl(curl_command):
-    # Basic cURL parser for comparison tool
+    # Clean the curl command
+    curl_command = curl_command.replace('\\\n', ' ').replace('\n', ' ').strip()
+    
     components = {
         'url': '',
         'method': 'GET',
@@ -229,25 +231,29 @@ def parse_curl(curl_command):
         'body': None
     }
     
-    # Extract URL
-    url_match = re.search(r"curl\s+(?:--location\s+)?['\"]?([^'\"]+)['\"]?", curl_command)
-    if url_match:
-        components['url'] = url_match.group(1).split(' ')[0]
+    # 1. Extract URL - Look for http(s) strictly first, then any quoted string that looks like a URL
+    url_match = re.search(r"'(https?://[^']+)'|\"(https?://[^\"]+)\"|(https?://[^\s']+)", curl_command)
+    if not url_match:
+        # Fallback for URLs without http prefix
+        url_match = re.search(r"curl\s+(?:--location\s+)?(?:--request\s+\w+\s+)?['\"]?([^'\s\"]+)['\"]?", curl_command)
         
-    # Extract Method
-    method_match = re.search(r"--request\s+(\w+)", curl_command)
+    if url_match:
+        components['url'] = next((g for g in url_match.groups() if g), "")
+        
+    # 2. Extract Method
+    method_match = re.search(r"(?:--request|-X)\s+([A-Z]+)", curl_command)
     if method_match:
         components['method'] = method_match.group(1)
-    elif "--data" in curl_command or "--data-raw" in curl_command:
+    elif "--data" in curl_command or "--data-raw" in curl_command or "-d " in curl_command:
         components['method'] = 'POST'
         
-    # Extract Headers
-    header_matches = re.finditer(r"--header\s+['\"]([^:]+):\s*([^'\"]+)['\"]", curl_command)
+    # 3. Extract Headers
+    header_matches = re.finditer(r"(?:--header|-H)\s+['\"]([^:]+):\s*([^'\"]+)['\"]", curl_command)
     for match in header_matches:
         components['headers'][match.group(1).strip()] = match.group(2).strip()
         
-    # Extract Body
-    body_match = re.search(r"--data(?:-raw)?\s+'([\s\S]*?)'", curl_command)
+    # 4. Extract Body
+    body_match = re.search(r"(?:--data(?:-raw)?|-d)\s+'([\s\S]*?)'", curl_command)
     if body_match:
         components['body'] = body_match.group(1).replace("\\'", "'").replace("\\\\", "\\")
         
@@ -274,7 +280,15 @@ def postman_compare_execute():
         resp_a = data.get('response_a', {})
         resp_b = data.get('response_b', {})
         comparator = PostmanComparator(exempted_fields=exempted)
-        return jsonify(comparator.compare(resp_a, resp_b))
+        res = comparator.compare(resp_a, resp_b)
+        res.update({
+            "method": "MANUAL",
+            "curl": "N/A",
+            "response_a_raw": resp_a,
+            "response_b_raw": resp_b,
+            "collection_name": data.get('collection_name', 'Manual Input')
+        })
+        return jsonify(res)
         
     elif mode == 'curl':
         curl_a = data.get('curl_a')
@@ -293,16 +307,103 @@ def postman_compare_execute():
             
         # Execute both
         try:
+            print(f"[DEBUG] Executing A: {comp_a['method']} {comp_a['url']}")
             res_a = requests.request(comp_a['method'], comp_a['url'], headers=comp_a['headers'], data=comp_a['body'], timeout=15, verify=False)
             res_b = requests.request(comp_b['method'], comp_b['url'], headers=comp_b['headers'], data=comp_b['body'], timeout=15, verify=False)
             
-            data_a = res_a.json() if 'application/json' in res_a.headers.get('Content-Type', '') else res_a.text
-            data_b = res_b.json() if 'application/json' in res_b.headers.get('Content-Type', '') else res_b.text
+            try:
+                data_a = res_a.json()
+            except:
+                data_a = res_a.text
+                
+            try:
+                data_b = res_b.json()
+            except:
+                data_b = res_b.text
             
             comparator = PostmanComparator(exempted_fields=exempted)
-            return jsonify(comparator.compare(data_a, data_b))
+            comparison_res = comparator.compare(data_a, data_b)
+            
+            comparison_res.update({
+                "method": comp_a['method'],
+                "curl": curl_a,
+                "response_a_raw": data_a,
+                "response_b_raw": data_b,
+                "collection_name": data.get('collection_name', 'cURL Import')
+            })
+            return jsonify(comparison_res)
         except Exception as e:
+            import traceback
+            print(traceback.format_exc())
             return jsonify({"error": f"Execution failed: {str(e)}"}), 500
+            
+    elif mode == 'collection':
+        request_obj = data.get('request_details')
+        if not request_obj:
+            return jsonify({"error": "Request details are missing"}), 400
+            
+        method = request_obj.get('method', 'GET')
+        url_data = request_obj.get('url', '')
+        
+        raw_url = ""
+        if isinstance(url_data, dict):
+            raw_url = url_data.get('raw', '')
+        else:
+            raw_url = str(url_data)
+            
+        # Extract Path + Query only
+        # We assume the user provides source_host/target_host as the base
+        from urllib.parse import urlparse
+        parsed = urlparse(raw_url)
+        path_query = parsed.path
+        if parsed.query: path_query += f"?{parsed.query}"
+        
+        # Ensure path starts with /
+        if not path_query.startswith('/'): path_query = '/' + path_query
+        
+        url_a = source_host.rstrip('/') + path_query
+        url_b = target_host.rstrip('/') + path_query
+        
+        # Prepare Headers
+        headers = {}
+        for h in request_obj.get('header', []):
+            if not h.get('disabled', False):
+                headers[h.get('key')] = h.get('value')
+        
+        # Prepare Body
+        body = None
+        if 'body' in request_obj and request_obj['body'].get('mode') == 'raw':
+            body = request_obj['body'].get('raw')
+            
+        # Execute
+        try:
+            print(f"[DEBUG] Collection Mode Execution - Path: {path_query}")
+            print(f"Executing A: {url_a}")
+            print(f"Executing B: {url_b}")
+            
+            res_a = requests.request(method, url_a, headers=headers, data=body, timeout=15, verify=False)
+            res_b = requests.request(method, url_b, headers=headers, data=body, timeout=15, verify=False)
+            
+            def safe_parse(r):
+                try: return r.json()
+                except: return r.text
+                
+            data_a = safe_parse(res_a)
+            data_b = safe_parse(res_b)
+            
+            comparator = PostmanComparator(exempted_fields=exempted)
+            comparison_res = comparator.compare(data_a, data_b)
+            
+            comparison_res.update({
+                "method": method,
+                "curl": f"Source: {url_a} \nTarget: {url_b}",
+                "response_a_raw": data_a,
+                "response_b_raw": data_b,
+                "collection_name": data.get('collection_name', 'Collection Import')
+            })
+            return jsonify(comparison_res)
+        except Exception as e:
+            return jsonify({"error": f"Collection Execution Failed: {str(e)}"}), 500
     
     return jsonify({"error": "Unsupported mode"}), 400
 

@@ -1,443 +1,1048 @@
 {% extends "base.html" %}
 
-{% block title %}Postman Compare Responses{% endblock %}
+{% block title %}Compare AI - Deep Structural JSON Analysis{% endblock %}
 
 {% block content %}
-<div class="m3-header" style="display:flex; justify-content:space-between; align-items:center;">
-    <div>
-        <h1>Postman: Side-by-Side Comparison</h1>
-        <p style="color:var(--text-muted); margin-top: -8px;">Deep JSON structural analysis with LCS-based field matching</p>
-    </div>
-    <div style="display:flex; gap:12px;">
-        <button id="btn-recorder" onclick="toggleRecorder()" class="m3-button-outline" style="border-color:var(--accent); color:var(--accent);">
-            <i class="material-icons">fiber_manual_record</i> Start Recorder
-        </button>
-        <button onclick="toggleGlobalConfig()" class="m3-button-outline">
-            <i class="material-icons">settings</i> Configuration
-        </button>
-        <a href="/postman" class="m3-button-outline">
-            <i class="material-icons">arrow_back</i> Suite Home
-        </a>
-    </div>
-</div>
-
-<!-- Global Configuration Card -->
-<div id="global-config-card" class="m3-card" style="display:none; margin-top:24px; padding:24px; border-left: 4px solid var(--accent);">
-    <h3 style="margin-bottom:16px;"><i class="material-icons">language</i> Global Environments</h3>
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
-        <div class="m3-input-group">
-            <label>Source Host (Reference)</label>
-            <input type="text" id="source-host" class="m3-input" placeholder="e.g. https://boomi-api.com" value="https://boomi-api.com">
+<div class="m3-page-wrapper">
+    <!-- Sophisticated Header -->
+    <header class="m3-hero-header">
+        <div class="header-left">
+            <span class="m3-badge-new">PRO VERSION</span>
+            <h1>Compare <span class="text-gradient">Engine</span></h1>
+            <p>Enterprise-grade structural alignment for Boomi & MuleSoft migrations</p>
         </div>
-        <div class="m3-input-group">
-            <label>Target Host (MuleSoft)</label>
-            <input type="text" id="target-host" class="m3-input" placeholder="e.g. https://mule-api.com" value="https://mule-api.com">
-        </div>
-    </div>
-    <div class="m3-input-group" style="margin-top:16px;">
-        <label>Exempted Fields (JSON Array)</label>
-        <input type="text" id="exempted-fields" class="m3-input" placeholder='["timestamp", "uuid", "transactionId"]' value='["timestamp", "uuid", "transactionId"]'>
-        <small>Regex support: <code>/pattern/</code> | Wildcards: <code>*</code> | Substrings: <code>field_name</code></small>
-    </div>
-</div>
-
-<!-- Input Section with Tabs -->
-<div class="m3-card" style="margin-top:24px; padding:0; overflow:hidden;">
-    <div style="display:flex; border-bottom: 1px solid var(--border-light);">
-        <div class="tab-btn active" onclick="switchTab('json')"><i class="material-icons">code</i> JSON Input</div>
-        <div class="tab-btn" onclick="switchTab('curl')"><i class="material-icons">terminal</i> cURL Import</div>
-        <div class="tab-btn" onclick="switchTab('collection')"><i class="material-icons">folder_zip</i> Postman Collection</div>
-    </div>
-
-    <!-- JSON Input -->
-    <div id="tab-json" class="tab-content" style="padding:24px;">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-            <div class="m3-input-group">
-                <label>Reference JSON (Environment A)</label>
-                <textarea id="resp-a" class="m3-input" rows="12" placeholder="Paste Reference JSON..." style="font-family:'JetBrains Mono', monospace; font-size:12px;"></textarea>
-            </div>
-            <div class="m3-input-group">
-                <label>Target JSON (Environment B)</label>
-                <textarea id="resp-b" class="m3-input" rows="12" placeholder="Paste Target JSON..." style="font-family:'JetBrains Mono', monospace; font-size:12px;"></textarea>
-            </div>
-        </div>
-    </div>
-
-    <!-- cURL Input -->
-    <div id="tab-curl" class="tab-content" style="padding:24px; display:none;">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-            <div class="m3-input-group">
-                <label>Source cURL (Reference)</label>
-                <textarea id="curl-a" class="m3-input" rows="12" placeholder="Paste cURL for Reference Env..." style="font-family:'JetBrains Mono', monospace; font-size:12px;"></textarea>
-            </div>
-            <div class="m3-input-group">
-                <label>Target cURL (MuleSoft)</label>
-                <textarea id="curl-b" class="m3-input" rows="12" placeholder="Paste cURL for Target Env..." style="font-family:'JetBrains Mono', monospace; font-size:12px;"></textarea>
-            </div>
-        </div>
-        <p style="color:var(--text-muted); font-size:12px;"><i class="material-icons" style="font-size:14px;">info</i> Base URLs will be cross-validated. Only host substitution is allowed.</p>
-    </div>
-
-    <!-- Collection Input -->
-    <div id="tab-collection" class="tab-content" style="padding:24px; display:none;">
-        <div class="m3-input-group">
-            <label>Upload Postman Collection</label>
-            <div class="file-picker-m3" onclick="document.getElementById('pick-coll').click()">
-                <i class="material-icons">upload_file</i>
-                <span id="coll-label">Select .postman_collection.json</span>
-                <input type="file" id="pick-coll" accept=".json" style="display:none;" onchange="handleCollectionUpload(this)">
-            </div>
-        </div>
-        <div id="coll-req-list" style="margin-top:16px; max-height: 300px; overflow-y: auto; display:none;">
-            <!-- Requests from collection will show up here -->
-        </div>
-    </div>
-
-    <div style="padding:24px; background: rgba(var(--accent-rgb), 0.03); border-top: 1px solid var(--border-light); display:flex; justify-content:flex-end;">
-        <button id="btn-compare" class="m3-button" onclick="executeComparison()">
-            <i class="material-icons">analytics</i> Compare Now
-        </button>
-    </div>
-</div>
-
-<!-- Results Section -->
-<div id="results-container" style="display:none; margin-top:24px;">
-    <!-- Stats Row -->
-    <div style="display:grid; grid-template-columns: repeat(6, 1fr); gap:16px; margin-bottom:24px;">
-        <div class="stat-mini-card">
-            <span class="label">Matched</span>
-            <span id="res-matched" class="value" style="color:var(--success);">0</span>
-        </div>
-        <div class="stat-mini-card">
-            <span class="label">Mismatches</span>
-            <span id="res-mismatched" class="value" style="color:var(--error);">0</span>
-        </div>
-        <div class="stat-mini-card">
-            <span class="label">Exempted</span>
-            <span id="res-exempted" class="value" style="color:#eab308;">0</span>
-        </div>
-        <div class="stat-mini-card">
-            <span class="label">Only A</span>
-            <span id="res-only-a" class="value" style="color:var(--primary);">0</span>
-        </div>
-        <div class="stat-mini-card">
-            <span class="label">Only B</span>
-            <span id="res-only-b" class="value" style="color:var(--secondary);">0</span>
-        </div>
-        <div class="stat-mini-card" style="background:var(--primary); color:white;">
-            <span class="label" style="color:rgba(255,255,255,0.7);">Match %</span>
-            <span id="res-percent" class="value">0%</span>
-        </div>
-    </div>
-
-    <!-- Side-by-Side View -->
-    <div class="m3-card" style="padding:0; overflow:hidden;">
-        <div style="padding: 16px; border-bottom: 1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center; background: var(--table-header);">
-            <div style="display:flex; align-items:center; gap:16px;">
-                <h3 style="margin:0;">Side-by-Side Comparison</h3>
-                <div id="result-status" class="status-badge status-neutral">N/A</div>
-            </div>
-            <div style="display:flex; gap:12px;">
-                <button onclick="downloadDiffCSV()" class="m3-button-outline" style="padding:6px 12px; font-size:12px;">
-                    <i class="material-icons" style="font-size:18px;">download</i> Export CSV
+        <div class="header-right">
+            <div class="m3-segmented-control" id="recorder-group">
+                <button id="btn-recorder" onclick="toggleRecorder()" class="segmented-item recorder-inactive">
+                    <i class="material-icons">fiber_manual_record</i> <span>Start Session</span>
+                </button>
+                <button onclick="toggleGlobalConfig()" class="segmented-item">
+                    <i class="material-icons">tune</i> <span>Environments</span>
                 </button>
             </div>
+            <a href="/postman" class="m3-icon-button" title="Back home">
+                <i class="material-icons">home</i>
+            </a>
         </div>
-        <div class="diff-container" style="max-height: 800px; overflow-y: auto; background: var(--bg-main);">
-            <table class="diff-table">
-                <thead>
-                    <tr>
-                        <th style="width: 48%;">Reference (Environment A)</th>
-                        <th style="width: 4%; text-align: center;">Diff</th>
-                        <th style="width: 48%;">Target (Environment B)</th>
-                    </tr>
-                </thead>
-                <tbody id="diff-body"></tbody>
-            </table>
+    </header>
+
+    <!-- Global Settings Drawer (Glassmorphic) -->
+    <div id="global-config-drawer" class="m3-drawer closed">
+        <div class="drawer-content">
+            <div class="drawer-header">
+                <h3><i class="material-icons">settings_input_component</i> Context Configuration</h3>
+                <button onclick="toggleGlobalConfig()" class="m3-icon-button small"><i
+                        class="material-icons">close</i></button>
+            </div>
+            <div class="drawer-body">
+                <div class="m3-field-card">
+                    <label>Environment Infrastructure</label>
+                    <div class="dual-input">
+                        <div class="m3-input-wrapper">
+                            <span>Reference</span>
+                            <input type="text" id="source-host" value="https://boomi-api.com">
+                        </div>
+                        <div class="m3-input-wrapper">
+                            <span>Target</span>
+                            <input type="text" id="target-host" value="https://mule-api.com">
+                        </div>
+                    </div>
+                </div>
+                <div class="m3-field-card" style="margin-top:16px;">
+                    <label>Comparison Exemptions (Regex Supported)</label>
+                    <textarea id="exempted-fields"
+                        placeholder='["timestamp", "uuid", "/.*Id$/"]'>["timestamp", "uuid", "transactionId"]</textarea>
+                </div>
+                <div class="m3-field-card" style="margin-top:16px;">
+                    <label>Collection Context (Optional)</label>
+                    <input type="text" id="collection-name" placeholder="Name of the source collection">
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- Main Workspace -->
+    <main class="m3-workspace">
+        <section class="input-canvas">
+            <div class="canvas-tabs">
+                <button class="tab-link active" data-tab="json"><i class="material-icons">schema</i> JSON</button>
+                <button class="tab-link" data-tab="curl"><i class="material-icons">terminal</i> cURL</button>
+                <button class="tab-link" data-tab="collection"><i class="material-icons">folder_special</i>
+                    Collection</button>
+            </div>
+
+            <!-- JSON Panel -->
+            <div id="view-json" class="view-panel active">
+                <div class="editor-pair">
+                    <div class="m3-editor-container" data-label="REFERENCE (A)">
+                        <textarea id="resp-a" placeholder="Paste source JSON payload..."></textarea>
+                    </div>
+                    <div class="m3-editor-container" data-label="TARGET (B)">
+                        <textarea id="resp-b" placeholder="Paste destination JSON payload..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- cURL Panel -->
+            <div id="view-curl" class="view-panel">
+                <div class="editor-pair">
+                    <div class="m3-editor-container" data-label="SOURCE CURL">
+                        <textarea id="curl-a" placeholder="Paste full cURL command for A..."></textarea>
+                    </div>
+                    <div class="m3-editor-container" data-label="TARGET CURL">
+                        <textarea id="curl-b" placeholder="Paste full cURL command for B..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Collection Panel -->
+            <div id="view-collection" class="view-panel">
+                <div class="collection-workspace">
+                    <div class="m3-card glass config-side">
+                        <div class="section-title">
+                            <i class="material-icons">cloud_upload</i>
+                            <div>
+                                <h3>Source Collection</h3>
+                                <p>Upload .json to browse endpoints</p>
+                            </div>
+                        </div>
+                        <div class="modern-drop-zone" onclick="document.getElementById('pick-coll').click()">
+                            <i class="material-icons">file_present</i>
+                            <div class="drop-text">
+                                <span id="coll-label">Select Collection JSON</span>
+                                <small>Full structural analysis of requests</small>
+                            </div>
+                            <input type="file" id="pick-coll" accept=".json" style="display:none;"
+                                onchange="handleCollectionUpload(this)">
+                        </div>
+                        <div class="coll-filters hidden" id="coll-filters">
+                            <div class="m3-input-wrapper" style="margin-top:20px;">
+                                <input type="text" id="coll-search" placeholder="Search by name or path..."
+                                    oninput="filterCollectionRequests()">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="m3-card glass list-side">
+                        <div id="coll-empty-state" class="empty-state">
+                            <i class="material-icons">search_off</i>
+                            <p>No collection loaded yet</p>
+                        </div>
+                        <div id="coll-request-list" class="m3-req-list hidden">
+                            <!-- Requests populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="canvas-actions">
+                <button id="btn-compare" class="m3-fab-extend" onclick="executeComparison()">
+                    <i class="material-icons">compare</i>
+                    <span>Analyze Delta</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Results Showcase -->
+        <section id="results-canvas" class="results-canvas hidden">
+            <div class="results-summary">
+                <div class="summary-card glass primary small">
+                    <div class="icon"><i class="material-icons">verified</i></div>
+                    <div class="data">
+                        <span class="val" id="res-matched">0</span>
+                        <span class="lbl">Match</span>
+                    </div>
+                </div>
+                <div class="summary-card glass error small">
+                    <div class="icon"><i class="material-icons">error_outline</i></div>
+                    <div class="data">
+                        <span class="val" id="res-mismatched">0</span>
+                        <span class="lbl">Diff</span>
+                    </div>
+                </div>
+                <div class="summary-card glass warning small">
+                    <div class="icon"><i class="material-icons">rule</i></div>
+                    <div class="data">
+                        <span class="val" id="res-exempted">0</span>
+                        <span class="lbl">Ignore</span>
+                    </div>
+                </div>
+                <div class="summary-card glass info small">
+                    <div class="icon"><i class="material-icons">remove_circle_outline</i></div>
+                    <div class="data">
+                        <span class="val" id="res-only-a">0</span>
+                        <span class="lbl">Del</span>
+                    </div>
+                </div>
+                <div class="summary-card glass tier3 small">
+                    <div class="icon"><i class="material-icons">add_circle_outline</i></div>
+                    <div class="data">
+                        <span class="val" id="res-only-b">0</span>
+                        <span class="lbl">New</span>
+                    </div>
+                </div>
+                <div class="summary-progress-ring-mini">
+                    <svg viewBox="0 0 36 36" class="circular-chart-mini">
+                        <path class="circle-bg"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path id="progress-path" class="circle" stroke-dasharray="0, 100"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    </svg>
+                    <div id="res-percent" class="pct-mini">0%</div>
+                    <div id="result-status" class="status-micro-badge">N/A</div>
+                </div>
+            </div>
+
+            <div class="m3-diff-viewer" id="main-diff-viewer">
+                <div class="diff-header">
+                    <div class="col-head"><i class="material-icons">description</i> Env A</div>
+                    <div class="col-head spacer">DELTA</div>
+                    <div class="col-head"><i class="material-icons">auto_fix_high</i> Env B</div>
+                    <div style="display:flex; gap:8px;">
+                        <button onclick="toggleFullscreen()" class="m3-icon-button small-i" title="Focus View"><i
+                                class="material-icons">fullscreen</i></button>
+                        <button onclick="downloadDiffCSV()" class="m3-icon-button small-i" title="Export CSV"><i
+                                class="material-icons">file_download</i></button>
+                    </div>
+                </div>
+                <div class="diff-content" id="diff-body">
+                    <!-- Clean icon-based rows -->
+                </div>
+            </div>
+        </section>
+    </main>
 </div>
 
 <style>
-.tab-btn {
-    padding: 16px 24px;
-    cursor: pointer;
-    font-weight: 500;
-    color: var(--text-muted);
-    border-bottom: 2px solid transparent;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s;
-}
-.tab-btn:hover { background: rgba(var(--accent-rgb), 0.05); }
-.tab-btn.active { 
-    color: var(--accent); 
-    border-bottom-color: var(--accent); 
-    background: rgba(var(--accent-rgb), 0.03); 
-}
+    /* CSS Reset & M3 Variables */
+    :root {
+        --primary-m3: #6750A4;
+        --on-primary: #FFFFFF;
+        --primary-container: rgba(234, 221, 255, 0.4);
+        --secondary-m3: #625B71;
+        --tertiary-m3: #7D5260;
+        --error-m3: #B3261E;
+        --surface-m3: rgba(254, 247, 255, 0.7);
+        --on-surface: #1D1B20;
+        --outline-m3: #79747E;
 
-.stat-mini-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    padding: 16px;
-    border-radius: 16px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    backdrop-filter: var(--glass-blur);
-}
-.stat-mini-card .label { font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
-.stat-mini-card .value { font-size: 24px; font-weight: 700; font-family: 'Outfit'; }
+        --glass-grad: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+        --accent-grad: linear-gradient(90deg, #6750A4, #9581FF);
+    }
 
-.diff-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-}
-.diff-table th {
-    padding: 12px 16px;
-    text-align: left;
-    font-weight: 600;
-    color: var(--text-muted);
-    font-size: 11px;
-    text-transform: uppercase;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    backdrop-filter: blur(8px);
-    background: var(--table-header);
-}
-.diff-table td {
-    padding: 6px 16px;
-    border-bottom: 1px solid var(--table-border);
-    font-family: 'JetBrains Mono', 'Consolas', monospace;
-    white-space: pre-wrap;
-    word-break: break-all;
-    vertical-align: top;
-}
+    .m3-page-wrapper {
+        padding: 32px;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        background: transparent;
+    }
 
-.diff-row:hover { background: rgba(var(--accent-rgb), 0.05); }
-.diff-row.match { background: transparent; }
-.diff-row.mismatch { background: rgba(220, 38, 38, 0.08); border-left: 4px solid var(--error); }
-.diff-row.exempted { border-left: 4px solid #eab308; background: rgba(234, 179, 8, 0.05); }
-.diff-row.only_a { background: rgba(0, 86, 210, 0.05); border-left: 4px solid var(--primary); }
-.diff-row.only_b { background: rgba(107, 0, 255, 0.05); border-left: 4px solid var(--secondary); }
+    /* Header */
+    .m3-hero-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 40px;
+    }
 
-.diff-pointer {
-    text-align: center;
-    font-size: 18px;
-    color: var(--text-muted);
-    font-family: 'Roboto', sans-serif;
-    vertical-align: middle !important;
-}
-.mismatch .diff-pointer { color: var(--error); font-weight: 700; }
-.only_a .diff-pointer { color: var(--primary); }
-.only_b .diff-pointer { color: var(--secondary); }
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
 
-.file-picker-m3 {
-    border: 2px dashed var(--border-light);
-    border-radius: 12px;
-    padding: 32px;
-    text-align: center;
-    cursor: pointer;
-    color: var(--text-muted);
-    transition: all 0.2s;
-}
-.file-picker-m3:hover { border-color: var(--accent); background: rgba(var(--accent-rgb), 0.05); color: var(--accent); }
+    .m3-icon-button {
+        background: var(--bg-card);
+        border: 1px solid var(--border-light);
+        color: var(--text-main);
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .m3-icon-button:hover {
+        background: var(--primary);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .m3-hero-header h1 {
+        font-size: 3.5rem;
+        margin: 0;
+        font-weight: 800;
+        letter-spacing: -2px;
+    }
+
+    .text-gradient {
+        background: var(--accent-grad);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .m3-badge-new {
+        font-size: 10px;
+        padding: 2px 8px;
+        border-radius: 20px;
+        background: var(--accent);
+        color: white;
+        font-weight: 700;
+        margin-bottom: 8px;
+        display: inline-block;
+    }
+
+    .m3-segmented-control {
+        background: var(--bg-card);
+        padding: 4px;
+        border-radius: 100px;
+        display: flex;
+        border: 1px solid var(--border-light);
+    }
+
+    .segmented-item {
+        background: transparent;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 100px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: var(--text-main);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .segmented-item:hover {
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    .recorder-active {
+        background: rgba(255, 0, 0, 0.1);
+        color: #ff3b3b;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            opacity: 0.8;
+        }
+
+        50% {
+            opacity: 1;
+        }
+
+        100% {
+            opacity: 0.8;
+        }
+    }
+
+    /* Workspace & Editors */
+    .m3-workspace {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+    }
+
+    .editor-pair {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+
+    .m3-editor-container {
+        background: var(--bg-card);
+        border-radius: 24px;
+        padding: 24px;
+        border: 1px solid var(--border-light);
+        position: relative;
+        backdrop-filter: var(--glass-blur);
+        transition: transform 0.3s;
+    }
+
+    .m3-editor-container::before {
+        content: attr(data-label);
+        position: absolute;
+        top: -12px;
+        left: 20px;
+        background: var(--primary);
+        color: white;
+        font-size: 10px;
+        padding: 4px 12px;
+        border-radius: 8px;
+        font-weight: 700;
+    }
+
+    .m3-editor-container textarea {
+        width: 100%;
+        height: 300px;
+        background: transparent;
+        border: none;
+        color: var(--text-main);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 13px;
+        resize: none;
+        outline: none;
+    }
+
+    .m3-fab-extend {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 18px 48px;
+        border-radius: 20px;
+        font-size: 1.2rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        cursor: pointer;
+        box-shadow: 0 8px 16px rgba(103, 80, 164, 0.3);
+        transition: all 0.3s;
+    }
+
+    .m3-fab-extend:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(103, 80, 164, 0.4);
+    }
+
+    /* Results */
+    .hidden {
+        display: none !important;
+    }
+
+    .results-canvas {
+        animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .results-summary {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr) 120px;
+        gap: 20px;
+        align-items: center;
+    }
+
+    .summary-card {
+        padding: 20px;
+        border-radius: 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border: 1px solid var(--border-light);
+        transition: 0.3s;
+    }
+
+    .summary-card:hover {
+        transform: scale(1.02);
+    }
+
+    .summary-card .icon {
+        font-size: 2rem;
+    }
+
+    .summary-card .val {
+        font-size: 2rem;
+        font-weight: 800;
+        display: block;
+    }
+
+    .summary-card .lbl {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        font-weight: 600;
+        opacity: 0.7;
+    }
+
+    .summary-card.primary {
+        background: rgba(103, 80, 164, 0.1);
+        color: #6750A4;
+    }
+
+    .summary-card.error {
+        background: rgba(179, 38, 30, 0.1);
+        color: #B3261E;
+    }
+
+    .summary-card.small {
+        padding: 10px 16px;
+        border-radius: 16px;
+        gap: 12px;
+    }
+
+    .summary-card.small .icon {
+        font-size: 1.4rem;
+    }
+
+    .summary-card.small .val {
+        font-size: 1.4rem;
+    }
+
+    .summary-card.small .lbl {
+        font-size: 0.7rem;
+    }
+
+    .summary-progress-ring-mini {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .circular-chart-mini {
+        width: 60px;
+        height: 60px;
+    }
+
+    .pct-mini {
+        position: absolute;
+        top: 22px;
+        font-weight: 700;
+        font-size: 12px;
+        color: var(--text-main);
+    }
+
+    .m3-icon-button.small-i {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+    }
+
+    .m3-icon-button.small-i i {
+        font-size: 18px;
+    }
+
+    /* Fullscreen Logic */
+    .m3-diff-viewer.fullscreen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 9999;
+        border-radius: 0;
+        background: var(--bg-panel);
+        padding: 24px;
+    }
+
+    .m3-diff-viewer.fullscreen .diff-content {
+        height: calc(100vh - 120px);
+        overflow-y: auto;
+    }
+
+    .status-micro-badge {
+        font-size: 8px;
+        font-weight: 800;
+        text-transform: uppercase;
+        text-align: center;
+        margin-top: 4px;
+        padding: 1px 6px;
+        border-radius: 4px;
+    }
+
+    /* Modern Diff Viewer */
+    .m3-diff-viewer {
+        background: var(--bg-card);
+        border-radius: 32px;
+        border: 1px solid var(--border-light);
+        overflow: hidden;
+        margin-top: 32px;
+    }
+
+    .diff-header {
+        padding: 20px 32px;
+        display: grid;
+        grid-template-columns: 1fr 100px 1fr 60px;
+        column-gap: 20px;
+        background: var(--table-header);
+        align-items: center;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .col-head {
+        color: var(--text-muted);
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 1px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .col-head.spacer {
+        justify-content: center;
+        background: var(--primary);
+        color: white;
+        padding: 4px;
+        border-radius: 8px;
+    }
+
+    .diff-content {
+        padding: 10px 0;
+    }
+
+    .diff-row {
+        display: grid;
+        grid-template-columns: 1fr 100px 1fr;
+        column-gap: 20px;
+        padding: 4px 32px;
+        min-height: 28px;
+        align-items: start;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.02);
+    }
+
+    .diff-row:hover {
+        background: rgba(0, 0, 0, 0.02);
+    }
+
+    .diff-text {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 13px;
+        color: var(--text-main);
+        white-space: pre-wrap;
+        word-break: break-all;
+        overflow-wrap: break-word;
+    }
+
+    .diff-status-cell {
+        display: flex;
+        justify-content: center;
+    }
+
+    .status-pill {
+        padding: 2px 12px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: 700;
+        min-width: 60px;
+        text-align: center;
+    }
+
+    .pill-match {
+        color: var(--success);
+    }
+
+    .pill-mismatch {
+        background: var(--error);
+        color: white;
+    }
+
+    .pill-exempted {
+        background: #eab308;
+        color: white;
+    }
+
+    .pill-only_a {
+        border: 1px solid var(--primary);
+        color: var(--primary);
+    }
+
+    .pill-only_b {
+        border: 1px solid var(--secondary);
+        color: var(--secondary);
+    }
+
+    /* Drawer */
+    .m3-drawer {
+        position: fixed;
+        right: -400px;
+        top: 0;
+        width: 400px;
+        height: 100%;
+        background: var(--bg-panel);
+        backdrop-filter: blur(24px);
+        border-left: 1px solid var(--border-light);
+        z-index: 1000;
+        transition: 0.4s cubic-bezier(0.2, 0, 0, 1);
+        padding: 32px;
+    }
+
+    .m3-drawer.open {
+        right: 0;
+        box-shadow: -20px 0 60px rgba(0, 0, 0, 0.1);
+    }
+
+    .m3-field-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 16px;
+        padding: 16px;
+    }
+
+    .m3-field-card label {
+        display: block;
+        font-size: 11px;
+        opacity: 0.6;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+    }
+
+    .m3-input-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .m3-input-wrapper span {
+        font-size: 10px;
+        text-transform: uppercase;
+        font-weight: 700;
+        opacity: 0.5;
+    }
+
+    .m3-input-wrapper input {
+        width: 100%;
+        background: var(--bg-main);
+        border: 1px solid var(--border-light);
+        padding: 12px;
+        border-radius: 12px;
+        color: var(--text-main);
+        outline: none;
+        transition: 0.2s;
+    }
+
+    .m3-input-wrapper input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(103, 80, 164, 0.1);
+    }
+
+    .m3-field-card input,
+    .m3-field-card textarea {
+        width: 100%;
+        background: var(--bg-main);
+        border: 1px solid var(--border-light);
+        padding: 12px;
+        border-radius: 8px;
+        color: var(--text-main);
+    }
+
+    /* Tabs */
+    .canvas-tabs {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .tab-link {
+        background: transparent;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 20px;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .tab-link.active {
+        background: var(--primary-container);
+        color: var(--primary);
+        font-weight: 600;
+    }
+
+    .view-panel {
+        display: none;
+    }
+
+    .view-panel.active {
+        display: block;
+    }
 </style>
 
 <script>
-let currentMode = 'json';
-let comparisonResults = null;
-let isRecording = false;
-let recordedSummaries = [];
+    let currentMode = 'json';
+    let comparisonResults = null;
+    let isRecording = false;
+    let recordedSummaries = [];
 
-function toggleRecorder() {
-    isRecording = !isRecording;
-    const btn = document.getElementById('btn-recorder');
-    if (isRecording) {
-        btn.innerHTML = '<i class="material-icons" style="color:var(--error);">stop</i> Stop & Export';
-        btn.style.background = 'rgba(220, 38, 38, 0.05)';
-        recordedSummaries = [];
-        alert("Recorder started. Every subsequent comparison will be captured.");
-    } else {
-        btn.innerHTML = '<i class="material-icons">fiber_manual_record</i> Start Recorder';
-        btn.style.background = 'transparent';
-        exportRecordedSummaries();
-    }
-}
+    // Tab Logic
+    document.querySelectorAll('.tab-link').forEach(btn => {
+        btn.onclick = (e) => {
+            document.querySelectorAll('.tab-link').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.view-panel').forEach(v => v.classList.remove('active'));
+            btn.classList.add('active');
+            const viewId = 'view-' + btn.getAttribute('data-tab');
+            document.getElementById(viewId).classList.add('active');
+            currentMode = btn.getAttribute('data-tab');
+        };
+    });
 
-function exportRecordedSummaries() {
-    if (recordedSummaries.length === 0) {
-        alert("No summaries were recorded.");
-        return;
+    function toggleGlobalConfig() {
+        const drawer = document.getElementById('global-config-drawer');
+        drawer.classList.toggle('open');
     }
 
-    const headers = ["Timestamp", "Mode", "Status", "Match %", "Mismatched", "Exempted", "Only A", "Only B"];
-    const csvContent = [
-        headers.join(","),
-        ...recordedSummaries.map(s => [
-            s.timestamp, s.mode, s.status, s.matchPercent, s.mismatched, s.exempted, s.onlyA, s.onlyB
-        ].join(","))
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `comparison_session_summary_${new Date().getTime()}.csv`);
-    link.click();
-}
-
-function switchTab(mode) {
-    currentMode = mode;
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
-    
-    event.currentTarget.classList.add('active');
-    document.getElementById(`tab-${mode}`).style.display = 'block';
-}
-
-function toggleGlobalConfig() {
-    const card = document.getElementById('global-config-card');
-    card.style.display = card.style.display === 'none' ? 'block' : 'none';
-}
-
-async function executeComparison() {
-    const btn = document.getElementById('btn-compare');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="m3-loader" style="width:20px; height:20px; border-width:3px;"></span> Executing...';
-
-    const exempted = document.getElementById('exempted-fields').value;
-    const sourceHost = document.getElementById('source-host').value;
-    const targetHost = document.getElementById('target-host').value;
-
-    let payload = {
-        mode: currentMode,
-        source_host: sourceHost,
-        target_host: targetHost,
-        exempted_fields: JSON.parse(exempted || '[]')
-    };
-
-    if (currentMode === 'json') {
-        payload.response_a = JSON.parse(document.getElementById('resp-a').value || '{}');
-        payload.response_b = JSON.parse(document.getElementById('resp-b').value || '{}');
-    } else if (currentMode === 'curl') {
-        payload.curl_a = document.getElementById('curl-a').value;
-        payload.curl_b = document.getElementById('curl-b').value;
-    }
-
-    try {
-        const res = await fetch('/api/postman/compare/execute', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        
-        if (data.error) {
-            alert(data.error);
+    function toggleRecorder() {
+        isRecording = !isRecording;
+        const btn = document.getElementById('btn-recorder');
+        const label = btn.querySelector('span');
+        if (isRecording) {
+            btn.classList.add('recorder-active');
+            label.innerText = 'Stop Session';
+            recordedSummaries = [];
         } else {
-            renderResults(data);
+            btn.classList.remove('recorder-active');
+            label.innerText = 'Start Session';
+            exportRecordedSummaries();
         }
-    } catch (e) {
-        alert("Comparison failed: " + e.message);
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="material-icons">analytics</i> Compare Now';
     }
-}
 
-function renderResults(data) {
-    comparisonResults = data;
-    document.getElementById('results-container').style.display = 'block';
-    
-    // Capture for recorder if active
-    if (isRecording) {
-        recordedSummaries.push({
-            timestamp: new Date().toLocaleTimeString(),
+    async function executeComparison() {
+        const btn = document.getElementById('btn-compare');
+        const originalText = btn.querySelector('span').innerText;
+        btn.disabled = true;
+        btn.querySelector('span').innerText = 'Processing Structural Diff...';
+
+        const payload = {
             mode: currentMode,
-            status: data.status,
-            matchPercent: data.match_percent,
-            mismatched: data.stats.totalMismatches,
-            exempted: data.stats.totalExempted,
-            onlyA: data.stats.totalOnlyA,
-            onlyB: data.stats.totalOnlyB
-        });
+            source_host: document.getElementById('source-host').value,
+            target_host: document.getElementById('target-host').value,
+            exempted_fields: JSON.parse(document.getElementById('exempted-fields').value || '[]'),
+            collection_name: document.getElementById('collection-name').value
+        };
+
+        if (currentMode === 'json') {
+            payload.response_a = JSON.parse(document.getElementById('resp-a').value || '{}');
+            payload.response_b = JSON.parse(document.getElementById('resp-b').value || '{}');
+        } else if (currentMode === 'curl') {
+            payload.curl_a = document.getElementById('curl-a').value;
+            payload.curl_b = document.getElementById('curl-b').value;
+        } else if (currentMode === 'collection') {
+            if (!selectedRequest) return alert("Please select a request from the list first!");
+            payload.request_details = selectedRequest.request;
+            payload.collection_name = selectedRequest.name;
+        }
+
+        try {
+            const res = await fetch('/api/postman/compare/execute', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.error) alert(data.error);
+            else renderResults(data);
+        } catch (e) {
+            alert("Engine Error: " + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.querySelector('span').innerText = originalText;
+        }
     }
 
-    // Update Stats
-    document.getElementById('res-matched').innerText = data.stats.totalMatched;
-    document.getElementById('res-mismatched').innerText = data.stats.totalMismatches;
-    document.getElementById('res-exempted').innerText = data.stats.totalExempted;
-    document.getElementById('res-only-a').innerText = data.stats.totalOnlyA;
-    document.getElementById('res-only-b').innerText = data.stats.totalOnlyB;
-    document.getElementById('res-percent').innerText = data.match_percent + '%';
+    function renderResults(data) {
+        comparisonResults = data;
+        document.getElementById('results-canvas').classList.remove('hidden');
 
-    const statusBadge = document.getElementById('result-status');
-    statusBadge.innerText = data.status;
-    statusBadge.className = 'status-badge ' + (data.status === 'PASSED' ? 'status-success' : 'status-error');
+        if (isRecording) {
+            recordedSummaries.push({
+                timestamp: new Date().toLocaleTimeString(),
+                collectionName: data.collection_name,
+                method: data.method,
+                curl: data.curl,
+                status: data.status,
+                matchPercent: data.match_percent,
+                mismatched: data.stats.totalMismatches,
+                exempted: data.stats.totalExempted,
+                exemptedFieldsFound: data.exempted_fields_found,
+                onlyA: data.stats.totalOnlyA,
+                onlyB: data.stats.totalOnlyB,
+                responseA: data.response_a_raw,
+                responseB: data.response_b_raw
+            });
+        }
 
-    // Render Diff Table
-    const tbody = document.getElementById('diff-body');
-    tbody.innerHTML = '';
+        // Stats
+        document.getElementById('res-matched').innerText = data.stats.totalMatched;
+        document.getElementById('res-mismatched').innerText = data.stats.totalMismatches;
+        document.getElementById('res-exempted').innerText = data.stats.totalExempted;
+        document.getElementById('res-only-a').innerText = data.stats.totalOnlyA;
+        document.getElementById('res-only-b').innerText = data.stats.totalOnlyB;
+        document.getElementById('res-percent').innerText = data.match_percent + '%';
 
-    const pointers = { 'mismatch': '↔', 'only_a': '→', 'only_b': '←' };
+        // Progress Ring
+        const path = document.getElementById('progress-path');
+        path.style.strokeDasharray = `${data.match_percent}, 100`;
 
-    data.diff.forEach(row => {
-        const tr = document.createElement('tr');
-        tr.className = `diff-row ${row.status}`;
-        
-        const indentA = row.indent_a * 16;
-        const indentB = row.indent_b * 16;
-        
-        tr.innerHTML = `
-            <td style="padding-left: ${indentA}px">${row.text_a || '&nbsp;'}</td>
-            <td class="diff-pointer">${pointers[row.status] || ''}</td>
-            <td style="padding-left: ${indentB}px">${row.text_b || '&nbsp;'}</td>
+        // Status Badge
+        const badge = document.getElementById('result-status');
+        badge.innerText = data.status;
+        badge.className = 'status-micro-badge ' + (data.status === 'PASSED' ? 'status-success' : 'status-error');
+
+        // Build Diff Rows
+        const body = document.getElementById('diff-body');
+        body.innerHTML = '';
+
+        // Icon-only Status Mapping
+        const statusMap = {
+            'mismatch': { icon: 'close', color: 'var(--error)' },
+            'only_a': { icon: 'arrow_forward', color: 'var(--primary)' },
+            'only_b': { icon: 'arrow_back', color: 'var(--secondary)' },
+            'exempted': { icon: 'block', color: '#eab308' },
+            'match': { icon: 'check', color: 'var(--success)' }
+        };
+
+        data.diff.forEach(row => {
+            const div = document.createElement('div');
+            div.className = `diff-row row-${row.status}`;
+
+            const indentA = '&nbsp;'.repeat(row.indent_a * 4);
+            const indentB = '&nbsp;'.repeat(row.indent_b * 4);
+            const st = statusMap[row.status];
+
+            div.innerHTML = `
+            <div class="diff-text">${indentA}${row.text_a}</div>
+            <div class="diff-status-cell">
+                <i class="material-icons" style="font-size:16px; color:${st.color}">${st.icon}</i>
+            </div>
+            <div class="diff-text">${indentB}${row.text_b}</div>
         `;
-        tbody.appendChild(tr);
-    });
-    document.getElementById('results-container').scrollIntoView({ behavior: 'smooth' });
-}
+            body.appendChild(div);
+        });
 
-function handleCollectionUpload(input) {
-    const file = input.files[0];
-    if (file) {
+        document.getElementById('results-canvas').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function toggleFullscreen() {
+        const el = document.getElementById('main-diff-viewer');
+        const isNowFullscreen = el.classList.toggle('fullscreen');
+
+        // Lift the parent <main> stacking context above the .nav-drawer (z-index: 10)
+        const mainEl = document.querySelector('main');
+        if (isNowFullscreen) {
+            mainEl.style.zIndex = '9999';
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        } else {
+            mainEl.style.zIndex = '1';
+            document.body.style.overflow = '';
+        }
+
+        const btn = event.currentTarget.querySelector('i');
+        btn.innerText = isNowFullscreen ? 'fullscreen_exit' : 'fullscreen';
+    }
+
+    function exportRecordedSummaries() {
+        if (recordedSummaries.length === 0) return;
+        const headers = ["Collection", "Method", "cURL", "Status", "%", "Miss", "Ex", "Ex Fields", "Only A", "Only B", "Resp A", "Resp B"];
+        const csvEscape = (val) => `"${String(val || '').replace(/"/g, '""')}"`;
+        const content = [headers.join(","), ...recordedSummaries.map(s => [
+            csvEscape(s.collectionName), csvEscape(s.method), csvEscape(s.curl), csvEscape(s.status),
+            s.matchPercent, s.mismatched, s.exempted, csvEscape(s.exemptedFieldsFound ? s.exemptedFieldsFound.join(", ") : ""),
+            s.onlyA, s.onlyB, csvEscape(typeof s.responseA === 'string' ? s.responseA : JSON.stringify(s.responseA)),
+            csvEscape(typeof s.responseB === 'string' ? s.responseB : JSON.stringify(s.responseB))
+        ].join(","))].join("\n");
+        const blob = new Blob([content], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `batch_report_${Date.now()}.csv`; a.click();
+    }
+
+    function downloadDiffCSV() {
+        if (!comparisonResults) return;
+        const headers = ["A Content", "Status", "B Content", "Path"];
+        const rows = comparisonResults.diff.map(r => [
+            `"${r.text_a.replace(/"/g, '""')}"`, r.status, `"${r.text_b.replace(/"/g, '""')}"`, r.path
+        ].join(","));
+        const blob = new Blob([[headers.join(","), ...rows].join("\n")], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `structural_diff_${Date.now()}.csv`; a.click();
+    }
+    let collectionRequests = [];
+    let selectedRequest = null;
+
+    async function handleCollectionUpload(input) {
+        const file = input.files[0];
+        if (!file) return;
+        
         document.getElementById('coll-label').innerText = file.name;
+        const text = await file.text();
+        try {
+            const data = JSON.parse(text);
+            collectionRequests = [];
+            
+            function recurse(items, path = "") {
+                items.forEach(item => {
+                    const currentPath = path ? `${path} > ${item.name}` : item.name;
+                    if (item.request) {
+                        collectionRequests.push({
+                            id: Math.random().toString(36).substr(2, 9),
+                            name: item.name,
+                            path: currentPath,
+                            method: item.request.method,
+                            request: item.request
+                        });
+                    }
+                    if (item.item) recurse(item.item, currentPath);
+                });
+            }
+            recurse(data.item || []);
+            
+            renderCollectionRequests(collectionRequests);
+            document.getElementById('coll-empty-state').classList.add('hidden');
+            document.getElementById('coll-request-list').classList.remove('hidden');
+            document.getElementById('coll-filters').classList.remove('hidden');
+        } catch (e) {
+            alert("Failed to parse collection: " + e.message);
+        }
     }
-}
 
-function downloadDiffCSV() {
-    if (!comparisonResults || !comparisonResults.diff) {
-        alert("No comparison results to export.");
-        return;
+    function renderCollectionRequests(requests) {
+        const list = document.getElementById('coll-request-list');
+        list.innerHTML = requests.map(req => {
+            let url = req.request.url || "";
+            if (typeof url === 'object') url = url.raw || "";
+            return `
+                <div class="req-item" id="req-${req.id}" onclick="selectCollectionRequest('${req.id}')">
+                    <div class="info">
+                        <span class="name">${req.name}</span>
+                        <span class="meta">
+                            <span class="method">${req.method}</span>
+                            <span class="path" title="${url}">${url.substring(0, 50)}${url.length > 50 ? '...' : ''}</span>
+                        </span>
+                    </div>
+                    <i class="material-icons">chevron_right</i>
+                </div>
+            `;
+        }).join('');
     }
 
-    const headers = ["Path", "Reference (A)", "Diff", "Target (B)", "Status"];
-    const rows = comparisonResults.diff.map(row => {
-        const pointers = { 'mismatch': '↔', 'only_a': '→', 'only_b': '←' };
-        return [
-            `"${row.path}"`,
-            `"${row.text_a.replace(/"/g, '""')}"`,
-            `"${pointers[row.status] || ''}"`,
-            `"${row.text_b.replace(/"/g, '""')}"`,
-            `"${row.status}"`
-        ].join(",");
-    });
+    function selectCollectionRequest(id) {
+        document.querySelectorAll('.req-item').forEach(el => el.classList.remove('active'));
+        document.getElementById(`req-${id}`).classList.add('active');
+        selectedRequest = collectionRequests.find(r => r.id === id);
+    }
 
-    const csvContent = [headers.join(","), ...rows].join("\n");
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    
-    link.setAttribute("href", url);
-    link.setAttribute("download", `api_comparison_${new Date().getTime()}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
+    function filterCollectionRequests() {
+        const term = document.getElementById('coll-search').value.toLowerCase();
+        const filtered = collectionRequests.filter(r => {
+            let url = r.request.url || "";
+            if (typeof url === 'object') url = url.raw || "";
+            return r.name.toLowerCase().includes(term) || url.toLowerCase().includes(term);
+        });
+        renderCollectionRequests(filtered);
+    }
 </script>
 {% endblock %}
