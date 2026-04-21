@@ -1,80 +1,258 @@
 {% extends 'base.html' %}
-{% block title %}Settings{% endblock %}
+{% block title %}Settings | Beyond Native{% endblock %}
 {% block content %}
-<div class="m3-header">
-    <h1>Settings</h1>
-    <p>Configure credentials and variables for all suites dynamically.</p>
-</div>
 
-<div class="m3-card">
-    <h3><i class="material-icons" style="vertical-align: middle;">lan</i> DevOps Suite (Azure)</h3>
-    <div style="display: grid; gap: 16px; margin-top: 16px;">
-        <div>
-            <label>Azure Organization</label>
-            <input type="text" id="azure_org" class="m3-input" value="{{ settings.get('azure_org', '') }}" placeholder="e.g. devsha256">
+<div class="m3-page-wrapper">
+    <header class="m3-hero-header">
+        <div class="header-left">
+            <span class="m3-badge-new">CONFIGURATION ENGINE</span>
+            <h1>Service <span class="text-gradient">Settings</span></h1>
+            <p style="opacity: 0.7; margin-top: 8px;">Synchronize your environment credentials across all suites</p>
         </div>
-        <div>
-            <label>Azure Project</label>
-            <input type="text" id="azure_project" class="m3-input" value="{{ settings.get('azure_project', '') }}" placeholder="e.g. BeyondNative">
+    </header>
+
+    <div class="settings-workspace">
+        <!-- DevOps Configuration -->
+        <div class="m3-card glass config-card" id="card-devops">
+            <div class="card-header-top">
+                <div class="header-icon azure"><i class="material-icons">lan</i></div>
+                <div class="header-title">
+                    <h3>DevOps Suite</h3>
+                    <p>Azure DevOps Integration</p>
+                </div>
+            </div>
+            
+            <div class="config-form">
+                <div class="input-group">
+                    <label>Organization Name</label>
+                    <input type="text" id="azure_org" value="{{ settings.get('azure_org', '') }}" placeholder="e.g. devsha256">
+                    <small>The Azure DevOps organization handle</small>
+                </div>
+                <div class="input-group">
+                    <label>Default Project</label>
+                    <input type="text" id="azure_project" value="{{ settings.get('azure_project', '') }}" placeholder="e.g. BeyondNative">
+                    <small>Primary workspace for bulk operations</small>
+                </div>
+                <div class="input-group">
+                    <label>Personal Access Token (PAT)</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="azure_pat" value="{{ settings.get('azure_pat', '') }}" placeholder="Required for API access">
+                    </div>
+                </div>
+            </div>
         </div>
-        <div>
-            <label>Azure PAT (Personal Access Token)</label>
-            <input type="password" id="azure_pat" class="m3-input" value="{{ settings.get('azure_pat', '') }}" placeholder="Enter personal access token">
+
+        <!-- MuleSoft Configuration -->
+        <div class="m3-card glass config-card" id="card-mule">
+            <div class="card-header-top">
+                <div class="header-icon mule"><i class="material-icons">api</i></div>
+                <div class="header-title">
+                    <h3>MuleSoft Suite</h3>
+                    <p>Anypoint Platform Connectivity</p>
+                </div>
+                <div id="mule_status_badge" class="m3-mini-badge idle">Idle</div>
+            </div>
+            
+            <div class="config-form">
+                <div id="mule_error_msg" class="credential-alert hidden">
+                    <i class="material-icons">warning</i>
+                    <span id="mule_error_text">Session Expired</span>
+                </div>
+
+                <div class="dual-input-row">
+                    <div class="input-group">
+                        <label>Default Org Context</label>
+                        <select id="mule_default_org" onchange="loadTargetEnvs(this.value)">
+                            <option value="">Checking credentials...</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Default Env Context</label>
+                        <select id="mule_default_env">
+                            <option value="">Select Org First...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="dual-input-row">
+                    <div class="input-group">
+                        <label>Anypoint Client ID</label>
+                        <input type="text" id="mule_client_id" value="{{ settings.get('mule_client_id', '') }}" placeholder="Connected App ID">
+                    </div>
+                    <div class="input-group">
+                        <label>Client Secret</label>
+                        <input type="password" id="mule_client_secret" value="{{ settings.get('mule_client_secret', '') }}" placeholder="••••••••">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Bearer Token (Override)</label>
+                    <input type="password" id="mule_bearer" value="{{ settings.get('mule_bearer', '') }}" placeholder="Optional raw JWT for manual sync">
+                    <small>Priority: Local Bearer > Connected App</small>
+                </div>
+            </div>
         </div>
+    </div>
+
+    <!-- Floating Save FAB -->
+    <div class="m3-fab-container">
+        <button id="save_btn" class="m3-fab-m3" onclick="saveSettings()">
+            <i class="material-icons">save</i>
+            <span class="label">Commit Changes</span>
+        </button>
     </div>
 </div>
 
-<div class="m3-card" style="margin-top: 24px;">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h3><i class="material-icons" style="vertical-align: middle;">api</i> MuleSoft Suite (Anypoint)</h3>
-        <div id="mule_status_badge" class="m3-badge" style="display: none;">Checking...</div>
-    </div>
+<style>
+    .m3-page-wrapper {
+        padding: 40px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* Hero Header Refinement */
+    .m3-hero-header { margin-bottom: 48px; }
+    .text-gradient { 
+        background: linear-gradient(90deg, var(--m3-primary), #9581FF);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Grid Layout */
+    .settings-workspace {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+        gap: 32px;
+        align-items: start;
+    }
+
+    .m3-card.glass {
+        background: var(--surface-m3);
+        backdrop-filter: blur(20px);
+        border-radius: 32px;
+        border: 1px solid var(--border-light);
+        padding: 32px;
+        box-shadow: 0 12px 40px var(--glass-shadow);
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .config-card:hover { transform: translateY(-4px); }
+
+    /* Card Header */
+    .card-header-top {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 32px;
+    }
+
+    .header-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .header-icon.azure { background: linear-gradient(135deg, #0078D4, #2899F5); }
+    .header-icon.mule { background: linear-gradient(135deg, #00A2DF, #00D1FF); }
+    .header-icon i { font-size: 32px; }
+
+    .header-title h3 { font-size: 20px; font-weight: 800; margin: 0; }
+    .header-title p { font-size: 13px; opacity: 0.6; margin: 4px 0 0 0; }
+
+    /* Form UI */
+    .config-form { display: flex; flex-direction: column; gap: 24px; }
+    .input-group { display: flex; flex-direction: column; gap: 8px; }
+    .input-group label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--m3-primary); opacity: 0.8; letter-spacing: 0.5px; }
+    .input-group input, .input-group select {
+        background: rgba(0,0,0,0.05);
+        border: 1px solid var(--m3-outline);
+        border-radius: 14px;
+        padding: 12px 16px;
+        color: var(--text-main);
+        font-family: inherit;
+        font-size: 14px;
+        transition: 0.2s;
+    }
     
-    <div style="display: grid; gap: 16px; margin-top: 16px;">
-        <div id="mule_error_msg" style="display: none; color: var(--error); padding: 12px; border: 1px solid var(--error); border-radius: 8px; background: rgba(220, 38, 38, 0.1); font-size: 0.9em;">
-            <i class="material-icons" style="font-size: 1.2em; vertical-align: middle;">error_outline</i>
-            <span id="mule_error_text">Credentials Expired</span>
-        </div>
+    [data-theme='dark'] .input-group input, [data-theme='dark'] .input-group select {
+        background: rgba(255,255,255,0.03);
+    }
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-            <div>
-                <label>Default Organization</label>
-                <select id="mule_default_org" class="m3-input" onchange="loadTargetEnvs(this.value)">
-                    <option value="">Checking credentials...</option>
-                </select>
-            </div>
-            <div>
-                <label>Default Environment</label>
-                <select id="mule_default_env" class="m3-input">
-                    <option value="">Select Organization First...</option>
-                </select>
-            </div>
-        </div>
+    .input-group input:focus, .input-group select:focus {
+        background: transparent;
+        border-color: var(--m3-primary);
+        box-shadow: 0 0 0 4px rgba(103, 80, 164, 0.1);
+        outline: none;
+    }
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-            <div>
-                <label>Connected App Client ID</label>
-                <input type="text" id="mule_client_id" class="m3-input" value="{{ settings.get('mule_client_id', '') }}" placeholder="Client ID">
-            </div>
-            <div>
-                <label>Connected App Client Secret</label>
-                <input type="password" id="mule_client_secret" class="m3-input" value="{{ settings.get('mule_client_secret', '') }}" placeholder="Client Secret">
-            </div>
-        </div>
-        
-        <div>
-            <label>Bearer Token (Optional Override)</label>
-            <input type="password" id="mule_bearer" class="m3-input" value="{{ settings.get('mule_bearer', '') }}" placeholder="Optional raw token override">
-            <small style="opacity: 0.7; font-style: italic; margin-top: 4px; display: block;">Use this if you prefer manual session sync over Connected App.</small>
-        </div>
-    </div>
-</div>
+    .input-group small { font-size: 11px; opacity: 0.5; font-style: italic; }
 
-<div style="position: fixed; bottom: 32px; right: 32px; z-index: 1000;">
-    <button id="save_btn" class="m3-button" onclick="saveSettings()" style="box-shadow: 0 8px 24px rgba(0,0,0,0.4); border-radius: 50px; padding: 16px 32px;">
-        <i class="material-icons" style="vertical-align: middle;">save</i> Save Settings
-    </button>
-</div>
+    .dual-input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    /* Badges & Alerts */
+    .m3-mini-badge {
+        margin-left: auto;
+        font-size: 10px;
+        font-weight: 800;
+        padding: 4px 12px;
+        border-radius: 20px;
+        text-transform: uppercase;
+    }
+    .m3-mini-badge.connected { background: rgba(46, 125, 50, 0.1); color: #81C784; }
+    .m3-mini-badge.idle { background: rgba(0,0,0,0.1); color: #ccc; }
+
+    .credential-alert {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: rgba(179, 38, 30, 0.1);
+        border-radius: 12px;
+        color: #E57373;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid rgba(179, 38, 30, 0.2);
+    }
+
+    /* FAB */
+    .m3-fab-container {
+        position: fixed;
+        bottom: 48px;
+        right: 48px;
+        z-index: 2000;
+    }
+
+    .m3-fab-m3 {
+        padding: 16px 32px;
+        background: var(--m3-primary);
+        color: white;
+        border: none;
+        border-radius: 28px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        cursor: pointer;
+        box-shadow: 0 12px 32px rgba(103, 80, 164, 0.4);
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .m3-fab-m3:hover { transform: scale(1.05) rotate(-1deg); box-shadow: 0 16px 48px rgba(103, 80, 164, 0.6); }
+    .m3-fab-m3:active { transform: scale(0.95); }
+    .m3-fab-m3 .label { font-size: 14px; font-weight: 700; }
+
+    .hidden { display: none !important; }
+    
+    @media (max-width: 800px) {
+        .settings-workspace { grid-template-columns: 1fr; }
+        .m3-page-wrapper { padding: 20px; }
+        .m3-fab-container { bottom: 24px; right: 24px; }
+    }
+</style>
 
 <script>
     const savedOrg = "{{ settings.get('mule_default_org', '') }}";
@@ -89,35 +267,25 @@
         const badge = document.getElementById('mule_status_badge');
         const errorMsg = document.getElementById('mule_error_msg');
         
-        badge.style.display = 'inline-block';
+        badge.classList.remove('idle', 'connected');
         badge.innerText = 'Checking...';
-        badge.style.background = 'var(--surface-light)';
 
         try {
             const res = await fetch('/api/mule/orgs');
             
             if (res.status === 401) {
-                // Credentials Expired
                 orgSelect.innerHTML = '<option value="">Invalid Credentials</option>';
                 badge.innerText = 'Unauthorized';
                 badge.style.background = 'var(--error)';
-                errorMsg.style.display = 'block';
-                document.getElementById('mule_error_text').innerText = "Anypoint token expired or invalid. Please update your Bearer Token or Connected App credentials.";
-                
-                ['mule_bearer', 'mule_client_id', 'mule_client_secret'].forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el && el.value) {
-                        el.classList.add('m3-input-error');
-                    }
-                });
+                errorMsg.classList.remove('hidden');
                 return;
             }
 
             if (res.ok) {
                 const orgs = await res.json();
                 badge.innerText = 'Connected';
-                badge.style.background = '#059669'; // Green
-                errorMsg.style.display = 'none';
+                badge.classList.add('connected');
+                errorMsg.classList.add('hidden');
 
                 if (orgs && orgs.length > 0) {
                     orgSelect.innerHTML = '<option value="">Select Organization...</option>' + 
@@ -127,25 +295,15 @@
                         orgSelect.value = savedOrg;
                         await loadTargetEnvs(savedOrg);
                     }
-                } else {
-                    orgSelect.innerHTML = '<option value="">No Orgs Found</option>';
                 }
-            } else {
-                orgSelect.innerHTML = '<option value="">Configuration Required</option>';
-                badge.innerText = 'Offline';
-                badge.style.background = 'var(--warning)';
             }
-        } catch(e) {
-            orgSelect.innerHTML = '<option value="">API Error</option>';
-            badge.innerText = 'Error';
-            badge.style.background = 'var(--error)';
-        }
+        } catch(e) { console.error("Mule API check failed", e); }
     }
 
     async function loadTargetEnvs(orgId) {
         if (!orgId) return;
         const envSelect = document.getElementById('mule_default_env');
-        envSelect.innerHTML = '<option value="">Loading...</option>';
+        envSelect.innerHTML = '<option value="">Loading Envs...</option>';
         try {
             const res = await fetch(`/api/mule/envs/${orgId}`);
             if (res.ok) {
@@ -156,18 +314,14 @@
                 if (savedEnv && savedOrg === orgId) {
                     envSelect.value = savedEnv;
                 }
-            } else {
-                envSelect.innerHTML = '<option value="">Failed to list Envs</option>';
             }
-        } catch(e) {
-            envSelect.innerHTML = '<option value="">Error</option>';
-        }
+        } catch(e) { console.error("Env load failed", e); }
     }
 
     function saveSettings() {
         const btn = document.getElementById('save_btn');
         const oldContent = btn.innerHTML;
-        btn.innerHTML = '<i class="material-icons rotating" style="vertical-align: middle;">sync</i> Saving...';
+        btn.innerHTML = '<i class="material-icons rotating">sync</i> <span class="label">Applying...</span>';
         btn.disabled = true;
 
         const payload = {
@@ -187,15 +341,13 @@
             body: JSON.stringify(payload)
         }).then(r => r.json()).then(res => {
             if (res.status === 'success') {
-                // Refresh to apply changes and clear errors
                 window.location.reload();
             } else {
-                alert("Error saving settings: " + (res.error || res.message));
+                alert("Error: " + (res.error || res.message));
                 btn.innerHTML = oldContent;
                 btn.disabled = false;
             }
         }).catch(err => {
-            alert("Network Error: " + err);
             btn.innerHTML = oldContent;
             btn.disabled = false;
         });

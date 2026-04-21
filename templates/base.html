@@ -149,25 +149,14 @@
             gap: 16px;
             text-decoration: none;
             color: var(--m3-on-surface);
-            padding-left: 16px;
+            padding-left: 24px;
             border-radius: 24px;
-            position: relative;
             transition: 0.1s;
             margin-bottom: 2px;
         }
 
         .sub-item .label { font-size: 13px; font-weight: 500; opacity: 0.7; }
         
-        .sub-item .indicator {
-            position: absolute;
-            left: 0;
-            width: 4px;
-            height: 0;
-            background: var(--m3-primary);
-            border-radius: 0 4px 4px 0;
-            transition: 0.2s;
-        }
-
         .sub-item:hover {
             background: rgba(103, 80, 164, 0.05);
         }
@@ -178,7 +167,6 @@
         }
 
         .sub-item.active .label { opacity: 1; font-weight: 700; }
-        .sub-item.active .indicator { height: 24px; }
 
         /* Footer */
         .m3-nav-footer {
@@ -241,11 +229,9 @@
                     </div>
                     <div class="m3-nav-sub">
                         <a href="/devops" class="sub-item">
-                            <span class="indicator"></span>
                             <span class="label">Overview</span>
                         </a>
                         <a href="/devops/bulk-pr" class="sub-item">
-                            <span class="indicator"></span>
                             <span class="label">Bulk PRs</span>
                         </a>
                     </div>
@@ -262,15 +248,12 @@
                     </div>
                     <div class="m3-nav-sub">
                         <a href="/mulesoft" class="sub-item">
-                            <span class="indicator"></span>
                             <span class="label">Overview</span>
                         </a>
                         <a href="/mulesoft/runtime-control" class="sub-item">
-                            <span class="indicator"></span>
                             <span class="label">Runtime Control</span>
                         </a>
                         <a href="/mulesoft/version-comparator" class="sub-item">
-                            <span class="indicator"></span>
                             <span class="label">Version Compare</span>
                         </a>
                     </div>
@@ -287,19 +270,15 @@
                     </div>
                     <div class="m3-nav-sub">
                         <a href="/postman" class="sub-item">
-                            <span class="indicator"></span>
                             <span class="label">Overview</span>
                         </a>
                         <a href="/postman/runner" class="sub-item">
-                            <span class="indicator"></span>
                             <span class="label">Runner</span>
                         </a>
                         <a href="/postman/log-report" class="sub-item">
-                            <span class="indicator"></span>
                             <span class="label">Logs</span>
                         </a>
                         <a href="/postman/compare" class="sub-item">
-                            <span class="indicator"></span>
                             <span class="label">Comparison</span>
                         </a>
                     </div>

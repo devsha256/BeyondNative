@@ -148,21 +148,23 @@
         --error: #B3261E;
         --success: #2E7D32;
         
-        /* Light Mode Defaults */
-        --surface-m3: rgba(255, 255, 255, 0.7);
-        --bg-panel: rgba(255, 255, 255, 1);
-        --text-main: #1d1b20;
-        --border-light: rgba(0, 0, 0, 0.08);
-        --console-bg: rgba(0, 0, 0, 0.03);
+        /* Light Mode Elite Profile */
+        --surface-m3: rgba(255, 255, 255, 0.75);
+        --bg-panel: rgba(255, 255, 255, 0.6);
+        --text-main: #1D1B20;
+        --border-light: rgba(103, 80, 164, 0.12);
+        --console-bg: rgba(255, 255, 255, 0.3);
+        --glass-shadow: rgba(103, 80, 164, 0.08);
     }
 
     @media (prefers-color-scheme: dark) {
         :root {
-            --surface-m3: rgba(28, 27, 31, 0.8);
-            --bg-panel: rgba(20, 20, 20, 0.6);
-            --text-main: #e6e1e5;
+            --surface-m3: rgba(28, 27, 31, 0.85);
+            --bg-panel: rgba(20, 20, 20, 0.5);
+            --text-main: #E6E1E5;
             --border-light: rgba(255, 255, 255, 0.1);
-            --console-bg: rgba(0, 0, 0, 0.4);
+            --console-bg: rgba(0, 0, 0, 0.35);
+            --glass-shadow: rgba(0, 0, 0, 0.3);
         }
     }
 
@@ -186,7 +188,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        box-shadow: 0 8px 32px var(--glass-shadow);
     }
 
     .header-left {
@@ -244,6 +246,7 @@
         background: var(--bg-panel);
         border: 1px solid var(--border-light);
         backdrop-filter: blur(10px);
+        box-shadow: 0 12px 40px var(--glass-shadow);
     }
 
     .card-header {
