@@ -532,6 +532,51 @@ def postman_sync():
     
     return jsonify({"status": "success", "path": path})
 
+@app.route('/api/postman/runner/run', methods=['POST'])
+def postman_runner_run():
+    data = request.json
+    collection = data.get('collection')
+    environment = data.get('environment', {})
+    iterations = int(data.get('iterations', 1))
+    delay = int(data.get('delay', 0)) / 1000.0 # to seconds
+
+    if not collection: return jsonify({"error": "No collection provided"}), 400
+    
+    # Simple variables merge
+    base_vars = {}
+    for v in collection.get('variable', []):
+        base_vars[v.get('key')] = v.get('value')
+    for v in environment.get('values', []):
+        if v.get('enabled', True):
+            base_vars[v.get('key')] = v.get('value')
+    
+    def generate():
+        import time
+        items = []
+        def recurse(obj_items):
+            for i in obj_items:
+                if 'request' in i: items.append(i)
+                if 'item' in i: recurse(i['item'])
+        recurse(collection.get('item', []))
+        
+        yield json.dumps({"type": "start", "total": len(items) * iterations}) + "\n"
+        
+        for it in range(iterations):
+            for i, item in enumerate(items):
+                # We could support iteration-specific variables here if needed
+                res = postman.execute_collection_item(item, base_vars)
+                yield json.dumps({
+                    "type": "item",
+                    "index": (it * len(items)) + i + 1,
+                    "name": item.get('name'),
+                    "result": res
+                }) + "\n"
+                if delay > 0: time.sleep(delay)
+        
+        yield json.dumps({"type": "end"}) + "\n"
+
+    return Response(generate(), mimetype='application/x-ndjson')
+
 @app.route('/api/postman/execute-single', methods=['POST'])
 def postman_execute_single():
     data = request.json

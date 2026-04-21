@@ -271,4 +271,17 @@ class PostmanManager:
                     results.append({"correlationId": cid, "status": "ERROR", "message": str(e)})
         except Exception as e:
             return {"error": str(e)}
-        return {"results": results, "count": len(results)}
+    def execute_collection_item(self, item, variables):
+        """Executes a single Postman item independently with specific variables."""
+        try:
+            method, url, headers, body = self._prepare_request_details(item, variables)
+            res = requests.request(method, url, headers=headers, data=body, timeout=20, verify=False)
+            return {
+                "status": "success",
+                "status_code": res.status_code,
+                "response": res.text[:2000], # Cap for console preview
+                "url": url,
+                "method": method
+            }
+        except Exception as e:
+            return {"status": "error", "message": str(e)}

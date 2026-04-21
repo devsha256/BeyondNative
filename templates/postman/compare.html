@@ -1162,12 +1162,14 @@
         } else {
             // Stop Session
             isRecording = false;
+            selectedRequests.clear();
             const btn = document.getElementById('btn-recorder');
             btn.classList.remove('recorder-active');
             btn.querySelector('span').innerText = 'Start Session';
             
             const toolbar = document.getElementById('batch-selection-toolbar');
             toolbar.classList.add('hidden');
+            toolbar.querySelector('.m3-checkbox').classList.remove('checked');
             
             // Clear viewers
             document.getElementById('results-canvas').classList.add('hidden');
