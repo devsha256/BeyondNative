@@ -407,11 +407,72 @@ def postman_compare_execute():
                 "response_b_raw": data_b,
                 "collection_name": data.get('collection_name', 'Collection Import')
             })
+
+            # Persistent Session Recording
+            session_id = data.get('session_id')
+            if session_id:
+                import db_utils
+                db_utils.record_comparison_result(
+                    session_id,
+                    comparison_res['collection_name'],
+                    method,
+                    comparison_res['status'],
+                    comparison_res['match_percent'],
+                    comparison_res['stats'],
+                    comparison_res['curl'],
+                    data_a, data_b
+                )
+
             return jsonify(comparison_res)
         except Exception as e:
             return jsonify({"error": f"Collection Execution Failed: {str(e)}"}), 500
     
     return jsonify({"error": "Unsupported mode"}), 400
+
+@app.route('/api/postman/compare/session/start', methods=['POST'])
+def start_session():
+    import uuid
+    import db_utils
+    data = request.json
+    session_id = str(uuid.uuid4())
+    collection_name = data.get('collection_name', 'Untitled Session')
+    db_utils.start_comparison_session(session_id, collection_name)
+    return jsonify({"session_id": session_id})
+
+@app.route('/api/postman/compare/session/export/<session_id>')
+def export_session(session_id):
+    import db_utils
+    import json
+    import csv
+    from io import StringIO
+    from flask import Response
+    
+    results = db_utils.get_session_results(session_id)
+    si = StringIO()
+    cw = csv.writer(si)
+    
+    cw.writerow(["Timestamp", "Collection/Request", "Method", "Status", "Match %", "Mismatched", "Exempted", "Only A", "Only B", "Details"])
+    
+    for r in results:
+        stats = json.loads(r['stats_json'] or '{}')
+        cw.writerow([
+            r['timestamp'],
+            r['request_name'],
+            r['method'],
+            r['status'],
+            f"{r['match_percent']}%",
+            stats.get('totalMismatches', 0),
+            stats.get('totalExempted', 0),
+            stats.get('totalOnlyA', 0),
+            stats.get('totalOnlyB', 0),
+            r['curl_details']
+        ])
+    
+    return Response(
+        si.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-disposition": f"attachment; filename=session_audit_{session_id}.csv"}
+    )
 
 # Compare API - Storage
 @app.route('/api/postman/compare/save-artifact', methods=['POST'])

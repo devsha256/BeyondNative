@@ -133,7 +133,7 @@
                             <p>No collection loaded yet</p>
                         </div>
                         <div id="coll-list-container" class="hidden" style="display:flex; flex-direction:column; height:100%;">
-                            <div class="selection-toolbar">
+                            <div id="batch-selection-toolbar" class="selection-toolbar hidden">
                                 <div class="m3-checkbox" onclick="selectAllRequests(!this.classList.contains('checked')); this.classList.toggle('checked');">
                                     <i class="material-icons">check</i>
                                 </div>
@@ -230,10 +230,63 @@
                 </div>
             </div>
         </section>
+    <!-- Unsaved Work Modal -->
+    <div id="m3-confirm-dialog" class="m3-modal-overlay hidden">
+        <div class="m3-modal">
+            <h3 style="margin:0 0 16px 0; display:flex; align-items:center; gap:12px;">
+                <i class="material-icons" style="color:var(--error-m3)">warning_amber</i> Unsaved Work
+            </h3>
+            <p style="opacity:0.8; line-height:1.5;">You have unsaved changes in the current tab. Switching will clear these inputs. Are you sure you want to proceed?</p>
+            <div class="modal-actions">
+                <button onclick="closeM3Dialog(false)" class="m3-button-m3 outline">Cancel</button>
+                <button onclick="closeM3Dialog(true)" class="m3-button-m3 danger">Switch Anyway</button>
+            </div>
+        </div>
+    </div>
     </main>
 </div>
 
 <style>
+    .m3-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        backdrop-filter: blur(8px);
+    }
+    .m3-modal {
+        background: var(--bg-panel);
+        padding: 32px;
+        border-radius: 32px;
+        max-width: 400px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        border: 1px solid var(--border-light);
+        animation: modalIn 0.3s cubic-bezier(0.2, 0, 0, 1);
+    }
+    @keyframes modalIn {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 24px;
+    }
+    .m3-button-m3.outline {
+        background: transparent;
+        border: 1px solid var(--border-light);
+        color: var(--text-main);
+    }
+    .m3-button-m3.danger {
+        background: var(--error-m3);
+    }
     /* CSS Reset & M3 Variables */
     :root {
         --primary-m3: #6750A4;
@@ -980,40 +1033,103 @@
     let comparisonResults = null;
     let isRecording = false;
     let recordedSummaries = [];
+    let currentSessionId = null;
 
     // Tab Logic
+    let pendingTabSwitch = null;
+
     document.querySelectorAll('.tab-link').forEach(btn => {
         btn.onclick = (e) => {
-            document.querySelectorAll('.tab-link').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.view-panel').forEach(v => v.classList.remove('active'));
-            btn.classList.add('active');
-            const viewId = 'view-' + btn.getAttribute('data-tab');
-            document.getElementById(viewId).classList.add('active');
-            currentMode = btn.getAttribute('data-tab');
+            const nextMode = btn.getAttribute('data-tab');
+            if (nextMode === currentMode) return;
+
+            // Check for potential unsaved work
+            let hasWork = false;
+            if (currentMode === 'json') {
+                hasWork = document.getElementById('resp-a').value.length > 0 || document.getElementById('resp-b').value.length > 0;
+            } else if (currentMode === 'curl') {
+                hasWork = document.getElementById('curl-a').value.length > 0 || document.getElementById('curl-b').value.length > 0;
+            }
+
+            if (hasWork) {
+                pendingTabSwitch = btn;
+                document.getElementById('m3-confirm-dialog').classList.remove('hidden');
+            } else {
+                performTabSwitch(btn);
+            }
         };
     });
+
+    function closeM3Dialog(confirm) {
+        document.getElementById('m3-confirm-dialog').classList.add('hidden');
+        if (confirm && pendingTabSwitch) {
+            performTabSwitch(pendingTabSwitch);
+        }
+        pendingTabSwitch = null;
+    }
+
+    function performTabSwitch(btn) {
+        document.querySelectorAll('.tab-link').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.view-panel').forEach(v => v.classList.remove('active'));
+        btn.classList.add('active');
+        const viewId = 'view-' + btn.getAttribute('data-tab');
+        document.getElementById(viewId).classList.add('active');
+        currentMode = btn.getAttribute('data-tab');
+    }
 
     function toggleGlobalConfig() {
         const drawer = document.getElementById('global-config-drawer');
         drawer.classList.toggle('open');
     }
 
-    function toggleRecorder() {
-        isRecording = !isRecording;
-        const btn = document.getElementById('btn-recorder');
-        const label = btn.querySelector('span');
-        if (isRecording) {
-            btn.classList.add('recorder-active');
-            label.innerText = 'Stop Session';
-            recordedSummaries = [];
-            currentResultIndex = 0;
+    async function toggleRecorder() {
+        if (!isRecording) {
+            // Start Session
+            const colName = document.getElementById('collection-name').value || 'New Session';
+            try {
+                const res = await fetch('/api/postman/compare/session/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ collection_name: colName })
+                });
+                const data = await res.json();
+                currentSessionId = data.session_id;
+                
+                isRecording = true;
+                const btn = document.getElementById('btn-recorder');
+                btn.classList.add('recorder-active');
+                btn.querySelector('span').innerText = 'Stop Session';
+                recordedSummaries = [];
+                currentResultIndex = 0;
+                
+                const toolbar = document.getElementById('batch-selection-toolbar');
+                if (collectionRequests.length > 0) toolbar.classList.remove('hidden');
+                
+                // Force refresh UI
+                if (collectionRequests.length > 0) filterCollectionRequests();
+            } catch (e) { alert("Failed to start session: " + e.message); }
         } else {
+            // Stop Session
+            isRecording = false;
+            const btn = document.getElementById('btn-recorder');
             btn.classList.remove('recorder-active');
-            label.innerText = 'Start Session';
-            exportRecordedSummaries();
+            btn.querySelector('span').innerText = 'Start Session';
+            
+            const toolbar = document.getElementById('batch-selection-toolbar');
+            toolbar.classList.add('hidden');
+            
+            // Clear viewers
+            document.getElementById('results-canvas').classList.add('hidden');
+            document.getElementById('diff-body').innerHTML = '';
+            
+            // Re-render UI for radio/checkbox switch
+            if (collectionRequests.length > 0) filterCollectionRequests();
+            
+            // Export from DB
+            if (currentSessionId) {
+                window.location.href = `/api/postman/compare/session/export/${currentSessionId}`;
+            }
         }
-        // Force refresh collection UI for radio/checkbox switch
-        if (collectionRequests.length > 0) filterCollectionRequests();
     }
 
     async function executeComparison() {
@@ -1024,6 +1140,7 @@
 
         const payload = {
             mode: currentMode,
+            session_id: currentSessionId,
             source_host: document.getElementById('source-host').value,
             target_host: document.getElementById('target-host').value,
             exempted_fields: JSON.parse(document.getElementById('exempted-fields').value || '[]'),
@@ -1244,6 +1361,7 @@
             document.getElementById('coll-empty-state').classList.add('hidden');
             document.getElementById('coll-list-container').classList.remove('hidden');
             document.getElementById('coll-filters').classList.remove('hidden');
+            if (isRecording) document.getElementById('batch-selection-toolbar').classList.remove('hidden');
         } catch (e) {
             alert("Failed to parse collection: " + e.message);
         }
