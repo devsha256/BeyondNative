@@ -1014,8 +1014,9 @@
         list.innerHTML = requests.map(req => {
             let url = req.request.url || "";
             if (typeof url === 'object') url = url.raw || "";
+            const isActive = selectedRequest && selectedRequest.id === req.id ? 'active' : '';
             return `
-                <div class="req-item" id="req-${req.id}" onclick="selectCollectionRequest('${req.id}')">
+                <div class="req-item ${isActive}" id="req-${req.id}" onclick="selectCollectionRequest('${req.id}')">
                     <div class="info">
                         <span class="name">${req.name}</span>
                         <span class="meta">
@@ -1023,7 +1024,7 @@
                             <span class="path" title="${url}">${url.substring(0, 50)}${url.length > 50 ? '...' : ''}</span>
                         </span>
                     </div>
-                    <i class="material-icons">chevron_right</i>
+                    <i class="material-icons">${isActive ? 'check_circle' : 'chevron_right'}</i>
                 </div>
             `;
         }).join('');
@@ -1031,7 +1032,8 @@
 
     function selectCollectionRequest(id) {
         document.querySelectorAll('.req-item').forEach(el => el.classList.remove('active'));
-        document.getElementById(`req-${id}`).classList.add('active');
+        const el = document.getElementById(`req-${id}`);
+        if (el) el.classList.add('active');
         selectedRequest = collectionRequests.find(r => r.id === id);
     }
 
@@ -1042,6 +1044,12 @@
             if (typeof url === 'object') url = url.raw || "";
             return r.name.toLowerCase().includes(term) || url.toLowerCase().includes(term);
         });
+
+        // Auto-select if only one result
+        if (filtered.length === 1) {
+            selectedRequest = filtered[0];
+        }
+
         renderCollectionRequests(filtered);
     }
 </script>
