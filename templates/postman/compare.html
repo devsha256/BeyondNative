@@ -157,6 +157,14 @@
 
         <!-- Results Showcase -->
         <section id="results-canvas" class="results-canvas hidden">
+            <div id="results-nav" class="hidden results-nav-toolbar">
+                <button onclick="navigateResults(-1)" class="m3-icon-button small-i"><i
+                        class="material-icons">chevron_left</i></button>
+                <span id="results-nav-status" class="nav-status-lbl">Result 1 of 5</span>
+                <button onclick="navigateResults(1)" class="m3-icon-button small-i"><i
+                        class="material-icons">chevron_right</i></button>
+            </div>
+
             <div class="results-summary">
                 <div class="summary-card glass primary small">
                     <div class="icon"><i class="material-icons">verified</i></div>
@@ -920,6 +928,48 @@
         gap: 12px;
     }
 
+    .results-nav-toolbar {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 24px;
+        margin-bottom: 24px;
+        background: var(--surface-m3);
+        padding: 8px 24px;
+        border-radius: 40px;
+        width: fit-content;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .nav-status-lbl {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-muted);
+        min-width: 120px;
+        text-align: center;
+    }
+
+    .m3-radio {
+        width: 22px;
+        height: 22px;
+        border: 2px solid var(--border-light);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.2s;
+    }
+
+    .m3-radio.checked {
+        border-color: var(--primary);
+    }
+
+    .m3-radio i {
+        font-size: 18px;
+        color: var(--primary);
+    }
+
     .empty-state i {
         font-size: 3rem;
     }
@@ -956,11 +1006,14 @@
             btn.classList.add('recorder-active');
             label.innerText = 'Stop Session';
             recordedSummaries = [];
+            currentResultIndex = 0;
         } else {
             btn.classList.remove('recorder-active');
             label.innerText = 'Start Session';
             exportRecordedSummaries();
         }
+        // Force refresh collection UI for radio/checkbox switch
+        if (collectionRequests.length > 0) filterCollectionRequests();
     }
 
     async function executeComparison() {
@@ -1028,26 +1081,36 @@
         }
     }
 
-    function renderResults(data) {
+    let currentResultIndex = 0;
+    function navigateResults(dir) {
+        currentResultIndex += dir;
+        if (currentResultIndex < 0) currentResultIndex = 0;
+        if (currentResultIndex >= recordedSummaries.length) currentResultIndex = recordedSummaries.length - 1;
+        
+        // Show navigation results
+        const data = recordedSummaries[currentResultIndex];
+        renderResults(data, true);
+    }
+
+    function renderResults(data, isNavigating = false) {
         comparisonResults = data;
         document.getElementById('results-canvas').classList.remove('hidden');
 
-        if (isRecording) {
+        if (isRecording && !isNavigating) {
             recordedSummaries.push({
-                timestamp: new Date().toLocaleTimeString(),
-                collectionName: data.collection_name,
-                method: data.method,
-                curl: data.curl,
-                status: data.status,
-                matchPercent: data.match_percent,
-                mismatched: data.stats.totalMismatches,
-                exempted: data.stats.totalExempted,
-                exemptedFieldsFound: data.exempted_fields_found,
-                onlyA: data.stats.totalOnlyA,
-                onlyB: data.stats.totalOnlyB,
-                responseA: data.response_a_raw,
-                responseB: data.response_b_raw
+                ...data, // Include everything from original response
+                timestamp: new Date().toLocaleTimeString()
             });
+            currentResultIndex = recordedSummaries.length - 1;
+        }
+
+        // Navigation UI
+        const nav = document.getElementById('results-nav');
+        if (recordedSummaries.length > 1) {
+            nav.classList.remove('hidden');
+            document.getElementById('results-nav-status').innerText = `Result ${currentResultIndex + 1} of ${recordedSummaries.length}`;
+        } else {
+            nav.classList.add('hidden');
         }
 
         // Stats
@@ -1192,11 +1255,14 @@
             let url = req.request.url || "";
             if (typeof url === 'object') url = url.raw || "";
             const isSelected = selectedRequests.has(req.id);
+            const typeClass = isRecording ? 'm3-checkbox' : 'm3-radio';
+            const icon = isRecording ? (isSelected ? 'check' : '') : (isSelected ? 'radio_button_checked' : 'radio_button_unchecked');
+            
             return `
                 <div class="req-item ${isSelected ? 'active' : ''}" onclick="toggleRequestSelection('${req.id}')">
                     <div class="req-checkbox-wrapper">
-                        <div class="m3-checkbox ${isSelected ? 'checked' : ''}">
-                            <i class="material-icons">${isSelected ? 'check' : ''}</i>
+                        <div class="${typeClass} ${isSelected ? 'checked' : ''}">
+                            <i class="material-icons">${icon}</i>
                         </div>
                     </div>
                     <div class="info">
@@ -1212,17 +1278,17 @@
     }
 
     function toggleRequestSelection(id) {
-        if (selectedRequests.has(id)) {
-            selectedRequests.delete(id);
-        } else {
+        if (!isRecording) {
+            selectedRequests.clear();
             selectedRequests.add(id);
+        } else {
+            if (selectedRequests.has(id)) {
+                selectedRequests.delete(id);
+            } else {
+                selectedRequests.add(id);
+            }
         }
-        renderCollectionRequests(collectionRequests.filter(r => {
-             const term = document.getElementById('coll-search').value.toLowerCase();
-             let url = r.request.url || "";
-             if (typeof url === 'object') url = url.raw || "";
-             return r.name.toLowerCase().includes(term) || url.toLowerCase().includes(term);
-        }));
+        filterCollectionRequests();
     }
 
     function selectAllRequests(check) {
