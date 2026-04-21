@@ -11,12 +11,14 @@
             <h1>Collection <span class="text-gradient">Runner</span></h1>
             <p>High-fidelity orchestration and real-time NDJSON execution streaming</p>
         </div>
-        <div class="header-right">
-            <button class="m3-icon-button" onclick="resetWorkspace()" title="Reset Engine">
+        <div class="header-right-actions">
+            <button class="m3-button outline glass" onclick="location.reload()" title="Hard Refresh Workspace">
                 <i class="material-icons">refresh</i>
+                <span>Reset Engine</span>
             </button>
-            <a href="/postman" class="m3-icon-button" title="Back to Suite">
+            <a href="/postman" class="m3-button primary glass-pill" title="Return to Postman Home">
                 <i class="material-icons">home</i>
+                <span>Dashboard</span>
             </a>
         </div>
     </header>
@@ -72,9 +74,13 @@
             </div>
 
             <div class="action-footer">
-                <button class="m3-fab-extend" id="run-btn" onclick="startCollectionRun()">
+                <button id="run-btn" class="m3-fab-extend" onclick="startCollectionRun()">
                     <i class="material-icons">play_arrow</i>
-                    <span>Execute Collection Run</span>
+                    <span>Execute Collection</span>
+                </button>
+                <button id="export-btn" class="m3-button status-success outline hidden" onclick="exportResults()">
+                    <i class="material-icons">cloud_download</i>
+                    <span>Export Audit Report</span>
                 </button>
             </div>
         </div>
@@ -133,7 +139,90 @@
         text-rendering: optimizeLegibility;
     }
 
-    .m3-badge-new {
+    .header-right-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .m3-button.glass {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-light);
+        backdrop-filter: blur(10px);
+        color: var(--text-main);
+        padding: 10px 20px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.3s;
+        text-decoration: none;
+    }
+    
+    .m3-button.glass:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+        border-color: var(--primary);
+    }
+
+    .glass-pill {
+        background: var(--primary) !important;
+        color: white !important;
+        border-radius: 50px !important;
+        padding: 10px 24px !important;
+    }
+
+    .action-footer { 
+        display: flex; 
+        gap: 20px; 
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border-light);
+        align-items: center;
+    }
+
+    .m3-fab-extend {
+        height: 56px;
+        padding: 0 32px;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 8px 24px var(--primary-glow);
+    }
+
+    .m3-fab-extend:hover {
+        transform: scale(1.02) translateY(-2px);
+        box-shadow: 0 12px 32px var(--primary-glow);
+    }
+
+    .m3-button.outline {
+        height: 56px;
+        padding: 0 28px;
+        background: transparent;
+        border: 2px solid var(--border-light);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 600;
+        color: var(--text-main);
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    
+    .m3-button.outline:hover {
+        background: rgba(0,0,0,0.05);
+        border-color: var(--primary);
+    }
         font-size: 10px;
         padding: 4px 10px;
         border-radius: 20px;
@@ -279,6 +368,8 @@
         location.reload();
     }
 
+    let runResults = [];
+
     async function startCollectionRun() {
         if (!collectionData) {
             alert("Please select a Postman Collection first.");
@@ -291,10 +382,13 @@
         const progressContainer = document.getElementById('run-progress-container');
         const progressBar = document.getElementById('progress-bar');
         const progressPercent = document.getElementById('progress-percent');
+        const progressText = document.getElementById('progress-text');
 
         // Reset UI
         consoleEl.innerHTML = '';
+        runResults = [];
         runBtn.disabled = true;
+        document.getElementById('export-btn').classList.add('hidden');
         statusBadge.innerText = 'RUNNING';
         statusBadge.className = 'badge-mini running';
         progressContainer.classList.remove('hidden');
@@ -329,11 +423,16 @@
                 lines.forEach(line => {
                     const event = JSON.parse(line);
                     
+                    if (event.type === 'run_start') {
+                        totalRequests = event.total;
+                    }
+
                     if (event.type === 'request_start') {
                         currentRequest++;
                         const percent = Math.round((currentRequest / totalRequests) * 100);
                         progressBar.style.width = `${percent}%`;
                         progressPercent.innerText = `${percent}%`;
+                        progressText.innerText = `Running: ${event.item_name}`;
                     }
 
                     if (event.type === 'request_complete') {
@@ -355,12 +454,15 @@
                         `;
                         consoleEl.appendChild(log);
                         consoleEl.scrollTop = consoleEl.scrollHeight;
+                        runResults.push(event);
                     }
 
                     if (event.type === 'run_complete') {
                         statusBadge.innerText = 'FINISHED';
                         statusBadge.className = 'badge-mini';
                         runBtn.disabled = false;
+                        progressText.innerText = 'Run Complete';
+                        document.getElementById('export-btn').classList.remove('hidden');
                     }
                 });
             }
@@ -369,6 +471,35 @@
             statusBadge.innerText = 'ERROR';
             runBtn.disabled = false;
         }
+    }
+
+    function exportResults() {
+        if (!runResults.length) return;
+        const csvRows = [["Timestamp", "Request Name", "Method", "URL", "Status Code", "Status", "Duration (ms)", "cURL", "Headers", "Response"]];
+        
+        runResults.forEach(r => {
+            csvRows.push([
+                new Date().toISOString(),
+                r.item_name,
+                r.method,
+                r.url,
+                r.status_code,
+                r.status_text,
+                r.duration,
+                `"${r.curl.replace(/"/g, '""')}"`,
+                `"${JSON.stringify(r.headers).replace(/"/g, '""')}"`,
+                `"${r.response.replace(/"/g, '""')}"`
+            ]);
+        });
+
+        const csvContent = "data:text/csv;charset=utf-8," + csvRows.map(e => e.join(",")).join("\n");
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `postman_run_${new Date().getTime()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 </script>
 {% endblock %}

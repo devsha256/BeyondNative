@@ -279,9 +279,23 @@ class PostmanManager:
             return {
                 "status": "success",
                 "status_code": res.status_code,
-                "response": res.text[:2000], # Cap for console preview
+                "response": res.text[:2000], 
+                "headers": dict(res.headers),
                 "url": url,
-                "method": method
+                "method": method,
+                "curl": self.generate_curl(method, url, headers, body)
             }
         except Exception as e:
             return {"status": "error", "message": str(e)}
+
+    def generate_curl(self, method, url, headers, body):
+        """Reconstructs a cURL command from request components."""
+        curl = f"curl --location --request {method} '{url}'"
+        for k, v in headers.items():
+            if k.lower() != 'content-length':
+                curl += f" \\\n--header '{k}: {v}'"
+        if body:
+            # Simple escape for body
+            safe_body = str(body).replace("'", "'\\''")
+            curl += f" \\\n--data-raw '{safe_body}'"
+        return curl

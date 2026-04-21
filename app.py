@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response
 from flask_cors import CORS
 from devops_module import AzureDevOpsManager
 from mulesoft_module import MuleSoftManager, MuleSoftAuthError
@@ -544,8 +544,16 @@ def postman_execute_stream():
     data = request.json
     collection = data.get('collection')
     environment = data.get('environment', {})
-    iterations = int(data.get('iterations', 1))
-    delay_ms = int(data.get('delay', 0))
+    
+    try:
+        iterations = int(data.get('iterations', 1))
+    except (ValueError, TypeError):
+        iterations = 1
+        
+    try:
+        delay_ms = int(data.get('delay', 0))
+    except (ValueError, TypeError):
+        delay_ms = 0
 
     if not collection: return jsonify({"error": "No collection provided"}), 400
     
@@ -569,6 +577,9 @@ def postman_execute_stream():
     recurse(collection.get('item', []))
 
     def generate():
+        total_count = len(items) * iterations
+        yield json.dumps({"type": "run_start", "total": total_count}) + "\n"
+        
         for it in range(iterations):
             for item in items:
                 # Signal request start
@@ -590,7 +601,10 @@ def postman_execute_stream():
                     "status_code": res.get('status_code', 500),
                     "status_text": status_text,
                     "duration": duration,
-                    "response": res.get('response', '')[:500] 
+                    "response": res.get('response', ''),
+                    "headers": res.get('headers', {}),
+                    "curl": res.get('curl', ''),
+                    "url": res.get('url', '')
                 }) + "\n"
                 
                 if delay_ms > 0:
