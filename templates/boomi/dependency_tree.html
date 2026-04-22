@@ -1,0 +1,417 @@
+{% extends "base.html" %}
+
+{% block title %}Dependency Tree | Boomi Suite{% endblock %}
+
+{% block content %}
+<div class="m3-page-wrapper elite-theme">
+    <div class="elite-bg-glow"></div>
+    
+    <!-- Hero Header -->
+    <header class="m3-hero-header floating">
+        <div class="header-left">
+            <span class="m3-badge-new boomi">MANIFEST AUDIT</span>
+            <h1>Component <span class="text-gradient-boomi">Hierarchy</span></h1>
+            <p>Deep-dive into the packaged manifest of your AtomSphere integrations.</p>
+        </div>
+        <div class="header-right">
+            <a href="/boomi" class="m3-icon-button" title="Back to Suite">
+                <i class="material-icons">home</i>
+            </a>
+        </div>
+    </header>
+
+    <!-- Search / Config -->
+    <div class="m3-card glass config-section">
+        <div class="action-header">
+            <i class="material-icons">architecture</i>
+            <div class="header-info">
+                <h3>Blueprint Orchestrator</h3>
+                <p>Analyze the hierarchical footprint of your packaged integrations.</p>
+            </div>
+        </div>
+
+        <div class="m3-config-grid">
+            <div class="input-group">
+                <label>Packaged Component Name</label>
+                <div class="search-box">
+                    <i class="material-icons">inventory_2</i>
+                    <input type="text" id="package-name" class="m3-input-v2 elite" placeholder="e.g. Master Order Sync">
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Tactical Version</label>
+                <input type="text" id="package-version" class="m3-input-v2 elite" placeholder="Latest if empty">
+            </div>
+        </div>
+        
+        <!-- Metadata Header (Hidden until results) -->
+        <div id="package-stats" class="metadata-board hidden">
+            <div class="meta-chip">
+                <span class="m-label">Package ID</span>
+                <span id="stat-id" class="m-val">---</span>
+            </div>
+            <div class="meta-chip">
+                <span class="m-label">Component</span>
+                <span id="stat-name" class="m-val">---</span>
+            </div>
+            <div class="meta-chip">
+                <span class="m-label">Version</span>
+                <span id="stat-ver" class="m-val">---</span>
+            </div>
+            <div class="meta-chip">
+                <span class="m-label">Footprint</span>
+                <span id="stat-count" class="m-val">---</span>
+            </div>
+        </div>
+
+        <div class="action-footer">
+            <button id="render-btn" class="m3-fab-extend elite-btn" onclick="renderTree()">
+                <i class="material-icons">hub</i>
+                <span>Generate Hierarchy Blueprint</span>
+            </button>
+            
+            <div class="legend-box">
+                <div class="legend-item"><span class="dot pkg"></span> Package</div>
+                <div class="legend-item"><span class="dot proc"></span> Process</div>
+                <div class="legend-item"><span class="dot conn"></span> Connector</div>
+                <div class="legend-item"><span class="dot misc"></span> Other</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tree Visualization Container -->
+    <div id="tree-container" class="m3-card glass hidden empty-state-container" style="margin-top: 32px; min-height: 500px; padding: 40px; overflow: auto; position: relative;">
+        <div id="empty-state" class="empty-state">
+            <div class="empty-icon"><i class="material-icons">list_alt</i></div>
+            <h3>Package Manifest Audit</h3>
+            <p>Execute a platform scan to extract the enriched component manifest.</p>
+        </div>
+        
+        <div id="tree-overlay" class="tree-overlay">
+            <div class="loader">
+                <i class="material-icons rotating">hub</i>
+                <p>Retrieving & Enriching Manifest Metadata...</p>
+            </div>
+        </div>
+        
+        <div class="tree-controls hidden">
+            <button class="ctrl-btn-v2" onclick="exportToCSV()">
+                <i class="material-icons">file_download</i>
+                <span>Export Audit Report</span>
+            </button>
+        </div>
+
+        <div id="audit-grid" class="audit-grid hidden">
+            <table class="m3-table-v2">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Folder</th>
+                        <th style="text-align: right;">Revision</th>
+                    </tr>
+                </thead>
+                <tbody id="audit-body"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function renderTree() {
+        const name = document.getElementById('package-name').value;
+        const version = document.getElementById('package-version').value;
+        const container = document.getElementById('tree-container');
+        const overlay = document.getElementById('tree-overlay');
+        const grid = document.getElementById('audit-grid');
+        const body = document.getElementById('audit-body');
+        const btn = document.getElementById('render-btn');
+        const statsEl = document.getElementById('package-stats');
+        const controls = document.querySelector('.tree-controls');
+
+        if (!name) { 
+            showToast("Package name is mandatory", "error");
+            return; 
+        }
+
+        btn.classList.add('loading-btn');
+        container.classList.remove('hidden');
+        overlay.style.display = 'flex';
+        grid.classList.add('hidden');
+        if(controls) controls.classList.add('hidden');
+        body.innerHTML = '';
+        statsEl.classList.add('hidden');
+
+        try {
+            document.getElementById('empty-state').style.display = 'none';
+            const res = await fetch(`/api/boomi/package-dependencies?name=${encodeURIComponent(name)}&version=${encodeURIComponent(version)}`);
+            const data = await res.json();
+
+            if (data.error) throw new Error(data.error);
+
+            // Populate Stats
+            statsEl.classList.remove('hidden');
+            document.getElementById('stat-id').innerText = data.package.packageId.substring(0,8) + '...';
+            document.getElementById('stat-name').innerText = data.package.componentName;
+            document.getElementById('stat-ver').innerText = 'v' + data.package.packageVersion;
+            document.getElementById('stat-count').innerText = data.included.length + ' Components';
+
+            // Populate Table
+            data.included.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="comp-name">
+                        <i class="material-icons">${getIcon(item.type)}</i>
+                        <span>${item.name}</span>
+                    </td>
+                    <td class="comp-type">${item.type}</td>
+                    <td class="comp-folder">${item.folder}</td>
+                    <td class="comp-rev">${item.version}</td>
+                `;
+                body.appendChild(row);
+            });
+
+            grid.classList.remove('hidden');
+            if(controls) controls.classList.remove('hidden');
+            
+        } catch (e) {
+            body.innerHTML = `<tr><td colspan="4" class="error-node"><i class="material-icons">error_outline</i><p>${e.message}</p></td></tr>`;
+            grid.classList.remove('hidden');
+        } finally {
+            overlay.style.display = 'none';
+            btn.classList.remove('loading-btn');
+        }
+    }
+
+    function getIcon(type) {
+        if (type === 'Process') return 'settings';
+        if (type.includes('Connector')) return 'cable';
+        if (type.includes('Profile')) return 'description';
+        if (type === 'Map') return 'map';
+        return 'insert_drive_file';
+    }
+
+    function exportToCSV() {
+        let csv = "Name,Type,Folder,Revision\n";
+        const rows = document.querySelectorAll('#audit-body tr');
+        rows.forEach(row => {
+            const cols = row.querySelectorAll('td');
+            const data = Array.from(cols).map(c => `"${c.innerText.trim().replace(/\n/g, '')}"`).join(",");
+            csv += data + "\n";
+        });
+        
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('hidden', '');
+        a.setAttribute('href', url);
+        a.setAttribute('download', 'boomi_package_audit.csv');
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+</script>
+
+<style>
+    .text-gradient-boomi {
+        background: linear-gradient(90deg, #0076CE, #00B5E2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .m3-badge-new.boomi { background: rgba(0, 118, 206, 0.1); color: #0076CE; }
+
+    .m3-page-wrapper.elite-theme { 
+        padding: 60px; 
+        background: #fbfbfc; 
+        min-height: 100vh;
+        position: relative;
+    }
+
+    .elite-bg-glow {
+        position: absolute;
+        top: -200px;
+        right: -200px;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(0, 118, 206, 0.05) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .m3-hero-header.floating {
+        animation: floatHeader 1s ease-out;
+    }
+
+    @keyframes floatHeader {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+
+    .config-section { 
+        padding: 40px; 
+        border-radius: 40px; 
+        box-shadow: 0 10px 40px rgba(0,0,0,0.03);
+        background: rgba(255,255,255,0.7);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.8);
+    }
+
+    .m3-input-v2 { 
+        background: white; 
+        border: 2px solid #eee; 
+        border-radius: 18px; 
+        padding: 16px 20px; 
+        font-size: 1rem; 
+        font-weight: 500;
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 100%;
+    }
+    .m3-input-v2:focus { border-color: #0076CE; box-shadow: 0 0 0 5px rgba(0, 118, 206, 0.1); outline: none; }
+
+    .m3-config-grid { 
+        display: grid; 
+        grid-template-columns: 2fr 1fr; 
+        gap: 32px; 
+    }
+
+    .input-group { 
+        display: flex; 
+        flex-direction: column; 
+        gap: 12px; 
+    }
+
+    .search-box { 
+        position: relative; 
+        display: flex;
+        align-items: center;
+    }
+    .search-box i { 
+        position: absolute; 
+        left: 20px; 
+        color: #0076CE; 
+        font-size: 20px;
+        opacity: 0.6;
+        z-index: 2;
+    }
+    .search-box input { 
+        padding-left: 56px !important; 
+    }
+
+    .action-header { 
+        display: flex; 
+        align-items: center; 
+        gap: 20px; 
+        margin-bottom: 32px; 
+        padding-bottom: 24px; 
+        border-bottom: 1px solid rgba(0,0,0,0.05); 
+    }
+    .action-header i { 
+        font-size: 32px; 
+        color: #0076CE; 
+        background: rgba(0, 118, 206, 0.1); 
+        padding: 12px; 
+        border-radius: 16px; 
+    }
+    .header-info h3 { margin: 0; font-size: 1.4rem; font-weight: 800; }
+    .header-info p { margin: 0; font-size: 0.95rem; opacity: 0.5; }
+
+    .action-footer { 
+        display: flex; 
+        align-items: center; 
+        justify-content: space-between; 
+        gap: 32px; 
+        margin-top: 48px; 
+        padding-top: 32px;
+        border-top: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .m3-fab-extend { 
+        background: linear-gradient(135deg, #0076CE, #00B5E2);
+        box-shadow: 0 10px 30px rgba(0, 118, 206, 0.3);
+        height: 64px;
+        border-radius: 32px;
+        font-size: 1.1rem;
+        padding: 0 48px;
+        color: white;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 700;
+        transition: 0.3s;
+    }
+    .m3-fab-extend:hover { transform: scale(1.02) translateY(-2px); box-shadow: 0 15px 40px rgba(0, 118, 206, 0.4); }
+
+    .legend-box { background: white; border: 1px solid #eee; padding: 16px 32px; border-radius: 24px; display: flex; gap: 20px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 800; text-transform: uppercase; opacity: 0.7; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot.pkg { background: #0076CE; }
+    .dot.proc { background: #00B5E2; }
+    .dot.conn { background: #FF6C37; }
+    .dot.misc { background: #ddd; }
+
+    /* Metadata Board */
+    .metadata-board {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin: 32px 0;
+        padding: 24px;
+        background: rgba(0,0,0,0.02);
+        border-radius: 24px;
+        animation: slideIn 0.5s ease-out;
+    }
+    .meta-chip {
+        flex: 1;
+        min-width: 160px;
+        background: white;
+        padding: 16px 24px;
+        border-radius: 16px;
+        border: 1px solid rgba(0,0,0,0.05);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    }
+    .meta-chip .m-label { font-size: 10px; font-weight: 900; text-transform: uppercase; color: #0076CE; opacity: 0.5; }
+    .meta-chip .m-val { font-weight: 800; font-size: 1.1rem; }
+
+    @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    .tree-overlay { 
+        position: absolute; 
+        inset: 0;
+        background: rgba(255,255,255,0.85); 
+        backdrop-filter: blur(10px); 
+        display: none; 
+        align-items: center; 
+        justify-content: center; 
+        z-index: 100; 
+        border-radius: 40px; 
+    }
+    
+    .audit-grid { width: 100%; animation: fadeIn 0.5s ease-out; }
+    .m3-table-v2 { width: 100%; border-collapse: collapse; }
+    .m3-table-v2 th { text-align: left; padding: 20px 24px; font-size: 11px; font-weight: 900; text-transform: uppercase; color: #0076CE; opacity: 0.5; border-bottom: 2px solid rgba(0,0,0,0.03); letter-spacing: 1px; }
+    .m3-table-v2 td { padding: 24px; border-bottom: 1px solid rgba(0,0,0,0.03); font-size: 14px; color: var(--text-main); font-weight: 500; }
+    .m3-table-v2 tr:hover { background: rgba(0, 118, 206, 0.02); }
+
+    .comp-name { display: flex; align-items: center; gap: 16px; font-weight: 800; color: #0076CE; }
+    .comp-name i { font-size: 18px; color: #0076CE; opacity: 0.4; }
+    .comp-rev { text-align: right; font-family: monospace; font-weight: 800; color: #00B5E2; }
+    .comp-type { opacity: 0.8; font-size: 13px; }
+    .comp-folder { opacity: 0.6; font-size: 13px; }
+
+    .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 400px; text-align: center; opacity: 0.4; }
+    .empty-icon i { font-size: 80px; margin-bottom: 20px; }
+    
+    .tree-controls { position: absolute; top: 24px; right: 24px; z-index: 20; }
+    .ctrl-btn-v2 { background: white; border: 1px solid #eee; padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; font-size: 13px; font-weight: 700; color: #0076CE; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .ctrl-btn-v2:hover { background: #0076CE; color: white; border-color: #0076CE; }
+
+    .rotating { animation: spin 2s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .hidden { display: none; }
+</style>
+{% endblock %}

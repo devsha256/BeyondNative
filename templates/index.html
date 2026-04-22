@@ -50,6 +50,18 @@
                 <i class="material-icons">arrow_forward</i>
             </div>
         </a>
+
+        <a href="/boomi" class="suite-card boomi-card">
+            <div class="card-icon"><i class="material-icons">account_tree</i></div>
+            <div class="card-body">
+                <h3>Boomi Suite</h3>
+                <p>AtomSphere metadata extraction, process discovery, and enterprise asset auditing.</p>
+            </div>
+            <div class="card-action">
+                <span>Engage Suite</span>
+                <i class="material-icons">arrow_forward</i>
+            </div>
+        </a>
     </div>
 
     <!-- System Health -->
@@ -80,6 +92,16 @@
                     <span>Authenticating...</span>
                 </div>
             </div>
+
+            <div class="metric-divider"></div>
+
+            <div class="metric-item">
+                <span class="m-label">Boomi AtomSphere API</span>
+                <div id="boomi-health" class="m-value loading">
+                    <i class="material-icons rotating">sync</i>
+                    <span>Scanning Atoms...</span>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -99,6 +121,8 @@
     .azure .card-icon { background: rgba(0, 120, 212, 0.1); color: #0078D4; }
     .mule .card-icon { background: rgba(0, 162, 223, 0.1); color: #00A2DF; }
     .postman .card-icon { background: rgba(255, 108, 55, 0.1); color: #FF6C37; }
+    .boomi-card .card-icon { background: rgba(0, 118, 206, 0.1); color: #0076CE; }
+    .boomi-card:hover { border-color: #0076CE !important; }
 
     .suite-card h3 { font-size: 24px; font-weight: 800; margin: 0; }
     .suite-card p { font-size: 14px; opacity: 0.7; line-height: 1.6; margin: 0; }
@@ -141,6 +165,8 @@
         refreshIcon.classList.add('rotating');
         devopsEl.className = 'm-value loading';
         muleEl.className = 'm-value loading';
+        const boomiEl = document.getElementById('boomi-health');
+        boomiEl.className = 'm-value loading';
         
         try {
             const res = await fetch('/api/health-check');
@@ -162,6 +188,15 @@
             } else {
                 muleEl.innerHTML = '<i class="material-icons">cloud_off</i><span>Awaiting Authentication</span>';
                 muleEl.className = 'm-value disconnected';
+            }
+
+            // Boomi Update
+            if (data.boomi) {
+                boomiEl.innerHTML = '<i class="material-icons">account_tree</i><span>Account Sync Live</span>';
+                boomiEl.className = 'm-value healthy';
+            } else {
+                boomiEl.innerHTML = '<i class="material-icons">no_accounts</i><span>Service Unavailable</span>';
+                boomiEl.className = 'm-value disconnected';
             }
         } catch (e) {
             console.error("Health check failed", e);

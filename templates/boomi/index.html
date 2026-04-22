@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Boomi Suite | Beyond Native{% endblock %}
+
+{% block content %}
+<div class="m3-page-wrapper">
+    <!-- Elite Header -->
+    <header class="m3-hero-header">
+        <div class="header-left">
+            <span class="m3-badge-new boomi">ATOMSPHERE MIDDLEWARE</span>
+            <h1>Boomi <span class="text-gradient-boomi">Suite</span></h1>
+            <p>Unified orchestration for AtomSphere processes, connectors, and component architectures.</p>
+        </div>
+    </header>
+
+    <div class="m3-grid-layout">
+        <!-- Discovery Card -->
+        <a href="/boomi/discovery" class="m3-card glass interactive">
+            <div class="card-icon">
+                <i class="material-icons">search_check</i>
+            </div>
+            <div class="card-content">
+                <h3>Component Discovery</h3>
+                <p>Scan and extract metadata for processes, maps, and connectors across your AtomSphere account.</p>
+            </div>
+            <div class="card-action">
+                <i class="material-icons">arrow_forward</i>
+            </div>
+        </a>
+
+        <!-- Comparison Card (Future) -->
+        <div class="m3-card glass disabled">
+            <div class="card-icon">
+                <i class="material-icons">difference</i>
+            </div>
+            <div class="card-content">
+                <h3>Environment Compare</h3>
+                <p>Analyze deployment variances between Atoms and Molecules (Coming Soon).</p>
+            </div>
+        </div>
+
+        <!-- Automation Card (Future) -->
+        <div class="m3-card glass disabled">
+            <div class="card-icon">
+                <i class="material-icons">auto_fix_high</i>
+            </div>
+            <div class="card-content">
+                <h3>Process Auditor</h3>
+                <p>Automated best-practices validation for integration logic (Coming Soon).</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .text-gradient-boomi {
+        background: linear-gradient(90deg, #0076CE, #00B5E2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .m3-badge-new.boomi { background: rgba(0, 118, 206, 0.1); color: #0076CE; }
+
+    .m3-grid-layout {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 32px;
+        margin-top: 48px;
+    }
+
+    .m3-card.glass {
+        background: var(--surface-m3);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-light);
+        border-radius: 32px;
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+        color: var(--text-main);
+        position: relative;
+    }
+
+    .m3-card.interactive:hover {
+        transform: translateY(-8px);
+        background: rgba(255,255,255,0.1);
+        border-color: #0076CE;
+        box-shadow: 0 20px 40px rgba(0, 118, 206, 0.1);
+    }
+
+    .card-icon i {
+        font-size: 2.5rem;
+        color: #0076CE;
+        background: rgba(0, 118, 206, 0.1);
+        padding: 16px;
+        border-radius: 20px;
+    }
+
+    .card-content h3 { font-size: 1.5rem; margin-bottom: 12px; font-weight: 800; }
+    .card-content p { opacity: 0.6; line-height: 1.6; font-size: 0.95rem; }
+
+    .card-action {
+        margin-top: auto;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .m3-card.disabled { opacity: 0.5; cursor: not-allowed; }
+</style>
+{% endblock %}

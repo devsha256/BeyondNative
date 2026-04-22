@@ -27,6 +27,7 @@
                     <h3>Azure DevOps</h3>
                     <p>Repository & PR Orchestration</p>
                 </div>
+                <div id="azure_status_badge" class="badge-status idle">OFFLINE</div>
             </div>
             
             <div class="form-body">
@@ -119,6 +120,33 @@
                 </div>
             </div>
         </div>
+
+        <!-- Boomi Suite Configuration -->
+        <div class="m3-card glass config-card">
+            <div class="card-header">
+                <div class="icon-stack boomi"><i class="material-icons">account_tree</i></div>
+                <div class="title-stack">
+                    <h3>Boomi AtomSphere</h3>
+                    <p>Asset & Component Extraction</p>
+                </div>
+                <div id="boomi_status_badge" class="badge-status idle">OFFLINE</div>
+            </div>
+            
+            <div class="form-body">
+                <div class="input-field">
+                    <label>Boomi Account ID</label>
+                    <input type="text" id="boomi_account_id" value="{{ settings.get('boomi_account_id', '') }}" placeholder="e.g. account-123">
+                </div>
+                <div class="input-field">
+                    <label>AtomSphere Username</label>
+                    <input type="text" id="boomi_username" value="{{ settings.get('boomi_username', '') }}" placeholder="user@company.com">
+                </div>
+                <div class="input-field">
+                    <label>API Key (Auth Token)</label>
+                    <input type="password" id="boomi_api_key" value="{{ settings.get('boomi_api_key', '') }}" placeholder="••••••••">
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -140,6 +168,11 @@
     .azure { background: linear-gradient(135deg, #0078D4, #00C6FF); }
     .mule { background: linear-gradient(135deg, #00A2DF, #00D1FF); }
     .postman { background: linear-gradient(135deg, #FF6C37, #FF9E6F); }
+    .boomi { background: linear-gradient(135deg, #0076CE, #00B5E2); }
+
+    /* New Status Badges specifically for Boomi header if not already added */
+    .config-card .card-header .badge-status { margin-left: auto; }
+    .badge-status.idle { background: rgba(0,0,0,0.05); color: var(--text-main); opacity: 0.3; }
 
     .title-stack h3 { margin: 0; font-size: 20px; font-weight: 800; }
     .title-stack p { margin: 0; font-size: 13px; opacity: 0.6; }
@@ -169,7 +202,36 @@
     const savedOrg = "{{ settings.get('mule_default_org', '') }}";
     const savedEnv = "{{ settings.get('mule_default_env', '') }}";
 
-    document.addEventListener('DOMContentLoaded', () => checkMuleConnection());
+    document.addEventListener('DOMContentLoaded', () => {
+        checkMuleConnection();
+        checkGlobalHealth();
+    });
+
+    async function checkGlobalHealth() {
+        const azureBadge = document.getElementById('azure_status_badge');
+        const boomiBadge = document.getElementById('boomi_status_badge');
+        
+        try {
+            const res = await fetch('/api/health-check');
+            const data = await res.json();
+            
+            if (data.devops) {
+                azureBadge.innerText = 'HEALTHY';
+                azureBadge.className = 'badge-status connected';
+            } else {
+                azureBadge.innerText = 'OFFLINE';
+                azureBadge.className = 'badge-status idle';
+            }
+            
+            if (data.boomi) {
+                boomiBadge.innerText = 'HEALTHY';
+                boomiBadge.className = 'badge-status connected';
+            } else {
+                boomiBadge.innerText = 'OFFLINE';
+                boomiBadge.className = 'badge-status idle';
+            }
+        } catch(e) { console.error("Global Health check failed", e); }
+    }
 
     async function checkMuleConnection() {
         const orgSelect = document.getElementById('mule_default_org');
@@ -215,7 +277,10 @@
             mule_bearer: document.getElementById('mule_bearer').value,
             postman_source_host: document.getElementById('postman_source_host').value,
             postman_target_host: document.getElementById('postman_target_host').value,
-            postman_exemptions: document.getElementById('postman_exemptions').value
+            postman_exemptions: document.getElementById('postman_exemptions').value,
+            boomi_account_id: document.getElementById('boomi_account_id').value,
+            boomi_username: document.getElementById('boomi_username').value,
+            boomi_api_key: document.getElementById('boomi_api_key').value
         };
 
         fetch('/api/settings', {

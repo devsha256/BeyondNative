@@ -1,0 +1,348 @@
+{
+  "info": {
+    "_postman_id": "0aa8b6ab-604b-4318-8f92-1de742495e20",
+    "name": "boomi-atomsphere",
+    "description": "Enterprise API collection for Boomi AtomSphere Platform operations, featuring automated request chaining and metadata extraction.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "41089880"
+  },
+  "item": [
+    {
+      "name": "01 - Health Check",
+      "item": [
+        {
+          "name": "01.01 - Get Account Details",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "https://api.boomi.com/api/rest/v1/{{accountId}}/Account/{{accountId}}",
+              "protocol": "https",
+              "host": [
+                "api",
+                "boomi",
+                "com"
+              ],
+              "path": [
+                "api",
+                "rest",
+                "v1",
+                "{{accountId}}",
+                "Account",
+                "{{accountId}}"
+              ]
+            },
+            "description": "Verifies platform connectivity."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 - Asset Discovery",
+      "item": [
+        {
+          "name": "02.01 - Resolve ID by Name",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const jsonData = pm.response.json();",
+                  "pm.test(\"Component Found\", function () {",
+                  "    pm.expect(jsonData.result).to.be.an('array').with.lengthOf.at.least(1);",
+                  "    const compId = jsonData.result[0].componentId;",
+                  "    pm.collectionVariables.set(\"componentId\", compId);",
+                  "    console.log(\"Resolved ID: \" + compId);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"QueryFilter\": {\n    \"expression\": {\n      \"argument\": [\n        \"{{componentName}}\"\n      ],\n      \"operator\": \"EQUALS\",\n      \"property\": \"name\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://api.boomi.com/api/rest/v1/{{accountId}}/ComponentMetadata/query",
+              "protocol": "https",
+              "host": [
+                "api",
+                "boomi",
+                "com"
+              ],
+              "path": [
+                "api",
+                "rest",
+                "v1",
+                "{{accountId}}",
+                "ComponentMetadata",
+                "query"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 - Packaging & Manifests",
+      "item": [
+        {
+          "name": "03.01 - Query Package by Resolved ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const jsonData = pm.response.json();",
+                  "pm.test(\"Package Found\", function () {",
+                  "    pm.expect(jsonData.result).to.be.an('array').with.lengthOf.at.least(1);",
+                  "    const pkgId = jsonData.result[0].packageId;",
+                  "    pm.collectionVariables.set(\"packageId\", pkgId);",
+                  "    console.log(\"Resolved Package ID: \" + pkgId);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"QueryFilter\": {\n    \"expression\": {\n      \"argument\": [\n        \"{{componentId}}\"\n      ],\n      \"operator\": \"EQUALS\",\n      \"property\": \"componentId\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://api.boomi.com/api/rest/v1/{{accountId}}/PackagedComponent/query",
+              "protocol": "https",
+              "host": [
+                "api",
+                "boomi",
+                "com"
+              ],
+              "path": [
+                "api",
+                "rest",
+                "v1",
+                "{{accountId}}",
+                "PackagedComponent",
+                "query"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "03.02 - Get Enriched Manifest",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Manifest Retrieved\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('componentInfo');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "https://api.boomi.com/api/rest/v1/{{accountId}}/PackagedComponentManifest/{{packageId}}",
+              "protocol": "https",
+              "host": [
+                "api",
+                "boomi",
+                "com"
+              ],
+              "path": [
+                "api",
+                "rest",
+                "v1",
+                "{{accountId}}",
+                "PackagedComponentManifest",
+                "{{packageId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 - Enrichment",
+      "item": [
+        {
+          "name": "04.01 - Batch Metadata Query",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"QueryFilter\": {\n        \"expression\": {\n            \"operator\": \"OR\",\n            \"nestedExpression\": [\n                { \"property\": \"componentId\", \"operator\": \"EQUALS\", \"argument\": [\"3d3bf835-27c9-4d8e-9912-19729fe22ac1\"] },\n                { \"property\": \"componentId\", \"operator\": \"EQUALS\", \"argument\": [\"a296e453-2f69-4652-872e-05391f95fd70\"] },\n                { \"property\": \"componentId\", \"operator\": \"EQUALS\", \"argument\": [\"2a6e6cb5-de98-49c5-bfd6-a5fcbecaab03\"] },\n                { \"property\": \"componentId\", \"operator\": \"EQUALS\", \"argument\": [\"c60911dd-763a-425a-9ad0-162068425c6d\"] },\n                { \"property\": \"componentId\", \"operator\": \"EQUALS\", \"argument\": [\"756fbff0-a7fb-41fc-96be-226a4d518874\"] },\n                { \"property\": \"componentId\", \"operator\": \"EQUALS\", \"argument\": [\"c9208a66-a4a8-4ced-b4ef-3474c88f3af6\"] },\n                { \"property\": \"componentId\", \"operator\": \"EQUALS\", \"argument\": [\"4859f4e4-c438-4418-9db0-966300795d1b\"] }\n            ]\n        }\n    }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://api.boomi.com/api/rest/v1/{{accountId}}/ComponentMetadata/query",
+              "protocol": "https",
+              "host": [
+                "api",
+                "boomi",
+                "com"
+              ],
+              "path": [
+                "api",
+                "rest",
+                "v1",
+                "{{accountId}}",
+                "ComponentMetadata",
+                "query"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "basic",
+    "basic": [
+      {
+        "key": "password",
+        "value": "{{apiKey}}",
+        "type": "string"
+      },
+      {
+        "key": "username",
+        "value": "BOOMI_TOKEN.{{email}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "accountId",
+      "value": "YOUR_ACCOUNT_ID"
+    },
+    {
+      "key": "email",
+      "value": "YOUR_EMAIL"
+    },
+    {
+      "key": "apiKey",
+      "value": "YOUR_API_KEY"
+    },
+    {
+      "key": "componentName",
+      "value": "WEBSVC Get Github User"
+    },
+    {
+      "key": "componentId",
+      "value": ""
+    },
+    {
+      "key": "packageId",
+      "value": ""
+    }
+  ]
+}

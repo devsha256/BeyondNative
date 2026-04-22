@@ -3,6 +3,7 @@ from flask_cors import CORS
 from devops_module import AzureDevOpsManager
 from mulesoft_module import MuleSoftManager, MuleSoftAuthError
 from postman_module import PostmanManager
+from boomi_module import BoomiManager
 from concurrent.futures import ThreadPoolExecutor
 import db_utils
 import os
@@ -11,6 +12,7 @@ import re
 import json
 import requests
 import urllib3
+from logger import log
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 from json_logic import JSONLogicArchitect
@@ -23,6 +25,7 @@ CORS(app)
 devops = AzureDevOpsManager()
 mule = MuleSoftManager()
 postman = PostmanManager()
+boomi = BoomiManager()
 jq_architect = JSONLogicArchitect()
 
 # --- JQ Logic APIs ---
@@ -45,10 +48,10 @@ def home():
 
 @app.route('/api/health-check')
 def health_check_api():
-    # Execute checks (could be in parallel but even sequential here is better than blocking index)
     return jsonify({
         "devops": devops.check_connection(),
-        "mulesoft": mule.check_connection()
+        "mulesoft": mule.check_connection(),
+        "boomi": boomi.check_connection()
     })
 
 @app.route('/devops')
@@ -160,7 +163,7 @@ def set_mule_session():
 
 @app.route('/settings')
 def settings_page():
-    keys = ['azure_org', 'azure_project', 'azure_pat', 'mule_client_id', 'mule_client_secret', 'mule_bearer', 'mule_default_org', 'mule_default_env']
+    keys = ['azure_org', 'azure_project', 'azure_pat', 'mule_client_id', 'mule_client_secret', 'mule_bearer', 'mule_default_org', 'mule_default_env', 'boomi_account_id', 'boomi_username', 'boomi_api_key']
     setting_vals = {k: db_utils.get_setting(k) for k in keys}
     return render_template('settings.html', settings=setting_vals)
 
@@ -174,8 +177,24 @@ def save_settings():
     # Force managers to reload their configs from DB
     devops.refresh_configs()
     mule.refresh_configs()
+    boomi.refresh_configs()
     
     return jsonify({"status": "success", "message": "Settings updated and managers refreshed!"})
+
+# --- Boomi APIs ---
+@app.route('/boomi')
+def boomi_index():
+    return render_template('boomi/index.html')
+
+@app.route('/boomi/discovery')
+def boomi_discovery():
+    return render_template('boomi/discovery.html')
+
+@app.route('/api/boomi/components')
+def boomi_api_components():
+    ctype = request.args.get('type')
+    components = boomi.get_components(ctype)
+    return jsonify(components)
 
 @app.route('/api/mule/orgs', methods=['GET'])
 def get_mule_orgs():
@@ -190,6 +209,32 @@ def get_mule_envs(org_id):
         return jsonify(mule.get_environments(org_id))
     except MuleSoftAuthError:
         return jsonify({"error": "Unauthorized"}), 401
+
+@app.route('/boomi/dependency-tree')
+def boomi_dependency_tree():
+    return render_template('boomi/dependency_tree.html')
+
+@app.route('/api/boomi/package-dependencies')
+def boomi_api_package_dependencies():
+    name = request.args.get('name')
+    version = request.args.get('version')
+    log.debug(f"API Trigger: Dependency Tree for '{name}' (v:{version})")
+    if not name: return jsonify({"error": "Name required"}), 400
+    
+    pkg = boomi.get_package_by_name(name, version)
+    if not pkg: 
+        log.warning(f"Dependency Tree Search: No Package found for '{name}'")
+        return jsonify({"error": "Package not found"}), 404
+    
+    manifest = boomi.get_package_manifest(pkg['packageId'])
+    if not manifest: 
+        log.warning(f"Dependency Tree Search: No Manifest found for package {pkg['packageId']}")
+        return jsonify({"error": "Manifest not found"}), 404
+    
+    return jsonify({
+        "package": pkg,
+        "included": manifest.get('includedComponent', [])
+    })
 
 @app.route('/api/mule/apps', methods=['POST'])
 def fetch_mule_apps():
