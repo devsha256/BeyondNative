@@ -337,6 +337,52 @@
                 }
             });
 
+            // Smart Auto-Completion Provider
+            monaco.languages.registerCompletionItemProvider('dataweave', {
+                triggerCharacters: ['.', ':', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'],
+                provideCompletionItems: async function(model, position) {
+                    const word = model.getWordUntilPosition(position);
+                    const range = {
+                        startLineNumber: position.lineNumber,
+                        endLineNumber: position.lineNumber,
+                        startColumn: word.startColumn,
+                        endColumn: word.endColumn
+                    };
+
+                    try {
+                        const fullText = model.getValue();
+
+                        const res = await fetch('/api/dw/autocomplete', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                text: fullText,
+                                word: word.word,
+                                line: position.lineNumber,
+                                column: position.column
+                            })
+                        });
+
+                        const data = await res.json();
+                        if (data.success && data.suggestions) {
+                            const suggestions = data.suggestions.map(s => ({
+                                label: s.label,
+                                kind: s.kind,
+                                insertText: s.snippet || s.label,
+                                insertTextRules: s.snippet ? monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet : monaco.languages.CompletionItemInsertTextRule.None,
+                                documentation: s.doc || '',
+                                range: range
+                            }));
+                            return { suggestions: suggestions };
+                        }
+                    } catch (e) {
+                        console.error('Autocomplete failed', e);
+                    }
+
+                    return { suggestions: [] };
+                }
+            });
+
             const commonOptions = {
                 theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'vs-dark' : 'vs',
                 fontFamily: "'Fira Code', monospace",

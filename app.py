@@ -5,6 +5,7 @@ from mulesoft_module import MuleSoftManager, MuleSoftAuthError
 from postman_module import PostmanManager
 from boomi_module import BoomiManager
 from dw_module import DataWeaveManager
+from dw_lsp_manager import DataWeaveLSPManager
 from concurrent.futures import ThreadPoolExecutor
 import db_utils
 import os
@@ -28,6 +29,7 @@ mule = MuleSoftManager()
 postman = PostmanManager()
 boomi = BoomiManager()
 dw_engine = DataWeaveManager()
+dw_lsp = DataWeaveLSPManager()
 jq_architect = JSONLogicArchitect()
 
 # --- JQ Logic APIs ---
@@ -256,6 +258,22 @@ def dw_evaluate_api():
         
     result = dw_engine.evaluate(inputs, scripts)
     return jsonify(result)
+
+@app.route('/api/dw/autocomplete', methods=['POST'])
+def dw_autocomplete_api():
+    data = request.json
+    context_code = data.get('text', '')
+    # Monaco lines are 1-indexed, LSP is 0-indexed
+    line = data.get('line', 1) - 1
+    character = data.get('column', 1) - 1
+    
+    suggestions = dw_lsp.get_lsp_completions(context_code, line, character)
+    
+    # If LSP returns empty array, fallback to static snippets
+    if not suggestions:
+        suggestions = dw_lsp.static_snippets
+        
+    return jsonify({"success": True, "suggestions": suggestions})
 
 @app.route('/api/mule/apps', methods=['POST'])
 def fetch_mule_apps():
