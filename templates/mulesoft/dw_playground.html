@@ -1,0 +1,928 @@
+{% extends "base.html" %}
+
+{% block title %}DataWeave Playground | MuleSoft Suite{% endblock %}
+
+{% block content %}
+<div class="m3-playground-shell elite-theme">
+    <div class="elite-bg-glow dw"></div>
+    
+    <!-- Google IDX Inspired Minimal App Bar -->
+    <div class="m3-glass-appbar minimal">
+        <div class="appbar-left">
+            <button class="m3-icon-button-outlined sidebar-toggle" onclick="toggleSidebar()" title="Toggle Project Explorer">
+                <i class="material-icons">menu_open</i>
+            </button>
+            <div class="title-with-help">
+                <span class="m3-badge-mini">IDE</span>
+                <h3 class="idx-title">DataWeave <span class="text-gradient-dw">Playground</span></h3>
+                <button class="m3-tonal-icon-btn help-trigger mini" onclick="toggleHelpModal()" title="Setup Guide">
+                    <i class="material-icons">info</i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="appbar-center">
+            <div class="file-chip">
+                <i class="material-icons">description</i>
+                <span>Untitled.dwl</span>
+            </div>
+        </div>
+
+        <div class="appbar-actions">
+            <button class="m3-icon-fab dw-run mini" onclick="executeDW()" title="Execute Transformation">
+                <i class="material-icons">play_arrow</i>
+            </button>
+            <div class="v-divider"></div>
+            <a href="/mulesoft" class="m3-icon-button" title="Exit IDE">
+                <i class="material-icons">close</i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Main IDE Workspace -->
+    <div class="playground-main">
+        <!-- Sidebar: Project Explorer (Collapsed by default) -->
+        <aside id="ide-sidebar" class="project-explorer collapsed">
+            <div class="explorer-section">
+                <div class="section-header">
+                    <span>INPUTS</span>
+                    <button class="icon-mini-btn" onclick="addInput()" title="Add Input">
+                        <i class="material-icons">add</i>
+                    </button>
+                </div>
+                <div id="explorer-inputs" class="explorer-list">
+                    <!-- Dynamic Inputs List -->
+                </div>
+            </div>
+            
+            <div class="v-spacer"></div>
+
+            <div class="explorer-section">
+                <div class="section-header">
+                    <span>MODULES</span>
+                    <button class="icon-mini-btn" onclick="addScript()" title="Add Module">
+                        <i class="material-icons">add</i>
+                    </button>
+                </div>
+                <div id="explorer-modules" class="explorer-list">
+                    <!-- Dynamic Modules List -->
+                </div>
+            </div>
+        </aside>
+
+        <div class="playground-workspace">
+            <!-- Pane 1: Inputs -->
+            <div class="dw-pane glass payload-pane" id="pane-input">
+                <div class="pane-header tabs-header">
+                    <div id="input-tabs" class="tabs-scroll">
+                        <!-- Dynamic Input Tabs -->
+                    </div>
+                </div>
+                <div class="pane-body">
+                    <div id="input-config" class="input-config-bar">
+                        <span id="active-input-name">payload</span>
+                        <select id="input-type" class="m3-mini-select" onchange="updateActiveInputType()">
+                            <option value="json">JSON</option>
+                            <option value="xml">XML</option>
+                            <option value="csv">CSV</option>
+                            <option value="yaml">YAML</option>
+                            <option value="txt">TEXT</option>
+                        </select>
+                    </div>
+                    <textarea id="dw-input" class="editor-textarea" oninput="saveCurrentInput()"></textarea>
+                </div>
+            </div>
+
+            <div class="resizer" id="resizer-1"></div>
+
+            <!-- Pane 2: Scripts -->
+            <div class="dw-pane glass script-pane" id="pane-script">
+                <div class="pane-header tabs-header">
+                    <div id="script-tabs" class="tabs-scroll">
+                        <!-- Dynamic Script Tabs -->
+                    </div>
+                </div>
+                <div class="pane-body">
+                    <textarea id="dw-script" class="editor-textarea script-font" oninput="saveCurrentScript()"></textarea>
+                </div>
+            </div>
+
+            <div class="resizer" id="resizer-2"></div>
+
+            <!-- Pane 3: Output -->
+            <div class="dw-pane glass output-pane" id="pane-output">
+                <div class="pane-header">
+                    <div class="pane-title">
+                        <i class="material-icons">output</i>
+                        <span>Output</span>
+                    </div>
+                    <div class="pane-controls">
+                        <button class="icon-mini-btn" onclick="copyOutput()" title="Copy Result">
+                            <i class="material-icons">content_copy</i>
+                        </button>
+                    </div>
+                </div>
+                <div class="pane-body">
+                    <div id="dw-error-panel" class="dw-error-panel hidden">
+                        <div class="error-status">
+                            <i class="material-icons">error</i>
+                            <span>Compiler Error</span>
+                        </div>
+                        <pre id="error-message"></pre>
+                    </div>
+                    <textarea id="dw-output" class="editor-textarea readonly" readonly placeholder="Transformation result..."></textarea>
+                    
+                    <!-- Loading State -->
+                    <div id="dw-loading" class="dw-loading-overlay hidden">
+                        <div class="loader-circle"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Setup Guide Modal -->
+    <div id="setup-modal" class="m3-modal-overlay hidden">
+        <div class="m3-modal glass">
+            <div class="modal-header">
+                <div class="header-title">
+                    <i class="material-icons">terminal</i>
+                    <h3>Environment Setup Guide</h3>
+                </div>
+                <button class="m3-icon-button" onclick="toggleHelpModal()">
+                    <i class="material-icons">close</i>
+                </button>
+            </div>
+            <div class="modal-body scrollable">
+                <div class="guide-tabs">
+                    <button class="tab-btn active" onclick="switchGuide(event, 'mac')">macOS</button>
+                    <button class="tab-btn" onclick="switchGuide(event, 'win')">Windows</button>
+                    <button class="tab-btn" onclick="switchGuide(event, 'linux')">Linux</button>
+                </div>
+
+                <!-- macOS Guide -->
+                <div id="guide-mac" class="guide-content">
+                    <section>
+                        <h5>1. Install Java (JDK 11+)</h5>
+                        <p>Recommended: Amazon Corretto 11. Run: <code>brew install --cask corretto</code></p>
+                    </section>
+                    <section>
+                        <h5>2. Configure Path</h5>
+                        <p>Ensure JAVA_HOME is in <code>~/.zshrc</code>:</p>
+                        <pre>export JAVA_HOME=$(/usr/libexec/java_home)&#10;export PATH=$JAVA_HOME/bin:$PATH</pre>
+                    </section>
+                    <section>
+                        <h5>3. Install DataWeave CLI</h5>
+                        <p>1. Download the <strong>Mac</strong> binary from <code>mulesoft/data-weave-cli/releases</code>.</p>
+                        <p>2. Extract to <code>~/.dw</code> and add its bin folder to your <code>~/.zshrc</code>:</p>
+                        <pre>export PATH=$PATH:~/.dw/bin</pre>
+                        <p>3. Restart terminal and run <code>dw --version</code>.</p>
+                    </section>
+                </div>
+
+                <!-- Windows Guide -->
+                <div id="guide-win" class="guide-content hidden">
+                    <section>
+                        <h5>1. Install Java (JDK 11+)</h5>
+                        <p>Download the MSI installer for Amazon Corretto 11 or 17.</p>
+                    </section>
+                    <section>
+                        <h5>2. Configure Path</h5>
+                        <p>Add <code>JAVA_HOME</code> to System Variables. Then add <code>%JAVA_HOME%\bin</code> to your <code>Path</code>.</p>
+                    </section>
+                    <section>
+                        <h5>3. Install DataWeave CLI</h5>
+                        <p>1. Download the Windows binary from <code>mulesoft/data-weave-cli/releases</code>.</p>
+                        <p>2. Extract to <code>C:\dw</code> and add <code>C:\dw\bin</code> to your system PATH.</p>
+                        <p>3. Restart Terminal and run <code>dw --version</code>.</p>
+                    </section>
+                </div>
+
+                <!-- Linux Guide -->
+                <div id="guide-linux" class="guide-content hidden">
+                    <section>
+                        <h5>1. Install Java (JDK 11+)</h5>
+                        <p>Ubuntu/Debian: <code>sudo apt install openjdk-11-jdk</code></p>
+                    </section>
+                    <section>
+                        <h5>2. Configure Path</h5>
+                        <p>Add to <code>~/.bashrc</code>:</p>
+                        <pre>export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64&#10;export PATH=$JAVA_HOME/bin:$PATH</pre>
+                    </section>
+                    <section>
+                        <h5>3. Install DataWeave CLI</h5>
+                        <p>Download the Linux binary from <code>mulesoft/data-weave-cli</code>, extract to <code>~/.dw</code>, and add <code>~/.dw/bin</code> to your PATH.</p>
+                    </section>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="m3-fab-extend elite-btn small" onclick="toggleHelpModal()">
+                    <span>Got it!</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Project State Management ---
+    let projectState = {
+        inputs: {
+            "payload": { content: '{\n  "message": "Hello Beyond Native",\n  "status": "Elite"\n}', type: "json" }
+        },
+        scripts: {
+            "main.dwl": "%dw 2.0\noutput application/json\n---\npayload"
+        },
+        activeInput: "payload",
+        activeScript: "main.dwl"
+    };
+
+    const inputArea = document.getElementById('dw-input');
+    const scriptArea = document.getElementById('dw-script');
+    const outputArea = document.getElementById('dw-output');
+
+    function toggleSidebar() {
+        const sidebar = document.getElementById('ide-sidebar');
+        const shell = document.querySelector('.m3-playground-shell');
+        sidebar.classList.toggle('collapsed');
+        shell.classList.toggle('sidebar-active');
+        
+        // Update icon based on state
+        const icon = document.querySelector('.sidebar-toggle i');
+        icon.innerText = sidebar.classList.contains('collapsed') ? 'menu_open' : 'menu';
+    }
+
+    function initIDE() {
+        renderExplorer();
+        renderTabs();
+        loadActiveEditors();
+        setupResizers();
+    }
+
+    function setupResizers() {
+        console.log("Initializing DataWeave IDE Resizers...");
+        const resizer1 = document.getElementById('resizer-1');
+        const resizer2 = document.getElementById('resizer-2');
+        
+        const pane1 = document.getElementById('pane-input');
+        const pane2 = document.getElementById('pane-script');
+        const pane3 = document.getElementById('pane-output');
+
+        if (!resizer1 || !resizer2) {
+            console.error("Resizer elements not found!");
+            return;
+        }
+
+        function initResizer(resizer, leftPane, rightPane, id) {
+            let startX, startWidthLeft, startWidthRight;
+
+            resizer.addEventListener('mousedown', function(e) {
+                console.log(`Resizer ${id} drag started`);
+                startX = e.clientX;
+                startWidthLeft = leftPane.getBoundingClientRect().width;
+                startWidthRight = rightPane.getBoundingClientRect().width;
+                
+                resizer.classList.add('dragging');
+                document.documentElement.style.cursor = 'col-resize';
+                
+                const overlay = document.createElement('div');
+                overlay.style.position = 'fixed';
+                overlay.style.inset = '0';
+                overlay.style.zIndex = '99999';
+                overlay.style.cursor = 'col-resize';
+                document.body.appendChild(overlay);
+
+                function onMouseMove(e) {
+                    const deltaX = e.clientX - startX;
+                    const newWidthLeft = startWidthLeft + deltaX;
+                    const newWidthRight = startWidthRight - deltaX;
+
+                    if (newWidthLeft > 100 && newWidthRight > 100) {
+                        // Apply fixed widths to both panes involved in the resize
+                        leftPane.style.width = `${newWidthLeft}px`;
+                        leftPane.style.flex = '0 0 auto';
+                        
+                        rightPane.style.width = `${newWidthRight}px`;
+                        rightPane.style.flex = '0 0 auto';
+                    }
+                }
+
+                function onMouseUp() {
+                    console.log(`Resizer ${id} drag ended`);
+                    resizer.classList.remove('dragging');
+                    document.documentElement.style.cursor = 'default';
+                    if (document.body.contains(overlay)) document.body.removeChild(overlay);
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                }
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+        }
+
+        initResizer(resizer1, pane1, pane2, "1");
+        initResizer(resizer2, pane2, pane3, "2");
+        console.log("Resizers setup complete.");
+    }
+
+    function renderExplorer() {
+        const inputList = document.getElementById('explorer-inputs');
+        const scriptList = document.getElementById('explorer-modules');
+        
+        inputList.innerHTML = Object.keys(projectState.inputs).map(name => `
+            <div class="explorer-item ${projectState.activeInput === name ? 'active' : ''}" onclick="switchInput('${name}')">
+                <i class="material-icons">data_object</i>
+                <span>${name}</span>
+            </div>
+        `).join('');
+
+        scriptList.innerHTML = Object.keys(projectState.scripts).map(name => `
+            <div class="explorer-item ${projectState.activeScript === name ? 'active' : ''}" onclick="switchScript('${name}')">
+                <i class="material-icons">description</i>
+                <span>${name}</span>
+            </div>
+        `).join('');
+    }
+
+    function renderTabs() {
+        const inputTabs = document.getElementById('input-tabs');
+        const scriptTabs = document.getElementById('script-tabs');
+        
+        inputTabs.innerHTML = Object.keys(projectState.inputs).map(name => `
+            <div class="tab ${projectState.activeInput === name ? 'active' : ''}" onclick="switchInput('${name}')">
+                <i class="material-icons">data_object</i>
+                <span>${name}</span>
+                ${name !== 'payload' ? `<i class="material-icons tab-close" onclick="deleteInput(event, '${name}')">close</i>` : ''}
+            </div>
+        `).join('');
+
+        scriptTabs.innerHTML = Object.keys(projectState.scripts).map(name => `
+            <div class="tab ${projectState.activeScript === name ? 'active' : ''}" onclick="switchScript('${name}')">
+                <i class="material-icons">description</i>
+                <span>${name}</span>
+                ${name !== 'main.dwl' ? `<i class="material-icons tab-close" onclick="deleteScript(event, '${name}')">close</i>` : ''}
+            </div>
+        `).join('');
+    }
+
+    function loadActiveEditors() {
+        const activeInput = projectState.inputs[projectState.activeInput];
+        inputArea.value = activeInput.content;
+        document.getElementById('input-type').value = activeInput.type;
+        document.getElementById('active-input-name').innerText = projectState.activeInput;
+
+        scriptArea.value = projectState.scripts[projectState.activeScript];
+    }
+
+    // --- Actions ---
+    function switchInput(name) {
+        saveCurrentState();
+        projectState.activeInput = name;
+        initIDE();
+    }
+
+    function switchScript(name) {
+        saveCurrentState();
+        projectState.activeScript = name;
+        initIDE();
+    }
+
+    function saveCurrentState() {
+        projectState.inputs[projectState.activeInput].content = inputArea.value;
+        projectState.scripts[projectState.activeScript] = scriptArea.value;
+    }
+
+    function saveCurrentInput() { projectState.inputs[projectState.activeInput].content = inputArea.value; }
+    function saveCurrentScript() { projectState.scripts[projectState.activeScript] = scriptArea.value; }
+
+    function updateActiveInputType() {
+        projectState.inputs[projectState.activeInput].type = document.getElementById('input-type').value;
+    }
+
+    function addInput() {
+        const name = prompt("Enter input name (e.g. vars):");
+        if (name && !projectState.inputs[name]) {
+            projectState.inputs[name] = { content: "{}", type: "json" };
+            switchInput(name);
+        }
+    }
+
+    function addScript() {
+        const name = prompt("Enter module name (e.g. MyLib.dwl):");
+        if (name) {
+            const filename = name.endsWith(".dwl") ? name : name + ".dwl";
+            if (!projectState.scripts[filename]) {
+                projectState.scripts[filename] = "%dw 2.0\n---";
+                switchScript(filename);
+            }
+        }
+    }
+
+    function deleteInput(e, name) {
+        e.stopPropagation();
+        if (confirm(`Delete input '${name}'?`)) {
+            delete projectState.inputs[name];
+            if (projectState.activeInput === name) projectState.activeInput = "payload";
+            initIDE();
+        }
+    }
+
+    function deleteScript(e, name) {
+        e.stopPropagation();
+        if (confirm(`Delete script '${name}'?`)) {
+            delete projectState.scripts[name];
+            if (projectState.activeScript === name) projectState.activeScript = "main.dwl";
+            initIDE();
+        }
+    }
+
+    // --- Execution ---
+    async function executeDW() {
+        saveCurrentState();
+        const errorPanel = document.getElementById('dw-error-panel');
+        const errorMsg = document.getElementById('error-message');
+        const loading = document.getElementById('dw-loading');
+        const runBtn = document.querySelector('.dw-run');
+
+        errorPanel.classList.add('hidden');
+        loading.classList.remove('hidden');
+
+        try {
+            const res = await fetch('/api/dw/evaluate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    inputs: projectState.inputs,
+                    scripts: projectState.scripts
+                })
+            });
+            const result = await res.json();
+
+            if (result.success) {
+                outputArea.value = result.output;
+                outputArea.classList.remove('error-text');
+            } else {
+                errorPanel.classList.remove('hidden');
+                errorMsg.innerText = result.error;
+                outputArea.value = "Execution failed.";
+                outputArea.classList.add('error-text');
+            }
+        } catch (e) {
+            showToast("DW Engine unreachable", "error");
+        } finally {
+            loading.classList.add('hidden');
+        }
+    }
+
+    function copyOutput() {
+        if (!outputArea.value) return;
+        outputArea.select();
+        document.execCommand('copy');
+        showToast("Copied to clipboard", "success");
+    }
+
+    function toggleHelpModal() {
+        document.getElementById('setup-modal').classList.toggle('hidden');
+    }
+
+    function switchGuide(e, os) {
+        document.querySelectorAll('.guide-content').forEach(c => c.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`guide-${os}`).classList.remove('hidden');
+        e.currentTarget.classList.add('active');
+    }
+
+    // Handle Tabs in Editor
+    document.querySelectorAll('.editor-textarea').forEach(el => {
+        el.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
+                this.selectionStart = this.selectionEnd = start + 4;
+            }
+        });
+    });
+
+    // Global Initialization
+    window.addEventListener('load', initIDE);
+</script>
+
+<style>
+    .m3-playground-shell {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: #fbfbfc;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .text-gradient-dw {
+        background: linear-gradient(90deg, var(--m3-primary), #00B5E2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Minimal M3 App Bar (Google IDX Style) */
+    .m3-glass-appbar.minimal {
+        height: 56px;
+        padding: 0 20px;
+        background: var(--m3-surface);
+        border-bottom: 1px solid var(--m3-outline);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        z-index: 100;
+        flex-shrink: 0;
+    }
+    
+    .idx-title { 
+        margin: 0; 
+        font-size: 13px; 
+        font-weight: 800; 
+        letter-spacing: -0.2px;
+        opacity: 0.9;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .m3-badge-mini { 
+        font-size: 8px; 
+        font-weight: 900; 
+        padding: 1px 6px; 
+        background: var(--m3-primary); 
+        color: white; 
+        border-radius: 4px; 
+        letter-spacing: 0.5px;
+    }
+
+    .appbar-left { display: flex; align-items: center; gap: 16px; }
+    .title-with-help { display: flex; align-items: center; gap: 8px; }
+
+    .appbar-center {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+    }
+    
+    .file-chip {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(0,0,0,0.03);
+        padding: 6px 16px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        opacity: 0.6;
+    }
+    .file-chip i { font-size: 16px; }
+
+    .appbar-actions { display: flex; align-items: center; gap: 8px; }
+    .v-divider { width: 1px; height: 24px; background: var(--m3-outline); margin: 0 8px; }
+
+    .m3-tonal-icon-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 14px;
+        background: rgba(103, 80, 164, 0.1);
+        color: var(--m3-primary);
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .m3-tonal-icon-btn:hover { background: rgba(103, 80, 164, 0.2); transform: scale(1.05); }
+    .m3-tonal-icon-btn i { font-size: 16px; }
+
+    .m3-icon-fab.mini { width: 36px; height: 36px; box-shadow: none; }
+    .m3-icon-fab.mini i { font-size: 20px; }
+
+    /* Modal Styling */
+    .m3-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        animation: fadeIn 0.3s ease;
+    }
+    .m3-modal {
+        width: 600px;
+        max-width: 90vw;
+        max-height: 85vh;
+        background: white;
+        border-radius: 40px;
+        padding: 40px;
+        box-shadow: 0 40px 100px rgba(0,0,0,0.2);
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        position: relative;
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+    .header-title { display: flex; align-items: center; gap: 16px; }
+    .header-title i { color: var(--m3-primary); font-size: 28px; }
+    .header-title h3 { margin: 0; font-size: 1.3rem; font-weight: 800; }
+
+    .modal-body { flex: 1; overflow-y: auto; padding-right: 8px; }
+    .modal-body::-webkit-scrollbar { width: 4px; }
+    .modal-body::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
+
+    .guide-tabs { display: flex; gap: 8px; background: rgba(0,0,0,0.03); padding: 6px; border-radius: 16px; margin-bottom: 24px; position: sticky; top: 0; background: white; z-index: 10; }
+    .tab-btn { flex: 1; border: none; background: transparent; padding: 10px; border-radius: 12px; font-weight: 700; font-size: 12px; cursor: pointer; transition: 0.2s; color: var(--text-main); opacity: 0.5; }
+    .tab-btn.active { background: var(--m3-primary); color: white; opacity: 1; box-shadow: 0 4px 12px rgba(103, 80, 164, 0.2); }
+
+    .guide-content section { margin-bottom: 24px; }
+    .guide-content h5 { margin: 0 0 8px 0; font-size: 14px; font-weight: 800; color: var(--m3-primary); }
+    .guide-content p { margin: 0; font-size: 13px; opacity: 0.7; line-height: 1.5; }
+    .guide-content code { background: rgba(103, 80, 164, 0.05); color: var(--m3-primary); padding: 2px 6px; border-radius: 4px; font-family: monospace; font-weight: 700; }
+    .guide-content pre { background: #1c1b1f; color: #e6e1e5; padding: 16px; border-radius: 16px; font-size: 12px; font-family: 'Fira Code', monospace; margin-top: 12px; overflow: auto; }
+
+    .m3-fab-extend.small { height: 48px; border-radius: 24px; padding: 0 32px; align-self: flex-end; }
+
+    /* Workspace Layout */
+    .playground-main { flex: 1; display: flex; min-height: 0; }
+    .project-explorer { 
+        width: 200px; 
+        background: var(--m3-surface); 
+        border-right: 1px solid var(--m3-outline); 
+        display: flex; 
+        flex-direction: column; 
+        padding: 16px 0;
+        flex-shrink: 0;
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+    }
+    .project-explorer.collapsed { 
+        width: 0; 
+        padding-left: 0; 
+        padding-right: 0; 
+        border-right: none; 
+        opacity: 0;
+    }
+    
+    .sidebar-toggle i { transition: 0.3s ease; }
+    .project-explorer.collapsed ~ .playground-workspace { flex: 1; }
+    .sidebar-active .sidebar-toggle i { transform: rotate(180deg); }
+
+    .m3-icon-button-outlined {
+        width: 36px;
+        height: 36px;
+        border-radius: 18px;
+        border: 1px solid var(--m3-outline);
+        background: transparent;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        opacity: 0.6;
+    }
+    .m3-icon-button-outlined:hover {
+        background: rgba(103, 80, 164, 0.05);
+        border-color: var(--m3-primary);
+        color: var(--m3-primary);
+        opacity: 1;
+    }
+    .m3-icon-button-outlined i { font-size: 20px; }
+    .explorer-section { display: flex; flex-direction: column; gap: 8px; }
+    .section-header { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        padding: 0 16px; 
+        font-size: 10px; 
+        font-weight: 800; 
+        letter-spacing: 1px; 
+        opacity: 0.5; 
+        margin-bottom: 8px;
+    }
+    .explorer-list { display: flex; flex-direction: column; }
+    .explorer-item { 
+        display: flex; 
+        align-items: center; 
+        gap: 10px; 
+        padding: 8px 16px; 
+        font-size: 12px; 
+        cursor: pointer; 
+        transition: 0.2s;
+        border-left: 3px solid transparent;
+        color: var(--text-main);
+        opacity: 0.7;
+    }
+    .explorer-item i { font-size: 16px; opacity: 0.6; }
+    .explorer-item:hover { background: rgba(0,0,0,0.03); opacity: 1; }
+    .explorer-item.active { 
+        background: rgba(103, 80, 164, 0.05); 
+        color: var(--m3-primary); 
+        opacity: 1; 
+        border-left-color: var(--m3-primary);
+        font-weight: 600;
+    }
+    .v-spacer { height: 32px; }
+
+    /* Tabs */
+    .tabs-header { 
+        padding: 0 !important; 
+        background: rgba(0,0,0,0.01) !important; 
+        height: 40px !important;
+        overflow: hidden;
+    }
+    .tabs-scroll { display: flex; height: 100%; }
+    .tab {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 16px;
+        height: 100%;
+        font-size: 11px;
+        font-weight: 700;
+        border-right: 1px solid rgba(0,0,0,0.05);
+        cursor: pointer;
+        opacity: 0.5;
+        transition: 0.2s;
+        background: rgba(0,0,0,0.02);
+        max-width: 150px;
+        min-width: 80px;
+    }
+    .tab span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tab.active { 
+        opacity: 1; 
+        background: white; 
+        border-bottom: 2px solid var(--m3-primary); 
+        color: var(--m3-primary);
+    }
+    .tab i { font-size: 14px; }
+    .tab-close { font-size: 12px !important; opacity: 0.3; }
+    .tab-close:hover { opacity: 1; color: #b71c1c; }
+
+    .input-config-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 16px;
+        background: rgba(0,0,0,0.01);
+        border-bottom: 1px solid rgba(0,0,0,0.03);
+        font-size: 11px;
+        font-weight: 800;
+        color: var(--m3-primary);
+    }
+
+    .playground-workspace {
+        flex: 1;
+        display: flex;
+        background: var(--m3-outline);
+        min-width: 0;
+        height: 100%;
+        position: relative;
+    }
+
+    .resizer {
+        width: 6px;
+        background: var(--m3-outline);
+        cursor: col-resize;
+        z-index: 10;
+        transition: background 0.2s, width 0.2s;
+        flex-shrink: 0;
+        margin: 0 -2px; /* Slight overlap for easier grabbing */
+    }
+
+    .resizer:hover, .resizer.dragging {
+        background: var(--m3-primary);
+        width: 8px;
+    }
+
+    .dw-pane {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: white;
+        min-width: 100px;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .pane-header {
+        height: 40px;
+        padding: 0 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(0,0,0,0.02);
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        flex-shrink: 0;
+    }
+
+    .pane-title { display: flex; align-items: center; gap: 8px; }
+    .pane-title i { font-size: 16px; color: var(--m3-primary); opacity: 0.6; }
+    .pane-title span { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.6; }
+
+    .pane-body { flex: 1; position: relative; min-height: 0; display: flex; flex-direction: column; }
+    
+    .editor-textarea {
+        width: 100%;
+        height: 100%;
+        border: none;
+        padding: 24px;
+        font-family: 'Fira Code', 'Cascadia Code', monospace;
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--text-main);
+        background: transparent;
+        resize: none;
+        outline: none;
+    }
+    .editor-textarea.readonly { background: rgba(0,0,0,0.01); color: #555; }
+    .script-font { color: var(--m3-primary); }
+
+    /* Controls */
+    .m3-mini-select {
+        background: transparent;
+        border: none;
+        font-size: 11px;
+        font-weight: 900;
+        color: var(--m3-primary);
+        text-transform: uppercase;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 8px;
+    }
+    .m3-mini-select:hover { background: rgba(103, 80, 164, 0.05); }
+
+    .m3-badge-mini { font-size: 9px; font-weight: 900; padding: 2px 8px; background: rgba(0,0,0,0.05); border-radius: 10px; opacity: 0.5; }
+
+    .icon-mini-btn { background: transparent; border: none; color: var(--m3-primary); opacity: 0.5; cursor: pointer; padding: 4px; border-radius: 8px; transition: 0.2s; }
+    .icon-mini-btn:hover { opacity: 1; background: rgba(103, 80, 164, 0.05); }
+
+    /* Circular FAB */
+    .m3-icon-fab {
+        width: 48px;
+        height: 48px;
+        border-radius: 24px;
+        background: var(--m3-primary);
+        color: white;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(103, 80, 164, 0.2);
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .m3-icon-fab:hover { 
+        transform: scale(1.1); 
+        box-shadow: 0 8px 24px rgba(103, 80, 164, 0.3);
+    }
+    .m3-icon-fab i { font-size: 24px; }
+
+    /* Error Panel */
+    .dw-error-panel {
+        position: absolute;
+        bottom: 24px;
+        left: 24px;
+        right: 24px;
+        background: #feebee;
+        border: 1px solid rgba(183,28,28,0.1);
+        border-radius: 16px;
+        padding: 16px;
+        z-index: 5;
+        max-height: 40%;
+        overflow: auto;
+    }
+    .error-status { display: flex; align-items: center; gap: 8px; color: #b71c1c; font-weight: 800; font-size: 11px; text-transform: uppercase; margin-bottom: 8px; }
+    .error-status i { font-size: 18px; }
+    #error-message { font-family: monospace; font-size: 12px; margin: 0; white-space: pre-wrap; color: #b71c1c; opacity: 0.8; }
+
+    /* Loading Overlay */
+    .dw-loading-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.4); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; z-index: 2; }
+    .loader-circle { width: 32px; height: 32px; border: 3px solid rgba(103, 80, 164, 0.1); border-top-color: var(--m3-primary); border-radius: 50%; animation: spin 1s linear infinite; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Dark Mode */
+    [data-theme='dark'] .m3-playground-shell { background: #141218; }
+    [data-theme='dark'] .m3-glass-appbar { background: rgba(25, 24, 28, 0.82); border-bottom-color: rgba(255,255,255,0.05); }
+    [data-theme='dark'] .dw-pane { background: #1c1b1f; }
+    [data-theme='dark'] .pane-header { background: rgba(255,255,255,0.02); border-bottom-color: rgba(255,255,255,0.05); }
+    [data-theme='dark'] .editor-textarea { color: #E6E1E5; }
+    [data-theme='dark'] .dw-error-panel { background: rgba(183, 28, 28, 0.15); border-color: rgba(183,28,28,0.3); color: #ffb4ab; }
+    [data-theme='dark'] .error-status { color: #ffb4ab; }
+    [data-theme='dark'] #error-message { color: #ffb4ab; }
+    [data-theme='dark'] .guide-tabs { background: #1c1b1f; }
+    [data-theme='dark'] .tab-btn.active { background: var(--m3-primary); }
+
+    .hidden { display: none !important; }
+</style>
+{% endblock %}

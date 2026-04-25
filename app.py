@@ -240,6 +240,23 @@ def boomi_api_package_dependencies():
         "included": manifest.get('includedComponent', [])
     })
 
+# --- DataWeave Playround ---
+@app.route('/mulesoft/dw-playground')
+def dw_playground():
+    return render_template('mulesoft/dw_playground.html')
+
+@app.route('/api/dw/evaluate', methods=['POST'])
+def dw_evaluate_api():
+    data = request.json
+    inputs = data.get('inputs', {})   # Map of {name: {content, type}}
+    scripts = data.get('scripts', {}) # Map of {filename: content}
+    
+    if not inputs and not scripts:
+        return jsonify({"success": False, "error": "No data provided"})
+        
+    result = dw_engine.evaluate(inputs, scripts)
+    return jsonify(result)
+
 @app.route('/api/mule/apps', methods=['POST'])
 def fetch_mule_apps():
     data = request.json
