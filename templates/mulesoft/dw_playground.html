@@ -621,6 +621,22 @@
 
             if (result.success) {
                 editors.output.setValue(result.output);
+                
+                // Detect output format from the script directive
+                const scriptText = projectState.scripts[projectState.activeScript];
+                const outputMatch = scriptText.match(/output\s+([\w/-]+)/);
+                let lang = 'plaintext';
+                
+                if (outputMatch) {
+                    const mime = outputMatch[1];
+                    if (mime.includes('json')) lang = 'json';
+                    else if (mime.includes('xml')) lang = 'xml';
+                    else if (mime.includes('yaml')) lang = 'yaml';
+                    else if (mime.includes('csv')) lang = 'plaintext';
+                }
+                
+                monaco.editor.setModelLanguage(editors.output.getModel(), lang);
+                
                 document.getElementById('dw-output').classList.remove('hidden');
                 errorPanel.classList.add('hidden');
             } else {
