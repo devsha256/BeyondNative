@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}DataWeave Playground | MuleSoft Suite{% endblock %}
+{% block title %}DataWeave Lite | MuleSoft Suite{% endblock %}
 {% block viewport_class %}full-bleed{% endblock %}
 
 {% block extra_head %}
@@ -11,22 +11,23 @@
 {% block content %}
 <div class="m3-playground-shell elite-theme">
     <div class="elite-bg-glow dw"></div>
-    
+
     <!-- Google IDX Inspired Minimal App Bar -->
     <div class="m3-glass-appbar minimal">
         <div class="appbar-left">
-            <button class="m3-icon-button-outlined sidebar-toggle" onclick="toggleSidebar()" title="Toggle Project Explorer">
+            <button class="m3-icon-button-outlined sidebar-toggle" onclick="toggleSidebar()"
+                title="Toggle Project Explorer">
                 <i class="material-icons">menu_open</i>
             </button>
             <div class="title-with-help">
                 <span class="m3-badge-mini">IDE</span>
-                <h3 class="idx-title">DataWeave <span class="text-gradient-dw">Playground</span></h3>
+                <h3 class="idx-title">DataWeave <span class="text-gradient-dw">Lite</span></h3>
                 <button class="m3-tonal-icon-btn help-trigger mini" onclick="toggleHelpModal()" title="Setup Guide">
                     <i class="material-icons">info</i>
                 </button>
             </div>
         </div>
-        
+
         <div class="appbar-center">
             <div class="m3-segmented-control">
                 <button class="m3-segment" onclick="triggerImport()" title="Import Project (.zip)">
@@ -69,9 +70,9 @@
                     <!-- Dynamic Inputs List -->
                 </div>
             </div>
-            
+
             <div class="v-spacer"></div>
-            
+
             <div class="explorer-section active" id="section-modules">
                 <div class="section-header" onclick="toggleExplorerSection('modules')">
                     <div class="header-main">
@@ -151,7 +152,7 @@
                         <pre id="error-message"></pre>
                     </div>
                     <div id="dw-output" class="editor-instance readonly"></div>
-                    
+
                     <!-- Loading State -->
                     <div id="dw-loading" class="dw-loading-overlay hidden">
                         <div class="loader-circle"></div>
@@ -191,7 +192,8 @@
                         <p><strong>Option A: Homebrew (Recommended)</strong></p>
                         <pre>brew tap mulesoft-labs/data-weave&#10;brew install dw</pre>
                         <p><strong>Option B: Manual Installation</strong></p>
-                        <p>1. Download the Mac binary from <a href="https://github.com/mulesoft/data-weave-cli/releases" target="_blank" class="elite-link">GitHub Releases</a>.</p>
+                        <p>1. Download the Mac binary from <a href="https://github.com/mulesoft/data-weave-cli/releases"
+                                target="_blank" class="elite-link">GitHub Releases</a>.</p>
                         <p>2. Extract to <code>~/.dw</code> and add its bin folder to your <code>~/.zshrc</code>:</p>
                         <pre>export PATH=$PATH:~/.dw/bin</pre>
                     </section>
@@ -209,8 +211,11 @@
                     </section>
                     <section>
                         <h5>2. Install DataWeave CLI</h5>
-                        <p>1. Download the Windows binary from <a href="https://github.com/mulesoft/data-weave-cli/releases" target="_blank" class="elite-link">GitHub Releases</a>.</p>
-                        <p>2. Extract to <code>C:\dw</code> and add <code>C:\dw\bin</code> to your system <strong>Path</strong> environment variable.</p>
+                        <p>1. Download the Windows binary from <a
+                                href="https://github.com/mulesoft/data-weave-cli/releases" target="_blank"
+                                class="elite-link">GitHub Releases</a>.</p>
+                        <p>2. Extract to <code>C:\dw</code> and add <code>C:\dw\bin</code> to your system
+                            <strong>Path</strong> environment variable.</p>
                     </section>
                     <section>
                         <h5>3. Verify Installation</h5>
@@ -226,8 +231,11 @@
                     </section>
                     <section>
                         <h5>2. Install DataWeave CLI</h5>
-                        <p>1. Download the Linux binary from <a href="https://github.com/mulesoft/data-weave-cli/releases" target="_blank" class="elite-link">GitHub Releases</a>.</p>
-                        <p>2. Extract to <code>~/.dw</code> and add <code>export PATH=$PATH:~/.dw/bin</code> to your <code>~/.bashrc</code>.</p>
+                        <p>1. Download the Linux binary from <a
+                                href="https://github.com/mulesoft/data-weave-cli/releases" target="_blank"
+                                class="elite-link">GitHub Releases</a>.</p>
+                        <p>2. Extract to <code>~/.dw</code> and add <code>export PATH=$PATH:~/.dw/bin</code> to your
+                            <code>~/.bashrc</code>.</p>
                     </section>
                     <section>
                         <h5>3. Verify Installation</h5>
@@ -254,7 +262,8 @@
             </div>
             <div class="modal-body">
                 <p id="create-desc" class="m3-modal-desc">Enter unique identifier</p>
-                <input type="text" id="create-input" class="m3-modal-input" placeholder="e.g. workspace" autocomplete="off">
+                <input type="text" id="create-input" class="m3-modal-input" placeholder="e.g. workspace"
+                    autocomplete="off">
             </div>
             <div class="modal-footer">
                 <button class="m3-mini-btn outline" onclick="closeCreateModal()">Cancel</button>
@@ -284,13 +293,13 @@
         const shell = document.querySelector('.m3-playground-shell');
         sidebar.classList.toggle('collapsed');
         shell.classList.toggle('sidebar-active');
-        
+
         // Update icon based on state
         const icon = document.querySelector('.sidebar-toggle i');
         if (icon) {
             icon.innerText = sidebar.classList.contains('collapsed') ? 'menu_open' : 'menu';
         }
-        
+
         // Reflow editors
         setTimeout(() => {
             if (editors.input) editors.input.layout();
@@ -306,7 +315,7 @@
 
     // --- Monaco Integration ---
     let editors = { input: null, script: null, output: null };
-    
+
     require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' } });
 
     function initIDE() {
@@ -329,16 +338,17 @@
             });
 
             const commonOptions = {
-                theme: document.body.dataset.theme === 'dark' ? 'vs-dark' : 'vs',
+                theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'vs-dark' : 'vs',
                 fontFamily: "'Fira Code', monospace",
                 fontSize: 13,
                 automaticLayout: true,
+                wordWrap: 'on',
                 minimap: { enabled: false },
-                scrollBeyondLastLine: false,
+                scrollBeyondLastLine: true,
                 lineNumbers: 'on',
                 renderLineHighlight: 'all',
                 contextmenu: true,
-                padding: { top: 16 }
+                padding: { top: 16, bottom: 40 }
             };
 
             if (!editors.input) {
@@ -378,10 +388,10 @@
 
             // Theme sync
             const observer = new MutationObserver(() => {
-                const isDark = document.body.dataset.theme === 'dark';
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
                 monaco.editor.setTheme(isDark ? 'vs-dark' : 'vs');
             });
-            observer.observe(document.body, { attributes: true, attributeFilter: ['data-theme'] });
+            observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
             // Render navigation elements
             renderExplorer();
@@ -395,7 +405,7 @@
     function renderExplorer() {
         const inputList = document.getElementById('explorer-inputs');
         const scriptList = document.getElementById('explorer-modules');
-        
+
         inputList.innerHTML = Object.keys(projectState.inputs).map(name => `
             <div class="explorer-item ${projectState.activeInput === name ? 'active' : ''}" onclick="switchInput('${name}')">
                 <i class="material-icons">data_object</i>
@@ -443,14 +453,14 @@
 
     function loadActiveEditors() {
         if (!editors.input || !editors.script) return;
-        
+
         const activeInput = projectState.inputs[projectState.activeInput];
         editors.input.setValue(activeInput.content);
-        
+
         // Update language based on mime type
         const langMap = { 'json': 'json', 'xml': 'xml', 'csv': 'plaintext', 'yaml': 'yaml', 'txt': 'plaintext' };
         monaco.editor.setModelLanguage(editors.input.getModel(), langMap[activeInput.type] || 'plaintext');
-        
+
         document.getElementById('active-input-name').innerText = projectState.activeInput;
         renderMimeItems();
 
@@ -471,8 +481,8 @@
         renderExplorer();
     }
 
-    function saveCurrentInput() {} 
-    function saveCurrentScript() {} 
+    function saveCurrentInput() { }
+    function saveCurrentScript() { }
 
     function renderMimeItems() {
         const types = ['json', 'xml', 'csv', 'yaml', 'txt'];
@@ -507,9 +517,9 @@
 
     function addInput() {
         showCreateModal(
-            "New Metadata Input", 
-            "data_object", 
-            "Provide a name for the new data source (e.g. vars or userInfo).", 
+            "New Metadata Input",
+            "data_object",
+            "Provide a name for the new data source (e.g. vars or userInfo).",
             "input_name",
             (name) => {
                 if (!projectState.inputs[name]) {
@@ -522,9 +532,9 @@
 
     function addScript() {
         showCreateModal(
-            "New DataWeave Module", 
-            "description", 
-            "Add a support library or a helper script (.dwl).", 
+            "New DataWeave Module",
+            "description",
+            "Add a support library or a helper script (.dwl).",
             "Helper.dwl",
             (name) => {
                 const filename = name.endsWith(".dwl") ? name : name + ".dwl";
@@ -544,7 +554,7 @@
         const input = document.getElementById('create-input');
         input.placeholder = placeholder;
         input.value = '';
-        
+
         document.getElementById('create-modal').classList.remove('hidden');
         setTimeout(() => input.focus(), 100);
 
@@ -602,7 +612,7 @@
             const res = await fetch('/api/dw/evaluate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     inputs: projectState.inputs,
                     scripts: projectState.scripts
                 })
@@ -653,7 +663,7 @@
         if (!resizer1 || !resizer2) return;
 
         function initResizer(resizer, leftPane, rightPane) {
-            resizer.addEventListener('mousedown', function(e) {
+            resizer.addEventListener('mousedown', function (e) {
                 const overlay = document.createElement('div');
                 overlay.style.position = 'fixed';
                 overlay.style.inset = '0';
@@ -664,7 +674,7 @@
                 let startX = e.clientX;
                 let startWidthLeft = leftPane.getBoundingClientRect().width;
                 let startWidthRight = rightPane.getBoundingClientRect().width;
-                
+
                 resizer.classList.add('dragging');
 
                 function onMouseMove(e) {
@@ -677,7 +687,7 @@
                         leftPane.style.flex = 'none';
                         rightPane.style.width = `${newRightW}px`;
                         rightPane.style.flex = 'none';
-                        
+
                         if (editors.input) editors.input.layout();
                         if (editors.script) editors.script.layout();
                         if (editors.output) editors.output.layout();
@@ -765,7 +775,7 @@
         Object.entries(projectState.scripts).forEach(([name, content]) => {
             scriptFolder.file(name, content);
         });
-        zip.generateAsync({type: "blob"}).then(function(content) {
+        zip.generateAsync({ type: "blob" }).then(function (content) {
             const link = document.createElement('a');
             link.href = URL.createObjectURL(content);
             link.download = `DataWeave_Project_${new Date().toISOString().split('T')[0]}.zip`;
@@ -798,7 +808,7 @@
         position: relative;
         overflow: hidden;
     }
-    
+
     .text-gradient-dw {
         background: linear-gradient(90deg, var(--m3-primary), #00B5E2);
         -webkit-background-clip: text;
@@ -817,29 +827,39 @@
         z-index: 100;
         flex-shrink: 0;
     }
-    
-    .idx-title { 
-        margin: 0; 
-        font-size: 13px; 
-        font-weight: 800; 
+
+    .idx-title {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 800;
         letter-spacing: -0.2px;
         opacity: 0.9;
         display: flex;
         align-items: center;
         gap: 6px;
     }
-    .m3-badge-mini { 
-        font-size: 8px; 
-        font-weight: 900; 
-        padding: 1px 6px; 
-        background: var(--m3-primary); 
-        color: white; 
-        border-radius: 4px; 
+
+    .m3-badge-mini {
+        font-size: 8px;
+        font-weight: 900;
+        padding: 1px 6px;
+        background: var(--m3-primary);
+        color: white;
+        border-radius: 4px;
         letter-spacing: 0.5px;
     }
 
-    .appbar-left { display: flex; align-items: center; gap: 16px; }
-    .title-with-help { display: flex; align-items: center; gap: 8px; }
+    .appbar-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .title-with-help {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
 
     .appbar-center {
         position: absolute;
@@ -848,7 +868,7 @@
         display: flex;
         align-items: center;
     }
-    
+
     .m3-segmented-control {
         display: flex;
         align-items: center;
@@ -858,7 +878,7 @@
         padding: 2px;
         backdrop-filter: blur(10px);
     }
-    
+
     .m3-segment {
         height: 36px;
         width: 36px;
@@ -872,30 +892,50 @@
         transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         border-radius: 12px;
     }
-    
+
     .m3-segment:hover {
         background: var(--m3-primary-container);
         color: var(--m3-on-primary-container);
     }
-    
-    .m3-segment i { font-size: 18px; }
-    
+
+    .m3-segment i {
+        font-size: 18px;
+    }
+
     .file-chip {
         display: flex;
         align-items: center;
         gap: 8px;
-        background: rgba(0,0,0,0.03);
+        background: rgba(0, 0, 0, 0.03);
         padding: 6px 16px;
         border-radius: 12px;
         font-size: 12px;
         font-weight: 600;
         opacity: 0.6;
     }
-    .file-chip i { font-size: 16px; }
 
-    .appbar-actions { display: flex; align-items: center; gap: 8px; }
-    .v-divider { width: 1px; height: 24px; background: var(--m3-outline); margin: 0 8px; }
-    .v-divider.mini { height: 16px; opacity: 0.5; margin: 0 4px; }
+    .file-chip i {
+        font-size: 16px;
+    }
+
+    .appbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .v-divider {
+        width: 1px;
+        height: 24px;
+        background: var(--m3-outline);
+        margin: 0 8px;
+    }
+
+    .v-divider.mini {
+        height: 16px;
+        opacity: 0.5;
+        margin: 0 4px;
+    }
 
     .m3-tonal-icon-btn {
         width: 28px;
@@ -910,17 +950,31 @@
         cursor: pointer;
         transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .m3-tonal-icon-btn:hover { background: rgba(103, 80, 164, 0.2); transform: scale(1.05); }
-    .m3-tonal-icon-btn i { font-size: 16px; }
 
-    .m3-icon-fab.mini { width: 36px; height: 36px; box-shadow: none; }
-    .m3-icon-fab.mini i { font-size: 20px; }
+    .m3-tonal-icon-btn:hover {
+        background: rgba(103, 80, 164, 0.2);
+        transform: scale(1.05);
+    }
+
+    .m3-tonal-icon-btn i {
+        font-size: 16px;
+    }
+
+    .m3-icon-fab.mini {
+        width: 36px;
+        height: 36px;
+        box-shadow: none;
+    }
+
+    .m3-icon-fab.mini i {
+        font-size: 20px;
+    }
 
     /* Modal Styling */
     .m3-modal-overlay {
         position: fixed;
         inset: 0;
-        background: rgba(0,0,0,0.4);
+        background: rgba(0, 0, 0, 0.4);
         backdrop-filter: blur(8px);
         display: flex;
         align-items: center;
@@ -928,6 +982,7 @@
         z-index: 10000;
         animation: fadeIn 0.3s ease;
     }
+
     .m3-modal {
         width: 600px;
         max-width: 90vw;
@@ -935,57 +990,169 @@
         background: white;
         border-radius: 40px;
         padding: 40px;
-        box-shadow: 0 40px 100px rgba(0,0,0,0.2);
+        box-shadow: 0 40px 100px rgba(0, 0, 0, 0.2);
         display: flex;
         flex-direction: column;
         gap: 24px;
         position: relative;
     }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-    .header-title { display: flex; align-items: center; gap: 16px; }
-    .header-title i { color: var(--m3-primary); font-size: 28px; }
-    .header-title h3 { margin: 0; font-size: 1.3rem; font-weight: 800; }
 
-    .modal-body { flex: 1; overflow-y: auto; padding-right: 8px; }
-    .modal-body::-webkit-scrollbar { width: 4px; }
-    .modal-body::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+    }
 
-    .guide-tabs { display: flex; gap: 8px; background: rgba(0,0,0,0.03); padding: 6px; border-radius: 16px; margin-bottom: 24px; position: sticky; top: 0; background: white; z-index: 10; }
-    .tab-btn { flex: 1; border: none; background: transparent; padding: 10px; border-radius: 12px; font-weight: 700; font-size: 12px; cursor: pointer; transition: 0.2s; color: var(--text-main); opacity: 0.5; }
-    .tab-btn.active { background: var(--m3-primary); color: white; opacity: 1; box-shadow: 0 4px 12px rgba(103, 80, 164, 0.2); }
+    .header-title {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
 
-    .guide-content section { margin-bottom: 24px; }
-    .guide-content h5 { margin: 0 0 8px 0; font-size: 14px; font-weight: 800; color: var(--m3-primary); }
-    .guide-content p { margin: 0; font-size: 13px; opacity: 0.7; line-height: 1.5; }
-    .guide-content code { background: rgba(103, 80, 164, 0.05); color: var(--m3-primary); padding: 2px 6px; border-radius: 4px; font-family: monospace; font-weight: 700; }
-    .guide-content pre { background: #1c1b1f; color: #e6e1e5; padding: 16px; border-radius: 16px; font-size: 12px; font-family: 'Fira Code', monospace; margin-top: 12px; overflow: auto; }
+    .header-title i {
+        color: var(--m3-primary);
+        font-size: 28px;
+    }
 
-    .m3-fab-extend.small { height: 48px; border-radius: 24px; padding: 0 32px; align-self: flex-end; }
+    .header-title h3 {
+        margin: 0;
+        font-size: 1.3rem;
+        font-weight: 800;
+    }
+
+    .modal-body {
+        flex: 1;
+        overflow-y: auto;
+        padding-right: 8px;
+    }
+
+    .modal-body::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .modal-body::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 2px;
+    }
+
+    .guide-tabs {
+        display: flex;
+        gap: 8px;
+        background: rgba(0, 0, 0, 0.03);
+        padding: 6px;
+        border-radius: 16px;
+        margin-bottom: 24px;
+        position: sticky;
+        top: 0;
+        background: white;
+        z-index: 10;
+    }
+
+    .tab-btn {
+        flex: 1;
+        border: none;
+        background: transparent;
+        padding: 10px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 12px;
+        cursor: pointer;
+        transition: 0.2s;
+        color: var(--text-main);
+        opacity: 0.5;
+    }
+
+    .tab-btn.active {
+        background: var(--m3-primary);
+        color: white;
+        opacity: 1;
+        box-shadow: 0 4px 12px rgba(103, 80, 164, 0.2);
+    }
+
+    .guide-content section {
+        margin-bottom: 24px;
+    }
+
+    .guide-content h5 {
+        margin: 0 0 8px 0;
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--m3-primary);
+    }
+
+    .guide-content p {
+        margin: 0;
+        font-size: 13px;
+        opacity: 0.7;
+        line-height: 1.5;
+    }
+
+    .guide-content code {
+        background: rgba(103, 80, 164, 0.05);
+        color: var(--m3-primary);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-weight: 700;
+    }
+
+    .guide-content pre {
+        background: #1c1b1f;
+        color: #e6e1e5;
+        padding: 16px;
+        border-radius: 16px;
+        font-size: 12px;
+        font-family: 'Fira Code', monospace;
+        margin-top: 12px;
+        overflow: auto;
+    }
+
+    .m3-fab-extend.small {
+        height: 48px;
+        border-radius: 24px;
+        padding: 0 32px;
+        align-self: flex-end;
+    }
 
     /* Workspace Layout */
-    .playground-main { flex: 1; display: flex; min-height: 0; }
-    .project-explorer { 
-        width: 200px; 
-        background: var(--m3-surface); 
-        border-right: 1px solid var(--m3-outline); 
-        display: flex; 
-        flex-direction: column; 
+    .playground-main {
+        flex: 1;
+        display: flex;
+        min-height: 0;
+    }
+
+    .project-explorer {
+        width: 200px;
+        background: var(--m3-surface);
+        border-right: 1px solid var(--m3-outline);
+        display: flex;
+        flex-direction: column;
         padding: 16px 0;
         flex-shrink: 0;
         transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         overflow: hidden;
     }
-    .project-explorer.collapsed { 
-        width: 0; 
-        padding-left: 0; 
-        padding-right: 0; 
-        border-right: none; 
+
+    .project-explorer.collapsed {
+        width: 0;
+        padding-left: 0;
+        padding-right: 0;
+        border-right: none;
         opacity: 0;
     }
-    
-    .sidebar-toggle i { transition: 0.3s ease; }
-    .project-explorer.collapsed ~ .playground-workspace { flex: 1; }
-    .sidebar-active .sidebar-toggle i { transform: rotate(180deg); }
+
+    .sidebar-toggle i {
+        transition: 0.3s ease;
+    }
+
+    .project-explorer.collapsed~.playground-workspace {
+        flex: 1;
+    }
+
+    .sidebar-active .sidebar-toggle i {
+        transform: rotate(180deg);
+    }
 
     .m3-icon-button-outlined {
         width: 36px;
@@ -1001,77 +1168,119 @@
         transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         opacity: 0.6;
     }
+
     .m3-icon-button-outlined:hover {
         background: rgba(103, 80, 164, 0.05);
         border-color: var(--m3-primary);
         color: var(--m3-primary);
         opacity: 1;
     }
-    .m3-icon-button-outlined i { font-size: 20px; }
-    .explorer-section { display: flex; flex-direction: column; gap: 8px; }
-    .explorer-section .explorer-list { 
-        max-height: 0; 
-        overflow: hidden; 
-        transition: 0.3s ease-in-out; 
+
+    .m3-icon-button-outlined i {
+        font-size: 20px;
     }
-    .explorer-section.active .explorer-list { 
-        max-height: 500px; 
+
+    .explorer-section {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
     }
-    .explorer-section.active .chevron { 
-        transform: rotate(90deg); 
+
+    .explorer-section .explorer-list {
+        max-height: 0;
+        overflow: hidden;
+        transition: 0.3s ease-in-out;
     }
-    .section-header { 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        padding: 0 16px; 
+
+    .explorer-section.active .explorer-list {
+        max-height: 500px;
+    }
+
+    .explorer-section.active .chevron {
+        transform: rotate(90deg);
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 16px;
         cursor: pointer;
         user-select: none;
     }
+
     .header-main {
         display: flex;
         align-items: center;
         gap: 4px;
-        font-size: 10px; 
-        font-weight: 800; 
-        letter-spacing: 1px; 
-        opacity: 0.6; 
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        opacity: 0.6;
     }
-    .header-main i.chevron { font-size: 14px; transition: 0.2s; }
-    .explorer-section:hover .header-main { opacity: 1; }
 
-    .explorer-list { display: flex; flex-direction: column; }
-    .explorer-item { 
-        display: flex; 
-        align-items: center; 
-        gap: 10px; 
-        padding: 8px 16px; 
-        font-size: 12px; 
-        cursor: pointer; 
+    .header-main i.chevron {
+        font-size: 14px;
+        transition: 0.2s;
+    }
+
+    .explorer-section:hover .header-main {
+        opacity: 1;
+    }
+
+    .explorer-list {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .explorer-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 16px;
+        font-size: 12px;
+        cursor: pointer;
         transition: 0.2s;
         border-left: 3px solid transparent;
         color: var(--text-main);
         opacity: 0.7;
     }
-    .explorer-item i { font-size: 16px; opacity: 0.6; }
-    .explorer-item:hover { background: rgba(0,0,0,0.03); opacity: 1; }
-    .explorer-item.active { 
-        background: rgba(103, 80, 164, 0.05); 
-        color: var(--m3-primary); 
-        opacity: 1; 
+
+    .explorer-item i {
+        font-size: 16px;
+        opacity: 0.6;
+    }
+
+    .explorer-item:hover {
+        background: rgba(0, 0, 0, 0.03);
+        opacity: 1;
+    }
+
+    .explorer-item.active {
+        background: rgba(103, 80, 164, 0.05);
+        color: var(--m3-primary);
+        opacity: 1;
         border-left-color: var(--m3-primary);
         font-weight: 600;
     }
-    .v-spacer { height: 32px; }
+
+    .v-spacer {
+        height: 32px;
+    }
 
     /* Tabs */
-    .tabs-header { 
-        padding: 0 !important; 
-        background: rgba(0,0,0,0.01) !important; 
+    .tabs-header {
+        padding: 0 !important;
+        background: rgba(0, 0, 0, 0.01) !important;
         height: 32px !important;
         overflow: hidden;
     }
-    .tabs-scroll { display: flex; height: 100%; }
+
+    .tabs-scroll {
+        display: flex;
+        height: 100%;
+    }
+
     .tab {
         display: flex;
         align-items: center;
@@ -1080,32 +1289,49 @@
         height: 100%;
         font-size: 11px;
         font-weight: 700;
-        border-right: 1px solid rgba(0,0,0,0.05);
+        border-right: 1px solid rgba(0, 0, 0, 0.05);
         cursor: pointer;
         opacity: 0.5;
         transition: 0.2s;
-        background: rgba(0,0,0,0.02);
+        background: rgba(0, 0, 0, 0.02);
         max-width: 150px;
         min-width: 80px;
     }
-    .tab span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .tab.active { 
-        opacity: 1; 
-        background: white; 
-        border-bottom: 2px solid var(--m3-primary); 
+
+    .tab span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .tab.active {
+        opacity: 1;
+        background: white;
+        border-bottom: 2px solid var(--m3-primary);
         color: var(--m3-primary);
     }
-    .tab i { font-size: 14px; }
-    .tab-close { font-size: 12px !important; opacity: 0.3; }
-    .tab-close:hover { opacity: 1; color: #b71c1c; }
+
+    .tab i {
+        font-size: 14px;
+    }
+
+    .tab-close {
+        font-size: 12px !important;
+        opacity: 0.3;
+    }
+
+    .tab-close:hover {
+        opacity: 1;
+        color: #b71c1c;
+    }
 
     .input-config-bar {
         display: flex;
         align-items: center;
         justify-content: space-between;
         padding: 8px 16px;
-        background: rgba(0,0,0,0.01);
-        border-bottom: 1px solid rgba(0,0,0,0.03);
+        background: rgba(0, 0, 0, 0.01);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.03);
         font-size: 11px;
         font-weight: 800;
         color: var(--m3-primary);
@@ -1127,10 +1353,12 @@
         z-index: 10;
         transition: background 0.2s, width 0.2s;
         flex-shrink: 0;
-        margin: 0 -2px; /* Slight overlap for easier grabbing */
+        margin: 0 -2px;
+        /* Slight overlap for easier grabbing */
     }
 
-    .resizer:hover, .resizer.dragging {
+    .resizer:hover,
+    .resizer.dragging {
         background: var(--m3-primary);
         width: 8px;
     }
@@ -1151,30 +1379,66 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: rgba(0,0,0,0.02);
-        border-bottom: 1px solid rgba(0,0,0,0.05);
+        background: rgba(0, 0, 0, 0.02);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         flex-shrink: 0;
     }
 
-    .pane-title { display: flex; align-items: center; gap: 8px; }
-    .pane-title i { font-size: 16px; color: var(--m3-primary); opacity: 0.6; }
-    .pane-title span { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.6; }
+    .pane-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
 
-    .pane-body { flex: 1; position: relative; min-height: 0; display: flex; flex-direction: column; }
-    
+    .pane-title i {
+        font-size: 16px;
+        color: var(--m3-primary);
+        opacity: 0.6;
+    }
+
+    .pane-title span {
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        opacity: 0.6;
+    }
+
+    .pane-body {
+        flex: 1;
+        position: relative;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
     .editor-instance {
         width: 100%;
         height: 100%;
         background: transparent;
     }
-    .monaco-editor, .monaco-editor .margin, .monaco-editor-background {
+
+    .monaco-editor,
+    .monaco-editor .margin,
+    .monaco-editor-background {
         background-color: transparent !important;
     }
-    .editor-instance.readonly { opacity: 0.8; }
-    .script-font { color: var(--m3-primary); }
+
+    .editor-instance.readonly {
+        opacity: 0.8;
+    }
+
+    .script-font {
+        color: var(--m3-primary);
+    }
 
     /* Controls */
-    .m3-menu-wrap { position: relative; display: inline-block; }
+    .m3-menu-wrap {
+        position: relative;
+        display: inline-block;
+    }
+
     .m3-menu-trigger {
         display: flex;
         align-items: center;
@@ -1190,7 +1454,11 @@
         border-radius: 8px;
         transition: 0.2s;
     }
-    .m3-menu-trigger:hover { background: rgba(103, 80, 164, 0.05); }
+
+    .m3-menu-trigger:hover {
+        background: rgba(103, 80, 164, 0.05);
+    }
+
     .m3-menu {
         position: absolute;
         top: 100%;
@@ -1199,7 +1467,7 @@
         background: white;
         border: 1px solid var(--m3-outline);
         border-radius: 12px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
         z-index: 1000;
         min-width: 110px;
         padding: 6px;
@@ -1208,6 +1476,7 @@
         animation: m3ScaleIn 0.2s cubic-bezier(0.1, 0.9, 0.2, 1);
         transform-origin: top right;
     }
+
     .m3-menu-item {
         padding: 8px 12px;
         font-size: 11px;
@@ -1221,35 +1490,58 @@
         transition: 0.2s;
         opacity: 0.8;
     }
-    .m3-menu-item:hover { 
-        background: var(--m3-primary-container); 
+
+    .m3-menu-item:hover {
+        background: var(--m3-primary-container);
         color: var(--m3-on-primary-container);
         opacity: 1;
     }
-    .m3-menu-item.active { 
-        color: var(--m3-primary); 
+
+    .m3-menu-item.active {
+        color: var(--m3-primary);
         background: rgba(103, 80, 164, 0.05);
         opacity: 1;
     }
 
     @keyframes m3ScaleIn {
-        from { opacity: 0; transform: scale(0.9) translateY(-10px); }
-        to { opacity: 1; transform: scale(1) translateY(0); }
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
     }
 
     [data-theme='dark'] .m3-menu {
         background: #1c1b1f;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     }
 
     .m3-mini-select {
-        display: none; /* Replaced by custom menu */
+        display: none;
+        /* Replaced by custom menu */
     }
 
-    .m3-badge-mini { font-size: 9px; font-weight: 900; padding: 2px 8px; background: rgba(0,0,0,0.05); border-radius: 10px; opacity: 0.5; }
 
-    .icon-mini-btn { background: transparent; border: none; color: var(--m3-primary); opacity: 0.5; cursor: pointer; padding: 4px; border-radius: 8px; transition: 0.2s; }
-    .icon-mini-btn:hover { opacity: 1; background: rgba(103, 80, 164, 0.05); }
+
+    .icon-mini-btn {
+        background: transparent;
+        border: none;
+        color: var(--m3-primary);
+        opacity: 0.5;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 8px;
+        transition: 0.2s;
+    }
+
+    .icon-mini-btn:hover {
+        opacity: 1;
+        background: rgba(103, 80, 164, 0.05);
+    }
 
     /* Circular FAB */
     .m3-icon-fab {
@@ -1266,11 +1558,15 @@
         box-shadow: 0 4px 12px rgba(103, 80, 164, 0.2);
         transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .m3-icon-fab:hover { 
-        transform: scale(1.1); 
+
+    .m3-icon-fab:hover {
+        transform: scale(1.1);
         box-shadow: 0 8px 24px rgba(103, 80, 164, 0.3);
     }
-    .m3-icon-fab i { font-size: 24px; }
+
+    .m3-icon-fab i {
+        font-size: 24px;
+    }
 
     /* Error Panel */
     .dw-error-panel {
@@ -1282,54 +1578,188 @@
         display: flex;
         flex-direction: column;
     }
-    .error-status { display: flex; align-items: center; gap: 8px; color: #b71c1c; font-weight: 800; font-size: 11px; text-transform: uppercase; margin-bottom: 8px; }
-    .error-status i { font-size: 18px; }
-    #error-message { font-family: 'Fira Code', monospace; font-size: 12px; margin: 0; white-space: pre-wrap; color: #b71c1c; opacity: 0.9; }
+
+    .error-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #b71c1c;
+        font-weight: 800;
+        font-size: 11px;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+
+    .error-status i {
+        font-size: 18px;
+    }
+
+    #error-message {
+        font-family: 'Fira Code', monospace;
+        font-size: 12px;
+        margin: 0;
+        white-space: pre-wrap;
+        color: #b71c1c;
+        opacity: 0.9;
+    }
 
     /* Loading Overlay */
-    .dw-loading-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.4); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; z-index: 2; }
-    .loader-circle { width: 32px; height: 32px; border: 3px solid rgba(103, 80, 164, 0.1); border-top-color: var(--m3-primary); border-radius: 50%; animation: spin 1s linear infinite; }
+    .dw-loading-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(2px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+    }
 
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader-circle {
+        width: 32px;
+        height: 32px;
+        border: 3px solid rgba(103, 80, 164, 0.1);
+        border-top-color: var(--m3-primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
 
     /* Dark Mode */
     /* Dark Mode Global Overrides */
-    [data-theme='dark'] .m3-playground-shell { background: #0f0d13; }
-    [data-theme='dark'] .idx-title { color: #e6e1e5; opacity: 1; }
-    [data-theme='dark'] .m3-glass-appbar.minimal { background: #1c1b1f; border-bottom-color: rgba(255,255,255,0.08); }
-    [data-theme='dark'] .project-explorer { background: #141218; border-right-color: rgba(255,255,255,0.05); }
-    
-    [data-theme='dark'] .tab { background: rgba(255,255,255,0.03); border-right-color: rgba(255,255,255,0.05); color: #e6e1e5; }
-    [data-theme='dark'] .tab.active { background: #1c1b1f; border-bottom-color: var(--m3-primary); color: #d0bcff; }
-    [data-theme='dark'] .tabs-header { border-bottom-color: rgba(255,255,255,0.05); }
-    
-    [data-theme='dark'] .input-config-bar { background: rgba(255,255,255,0.02); border-bottom-color: rgba(255,255,255,0.03); color: #d0bcff; }
-    [data-theme='dark'] .pane-header { background: #1c1b1f; border-bottom-color: rgba(255,255,255,0.05); }
-    [data-theme='dark'] .pane-title { color: #e6e1e5; }
-    
-    [data-theme='dark'] .explorer-item { color: #cac4d0; }
-    [data-theme='dark'] .explorer-item:hover { background: rgba(208, 188, 255, 0.08); color: #e6e1e5; }
-    [data-theme='dark'] .explorer-item.active { background: rgba(208, 188, 255, 0.12); color: #d0bcff; }
-    
-    [data-theme='dark'] .resizer { background: #141218; }
-    [data-theme='dark'] .resizer:hover, [data-theme='dark'] .resizer.dragging { background: var(--m3-primary); }
-    
-    [data-theme='dark'] .dw-pane { background: #1c1b1f; }
-    [data-theme='dark'] .dw-error-panel { background: rgba(255, 180, 171, 0.1); border-color: rgba(255, 180, 171, 0.2); }
-    [data-theme='dark'] .error-status { color: #ffb4ab; }
-    [data-theme='dark'] #error-message { color: #ffb4ab; }
-    
-    [data-theme='dark'] .m3-menu { background: #252428; border-color: rgba(255,255,255,0.1); }
-    [data-theme='dark'] .m3-menu-item { color: #e6e1e5; }
-    [data-theme='dark'] .v-spacer { border-top-color: rgba(255,255,255,0.05); }
-    [data-theme='dark'] .icon-mini-btn { color: #cac4d0; }
-    [data-theme='dark'] .icon-mini-btn:hover { background: rgba(255,255,255,0.05); color: #e6e1e5; }
-    .m3-modal.small { max-width: 400px; padding: 24px; }
-    .m3-modal-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
+    [data-theme='dark'] .m3-playground-shell {
+        background: #0f0d13;
+    }
+
+    [data-theme='dark'] .idx-title {
+        color: #e6e1e5;
+        opacity: 1;
+    }
+
+    [data-theme='dark'] .m3-glass-appbar.minimal {
+        background: #1c1b1f;
+        border-bottom-color: rgba(255, 255, 255, 0.08);
+    }
+
+    [data-theme='dark'] .project-explorer {
+        background: #141218;
+        border-right-color: rgba(255, 255, 255, 0.05);
+    }
+
+    [data-theme='dark'] .tab {
+        background: rgba(255, 255, 255, 0.03);
+        border-right-color: rgba(255, 255, 255, 0.05);
+        color: #e6e1e5;
+    }
+
+    [data-theme='dark'] .tab.active {
+        background: #1c1b1f;
+        border-bottom-color: var(--m3-primary);
+        color: #d0bcff;
+    }
+
+    [data-theme='dark'] .tabs-header {
+        border-bottom-color: rgba(255, 255, 255, 0.05);
+    }
+
+    [data-theme='dark'] .input-config-bar {
+        background: rgba(255, 255, 255, 0.02);
+        border-bottom-color: rgba(255, 255, 255, 0.03);
+        color: #d0bcff;
+    }
+
+    [data-theme='dark'] .pane-header {
+        background: #1c1b1f;
+        border-bottom-color: rgba(255, 255, 255, 0.05);
+    }
+
+    [data-theme='dark'] .pane-title {
+        color: #e6e1e5;
+    }
+
+    [data-theme='dark'] .explorer-item {
+        color: #cac4d0;
+    }
+
+    [data-theme='dark'] .explorer-item:hover {
+        background: rgba(208, 188, 255, 0.08);
+        color: #e6e1e5;
+    }
+
+    [data-theme='dark'] .explorer-item.active {
+        background: rgba(208, 188, 255, 0.12);
+        color: #d0bcff;
+    }
+
+    [data-theme='dark'] .resizer {
+        background: #141218;
+    }
+
+    [data-theme='dark'] .resizer:hover,
+    [data-theme='dark'] .resizer.dragging {
+        background: var(--m3-primary);
+    }
+
+    [data-theme='dark'] .dw-pane {
+        background: #1c1b1f;
+    }
+
+    [data-theme='dark'] .dw-error-panel {
+        background: rgba(255, 180, 171, 0.1);
+        border-color: rgba(255, 180, 171, 0.2);
+    }
+
+    [data-theme='dark'] .error-status {
+        color: #ffb4ab;
+    }
+
+    [data-theme='dark'] #error-message {
+        color: #ffb4ab;
+    }
+
+    [data-theme='dark'] .m3-menu {
+        background: #252428;
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    [data-theme='dark'] .m3-menu-item {
+        color: #e6e1e5;
+    }
+
+    [data-theme='dark'] .v-spacer {
+        border-top-color: rgba(255, 255, 255, 0.05);
+    }
+
+    [data-theme='dark'] .icon-mini-btn {
+        color: #cac4d0;
+    }
+
+    [data-theme='dark'] .icon-mini-btn:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: #e6e1e5;
+    }
+
+    .m3-modal.small {
+        max-width: 400px;
+        padding: 24px;
+    }
+
+    .m3-modal-desc {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-bottom: 20px;
+        line-height: 1.5;
+    }
+
     .m3-modal-input {
         width: 100%;
         padding: 12px 16px;
-        background: rgba(0,0,0,0.03);
+        background: rgba(0, 0, 0, 0.03);
         border: 1px solid var(--m3-outline);
         border-radius: 10px;
         font-family: 'Inter', sans-serif;
@@ -1338,13 +1768,21 @@
         outline: none;
         transition: 0.2s;
     }
+
     .m3-modal-input:focus {
         border-color: var(--m3-primary);
         background: white;
         box-shadow: 0 0 0 4px rgba(103, 80, 164, 0.1);
     }
-    [data-theme='dark'] .m3-modal-input { background: rgba(255,255,255,0.03); color: white; }
-    [data-theme='dark'] .m3-modal-input:focus { background: rgba(255,255,255,0.05); }
+
+    [data-theme='dark'] .m3-modal-input {
+        background: rgba(255, 255, 255, 0.03);
+        color: white;
+    }
+
+    [data-theme='dark'] .m3-modal-input:focus {
+        background: rgba(255, 255, 255, 0.05);
+    }
 
     .m3-mini-btn.outline {
         background: transparent;
@@ -1356,10 +1794,27 @@
         font-weight: 700;
         cursor: pointer;
     }
-    .m3-mini-btn.outline:hover { background: rgba(0,0,0,0.02); color: var(--m3-primary); }
 
-    [data-theme='dark'] .m3-mini-btn.outline:hover { background: rgba(255,255,255,0.05); }
+    .m3-mini-btn.outline:hover {
+        background: rgba(0, 0, 0, 0.02);
+        color: var(--m3-primary);
+    }
 
-    .hidden { display: none !important; }
+    [data-theme='dark'] .m3-mini-btn.outline:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    [data-theme='dark'] .m3-modal { background: #1c1b1f; color: #e6e1e5; box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5); }
+    [data-theme='dark'] .m3-modal h3 { color: #e6e1e5; }
+    [data-theme='dark'] .guide-tabs { background: rgba(255, 255, 255, 0.03); }
+    [data-theme='dark'] .tab-btn { color: #e6e1e5; opacity: 0.6; }
+    [data-theme='dark'] .tab-btn.active { background: var(--m3-primary); color: white; opacity: 1; }
+    [data-theme='dark'] .guide-content p { color: #cac4d0; }
+    [data-theme='dark'] .m3-modal-desc { color: #cac4d0; }
+    [data-theme='dark'] .m3-modal-overlay { background: rgba(0, 0, 0, 0.6); }
+
+    .hidden {
+        display: none !important;
+    }
 </style>
 {% endblock %}
