@@ -4,6 +4,7 @@ from devops_module import AzureDevOpsManager
 from mulesoft_module import MuleSoftManager, MuleSoftAuthError
 from postman_module import PostmanManager
 from boomi_module import BoomiManager
+from dw_module import DataWeaveManager
 from concurrent.futures import ThreadPoolExecutor
 import db_utils
 import os
@@ -26,6 +27,7 @@ devops = AzureDevOpsManager()
 mule = MuleSoftManager()
 postman = PostmanManager()
 boomi = BoomiManager()
+dw_engine = DataWeaveManager()
 jq_architect = JSONLogicArchitect()
 
 # --- JQ Logic APIs ---
@@ -226,7 +228,9 @@ def boomi_api_package_dependencies():
         log.warning(f"Dependency Tree Search: No Package found for '{name}'")
         return jsonify({"error": "Package not found"}), 404
     
-    manifest = boomi.get_package_manifest(pkg['packageId'])
+    # Defensive retrieval of component name for root manifest context
+    root_name = pkg.get('componentName') or name
+    manifest = boomi.get_package_manifest(pkg['packageId'], root_name=root_name)
     if not manifest: 
         log.warning(f"Dependency Tree Search: No Manifest found for package {pkg['packageId']}")
         return jsonify({"error": "Manifest not found"}), 404

@@ -44,7 +44,7 @@
             </div>
         </div>
         
-        <!-- Metadata Header (Hidden until results) -->
+        <!-- Metadata Header -->
         <div id="package-stats" class="metadata-board hidden">
             <div class="meta-chip">
                 <span class="m-label">Package ID</span>
@@ -94,21 +94,50 @@
             </div>
         </div>
         
-        <div class="tree-controls hidden">
-            <button class="ctrl-btn-v2" onclick="exportToCSV()">
-                <i class="material-icons">file_download</i>
-                <span>Export Audit Report</span>
-            </button>
+        <div class="tree-ui-layer hidden">
+            <div class="orchestrator-controls">
+                <div class="col-selector-group">
+                    <span class="selector-label"><i class="material-icons">tune</i> Perspective:</span>
+                    <label class="m3-chip-check">
+                        <input type="checkbox" checked onchange="toggleCol('type')">
+                        <span>Type</span>
+                    </label>
+                    <label class="m3-chip-check">
+                        <input type="checkbox" onchange="toggleCol('folder')">
+                        <span>Folder</span>
+                    </label>
+                    <label class="m3-chip-check">
+                        <input type="checkbox" checked onchange="toggleCol('date')">
+                        <span>Modified At</span>
+                    </label>
+                    <label class="m3-chip-check">
+                        <input type="checkbox" onchange="toggleCol('user')">
+                        <span>Modified By</span>
+                    </label>
+                    <label class="m3-chip-check">
+                        <input type="checkbox" checked onchange="toggleCol('env')">
+                        <span>Deployed To</span>
+                    </label>
+                </div>
+                
+                <button class="ctrl-btn-v2" onclick="exportToCSV()">
+                    <i class="material-icons">file_download</i>
+                    <span>Export Report</span>
+                </button>
+            </div>
         </div>
 
         <div id="audit-grid" class="audit-grid hidden">
-            <table class="m3-table-v2">
+            <table class="m3-table-v2" id="main-audit-table">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Type</th>
-                        <th>Folder</th>
-                        <th style="text-align: right;">Revision</th>
+                        <th class="col-name">Name</th>
+                        <th class="col-type">Type</th>
+                        <th class="col-folder hidden-col">Folder</th>
+                        <th class="col-date">Modified At</th>
+                        <th class="col-user hidden-col">Modified By</th>
+                        <th class="col-env">Deployed To</th>
+                        <th class="col-rev" style="text-align: right;">Revision</th>
                     </tr>
                 </thead>
                 <tbody id="audit-body"></tbody>
@@ -118,6 +147,8 @@
 </div>
 
 <script>
+    let currentData = null;
+
     async function renderTree() {
         const name = document.getElementById('package-name').value;
         const version = document.getElementById('package-version').value;
@@ -127,7 +158,7 @@
         const body = document.getElementById('audit-body');
         const btn = document.getElementById('render-btn');
         const statsEl = document.getElementById('package-stats');
-        const controls = document.querySelector('.tree-controls');
+        const uiLayer = document.querySelector('.tree-ui-layer');
 
         if (!name) { 
             showToast("Package name is mandatory", "error");
@@ -138,7 +169,7 @@
         container.classList.remove('hidden');
         overlay.style.display = 'flex';
         grid.classList.add('hidden');
-        if(controls) controls.classList.add('hidden');
+        uiLayer.classList.add('hidden');
         body.innerHTML = '';
         statsEl.classList.add('hidden');
 
@@ -148,6 +179,7 @@
             const data = await res.json();
 
             if (data.error) throw new Error(data.error);
+            currentData = data;
 
             // Populate Stats
             statsEl.classList.remove('hidden');
@@ -156,31 +188,68 @@
             document.getElementById('stat-ver').innerText = 'v' + data.package.packageVersion;
             document.getElementById('stat-count').innerText = data.included.length + ' Components';
 
-            // Populate Table
-            data.included.forEach(item => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="comp-name">
-                        <i class="material-icons">${getIcon(item.type)}</i>
-                        <span>${item.name}</span>
-                    </td>
-                    <td class="comp-type">${item.type}</td>
-                    <td class="comp-folder">${item.folder}</td>
-                    <td class="comp-rev">${item.version}</td>
-                `;
-                body.appendChild(row);
-            });
+            refreshTable();
 
             grid.classList.remove('hidden');
-            if(controls) controls.classList.remove('hidden');
+            uiLayer.classList.remove('hidden');
             
         } catch (e) {
-            body.innerHTML = `<tr><td colspan="4" class="error-node"><i class="material-icons">error_outline</i><p>${e.message}</p></td></tr>`;
+            body.innerHTML = `<tr><td colspan="6" class="error-node"><i class="material-icons">error_outline</i><p>${e.message}</p></td></tr>`;
             grid.classList.remove('hidden');
         } finally {
             overlay.style.display = 'none';
             btn.classList.remove('loading-btn');
         }
+    }
+
+    function refreshTable() {
+        const body = document.getElementById('audit-body');
+        body.innerHTML = '';
+        
+        currentData.included.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="col-name">
+                    <div class="comp-name">
+                        <i class="material-icons">${getIcon(item.type)}</i>
+                        <span title="${item.name}">${item.name}</span>
+                    </div>
+                </td>
+                <td class="col-type">${item.type}</td>
+                <td class="col-folder hidden-col">${item.folder}</td>
+                <td class="col-date">${item.modifiedDate}</td>
+                <td class="col-user hidden-col">${item.modifiedBy}</td>
+                <td class="col-env"><span class="m3-badge-new status">${item.deployedTo}</span></td>
+                <td class="col-rev" style="text-align: right;">${item.version}</td>
+            `;
+            body.appendChild(row);
+        });
+        
+        // Final sync of classes based on checkboxes
+        document.querySelectorAll('.col-selector-group input').forEach(input => {
+            const colId = input.getAttribute('onchange').match(/'(.*)'/)[1];
+            updateColumnVisibility(colId, input.checked);
+        });
+    }
+
+    function toggleCol(colId) {
+        const checkbox = event.target;
+        updateColumnVisibility(colId, checkbox.checked);
+    }
+
+    function updateColumnVisibility(colId, isVisible) {
+        const selectors = {
+            'type': '.col-type',
+            'folder': '.col-folder',
+            'date': '.col-date',
+            'user': '.col-user',
+            'env': '.col-env'
+        };
+        const selector = selectors[colId];
+        document.querySelectorAll(selector).forEach(el => {
+            if (isVisible) el.classList.remove('hidden-col');
+            else el.classList.add('hidden-col');
+        });
     }
 
     function getIcon(type) {
@@ -192,23 +261,17 @@
     }
 
     function exportToCSV() {
-        let csv = "Name,Type,Folder,Revision\n";
-        const rows = document.querySelectorAll('#audit-body tr');
-        rows.forEach(row => {
-            const cols = row.querySelectorAll('td');
-            const data = Array.from(cols).map(c => `"${c.innerText.trim().replace(/\n/g, '')}"`).join(",");
-            csv += data + "\n";
+        let csv = "Name,Root Component,Package ID,Type,Folder,Modified At,Modified By,Deployed To,Revision\n";
+        currentData.included.forEach(item => {
+            csv += `"${item.name}","${item.rootComponent}","${item.packageId}","${item.type}","${item.folder}","${item.modifiedDate}","${item.modifiedBy}","${item.deployedTo}","${item.version}"\n`;
         });
         
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.setAttribute('hidden', '');
-        a.setAttribute('href', url);
-        a.setAttribute('download', 'boomi_package_audit.csv');
-        document.body.appendChild(a);
+        a.href = url;
+        a.download = `boomi_audit_${currentData.package.componentName}.csv`;
         a.click();
-        document.body.removeChild(a);
     }
 </script>
 
@@ -220,194 +283,78 @@
     }
     .m3-badge-new.boomi { background: rgba(0, 118, 206, 0.1); color: #0076CE; }
 
-    .m3-page-wrapper.elite-theme { 
-        padding: 60px; 
-        background: #fbfbfc; 
-        min-height: 100vh;
-        position: relative;
-    }
+    .m3-page-wrapper.elite-theme { padding: 60px; background: #fbfbfc; min-height: 100vh; position: relative; }
+    .elite-bg-glow { position: absolute; top: -200px; right: -200px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(0, 118, 206, 0.05) 0%, transparent 70%); pointer-events: none; }
 
-    .elite-bg-glow {
-        position: absolute;
-        top: -200px;
-        right: -200px;
-        width: 600px;
-        height: 600px;
-        background: radial-gradient(circle, rgba(0, 118, 206, 0.05) 0%, transparent 70%);
-        pointer-events: none;
-    }
+    .m3-hero-header.floating { animation: floatHeader 1s ease-out; }
+    @keyframes floatHeader { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-    .m3-hero-header.floating {
-        animation: floatHeader 1s ease-out;
-    }
+    .config-section { padding: 40px; border-radius: 40px; box-shadow: 0 10px 40px rgba(0,0,0,0.03); background: rgba(255,255,255,0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.8); }
 
-    @keyframes floatHeader {
-        from { transform: translateY(20px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-    }
-
-    .config-section { 
-        padding: 40px; 
-        border-radius: 40px; 
-        box-shadow: 0 10px 40px rgba(0,0,0,0.03);
-        background: rgba(255,255,255,0.7);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255,255,255,0.8);
-    }
-
-    .m3-input-v2 { 
-        background: white; 
-        border: 2px solid #eee; 
-        border-radius: 18px; 
-        padding: 16px 20px; 
-        font-size: 1rem; 
-        font-weight: 500;
-        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        width: 100%;
-    }
+    .m3-input-v2 { background: white; border: 2px solid #eee; border-radius: 18px; padding: 16px 20px; font-size: 1rem; font-weight: 500; transition: 0.3s; width: 100%; }
     .m3-input-v2:focus { border-color: #0076CE; box-shadow: 0 0 0 5px rgba(0, 118, 206, 0.1); outline: none; }
 
-    .m3-config-grid { 
-        display: grid; 
-        grid-template-columns: 2fr 1fr; 
-        gap: 32px; 
-    }
+    .m3-config-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 32px; }
+    .input-group { display: flex; flex-direction: column; gap: 12px; }
+    .search-box { position: relative; display: flex; align-items: center; }
+    .search-box i { position: absolute; left: 20px; color: #0076CE; font-size: 20px; opacity: 0.6; z-index: 2; }
+    .search-box input { padding-left: 56px !important; }
 
-    .input-group { 
-        display: flex; 
-        flex-direction: column; 
-        gap: 12px; 
-    }
-
-    .search-box { 
-        position: relative; 
-        display: flex;
-        align-items: center;
-    }
-    .search-box i { 
-        position: absolute; 
-        left: 20px; 
-        color: #0076CE; 
-        font-size: 20px;
-        opacity: 0.6;
-        z-index: 2;
-    }
-    .search-box input { 
-        padding-left: 56px !important; 
-    }
-
-    .action-header { 
-        display: flex; 
-        align-items: center; 
-        gap: 20px; 
-        margin-bottom: 32px; 
-        padding-bottom: 24px; 
-        border-bottom: 1px solid rgba(0,0,0,0.05); 
-    }
-    .action-header i { 
-        font-size: 32px; 
-        color: #0076CE; 
-        background: rgba(0, 118, 206, 0.1); 
-        padding: 12px; 
-        border-radius: 16px; 
-    }
+    .action-header { display: flex; align-items: center; gap: 20px; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+    .action-header i { font-size: 32px; color: #0076CE; background: rgba(0, 118, 206, 0.1); padding: 12px; border-radius: 16px; }
     .header-info h3 { margin: 0; font-size: 1.4rem; font-weight: 800; }
     .header-info p { margin: 0; font-size: 0.95rem; opacity: 0.5; }
 
-    .action-footer { 
-        display: flex; 
-        align-items: center; 
-        justify-content: space-between; 
-        gap: 32px; 
-        margin-top: 48px; 
-        padding-top: 32px;
-        border-top: 1px solid rgba(0,0,0,0.05);
-    }
+    .action-footer { display: flex; align-items: center; justify-content: space-between; gap: 32px; margin-top: 48px; padding-top: 32px; border-top: 1px solid rgba(0,0,0,0.05); }
 
-    .m3-fab-extend { 
-        background: linear-gradient(135deg, #0076CE, #00B5E2);
-        box-shadow: 0 10px 30px rgba(0, 118, 206, 0.3);
-        height: 64px;
-        border-radius: 32px;
-        font-size: 1.1rem;
-        padding: 0 48px;
-        color: white;
-        border: none;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        font-weight: 700;
-        transition: 0.3s;
-    }
+    .m3-fab-extend { background: linear-gradient(135deg, #0076CE, #00B5E2); box-shadow: 0 10px 30px rgba(0, 118, 206, 0.3); height: 64px; border-radius: 32px; font-size: 1.1rem; padding: 0 48px; color: white; border: none; cursor: pointer; display: flex; align-items: center; gap: 12px; font-weight: 700; transition: 0.3s; }
     .m3-fab-extend:hover { transform: scale(1.02) translateY(-2px); box-shadow: 0 15px 40px rgba(0, 118, 206, 0.4); }
 
-    .legend-box { background: white; border: 1px solid #eee; padding: 16px 32px; border-radius: 24px; display: flex; gap: 20px; }
-    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 800; text-transform: uppercase; opacity: 0.7; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; }
-    .dot.pkg { background: #0076CE; }
-    .dot.proc { background: #00B5E2; }
-    .dot.conn { background: #FF6C37; }
-    .dot.misc { background: #ddd; }
+    /* Controls Layer */
+    .orchestrator-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; animation: fadeIn 0.5s ease-out; }
+    .col-selector-group { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.03); padding: 8px 16px; border-radius: 20px; }
+    .selector-label { font-size: 11px; font-weight: 800; text-transform: uppercase; opacity: 0.5; display: flex; align-items: center; gap: 6px; margin-right: 8px; }
+    
+    .m3-chip-check { cursor: pointer; position: relative; }
+    .m3-chip-check input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
+    .m3-chip-check span { padding: 6px 14px; border-radius: 12px; font-size: 11px; font-weight: 700; background: white; border: 1px solid #eee; transition: 0.2s; color: var(--text-main); }
+    .m3-chip-check input:checked ~ span { background: #0076CE; color: white; border-color: #0076CE; }
+    .m3-chip-check:hover span { border-color: #0076CE; }
 
+    /* Audit Table */
+    .audit-grid { width: 100%; animation: fadeIn 0.5s ease-out; }
+    .m3-table-v2 { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .m3-table-v2 th { text-align: left; padding: 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; color: #0076CE; opacity: 0.5; border-bottom: 2px solid rgba(0,0,0,0.03); letter-spacing: 1px; }
+    .m3-table-v2 td { padding: 16px; border-bottom: 1px solid rgba(0,0,0,0.03); font-size: 13px; color: var(--text-main); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
+    .m3-table-v2 tr:hover { background: rgba(0, 118, 206, 0.02); }
+
+    .col-name { width: 28%; }
+    .col-type { width: 18%; }
+    .col-folder { width: 15%; }
+    .col-date { width: 18%; }
+    .col-user { width: 15%; }
+    .col-env { width: 15%; }
+    .col-rev { width: 8%; }
+
+    .hidden-col { display: none !important; }
+
+    .comp-name { display: flex; align-items: center; gap: 12px; font-weight: 800; color: #0076CE; }
+    .comp-name i { font-size: 18px; color: #0076CE; opacity: 0.4; }
+    .comp-env .m3-badge-new { font-size: 9px; padding: 4px 10px; background: rgba(0, 181, 226, 0.1); color: #00B5E2; font-weight: 700; }
+
+    .legend-box { background: white; border: 1px solid #eee; padding: 16px 32px; border-radius: 24px; display: flex; gap: 20px; }
     /* Metadata Board */
-    .metadata-board {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 16px;
-        margin: 32px 0;
-        padding: 24px;
-        background: rgba(0,0,0,0.02);
-        border-radius: 24px;
-        animation: slideIn 0.5s ease-out;
-    }
-    .meta-chip {
-        flex: 1;
-        min-width: 160px;
-        background: white;
-        padding: 16px 24px;
-        border-radius: 16px;
-        border: 1px solid rgba(0,0,0,0.05);
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-    }
+    .metadata-board { display: flex; flex-wrap: wrap; gap: 16px; margin: 32px 0; padding: 24px; background: rgba(0,0,0,0.02); border-radius: 24px; animation: slideIn 0.5s ease-out; }
+    .meta-chip { flex: 1; min-width: 160px; background: white; padding: 16px 24px; border-radius: 16px; border: 1px solid rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
     .meta-chip .m-label { font-size: 10px; font-weight: 900; text-transform: uppercase; color: #0076CE; opacity: 0.5; }
     .meta-chip .m-val { font-weight: 800; font-size: 1.1rem; }
 
-    @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .ctrl-btn-v2 { background: white; border: 1px solid #eee; padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; font-size: 13px; font-weight: 700; color: #0076CE; }
+    .ctrl-btn-v2:hover { background: #0076CE; color: white; }
 
-    .tree-overlay { 
-        position: absolute; 
-        inset: 0;
-        background: rgba(255,255,255,0.85); 
-        backdrop-filter: blur(10px); 
-        display: none; 
-        align-items: center; 
-        justify-content: center; 
-        z-index: 100; 
-        border-radius: 40px; 
-    }
-    
-    .audit-grid { width: 100%; animation: fadeIn 0.5s ease-out; }
-    .m3-table-v2 { width: 100%; border-collapse: collapse; }
-    .m3-table-v2 th { text-align: left; padding: 20px 24px; font-size: 11px; font-weight: 900; text-transform: uppercase; color: #0076CE; opacity: 0.5; border-bottom: 2px solid rgba(0,0,0,0.03); letter-spacing: 1px; }
-    .m3-table-v2 td { padding: 24px; border-bottom: 1px solid rgba(0,0,0,0.03); font-size: 14px; color: var(--text-main); font-weight: 500; }
-    .m3-table-v2 tr:hover { background: rgba(0, 118, 206, 0.02); }
-
-    .comp-name { display: flex; align-items: center; gap: 16px; font-weight: 800; color: #0076CE; }
-    .comp-name i { font-size: 18px; color: #0076CE; opacity: 0.4; }
-    .comp-rev { text-align: right; font-family: monospace; font-weight: 800; color: #00B5E2; }
-    .comp-type { opacity: 0.8; font-size: 13px; }
-    .comp-folder { opacity: 0.6; font-size: 13px; }
-
+    .tree-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.85); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 100; border-radius: 40px; }
     .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 400px; text-align: center; opacity: 0.4; }
     .empty-icon i { font-size: 80px; margin-bottom: 20px; }
-    
-    .tree-controls { position: absolute; top: 24px; right: 24px; z-index: 20; }
-    .ctrl-btn-v2 { background: white; border: 1px solid #eee; padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; font-size: 13px; font-weight: 700; color: #0076CE; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-    .ctrl-btn-v2:hover { background: #0076CE; color: white; border-color: #0076CE; }
 
     .rotating { animation: spin 2s linear infinite; }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }

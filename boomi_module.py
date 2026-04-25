@@ -135,7 +135,12 @@ class BoomiManager:
             if res.status_code == 200:
                 results = res.json().get('result', [])
                 log.debug(f"Boomi Package Found: {len(results)} matches")
-                return results[0] if results else None
+                if results:
+                    pkg = results[0]
+                    # Inject component name resolved in Step 1
+                    pkg['componentName'] = component_name
+                    return pkg
+                return None
             
             log.error(f"Boomi Package Query Error {res.status_code}: {res.text}")
             return None
@@ -144,7 +149,7 @@ class BoomiManager:
             log.error(f"Boomi Discovery Orchestration Exception: {e}")
             return None
 
-    def get_package_manifest(self, package_id):
+    def get_package_manifest(self, package_id, root_name="---"):
         """Retrieves and enriches the manifest (included components) for a package."""
         if not self.account_id or not self._get_auth():
             return None
@@ -176,12 +181,20 @@ class BoomiManager:
             comp_ids = [c['componentId'] for c in formatted_included]
             enriched_map = self._batch_get_component_meta(comp_ids)
             
+            # Fetch Deployment Info for this package
+            deployment_targets = self._get_package_deployments(package_id)
+            
             # Merge back
             for item in formatted_included:
                 meta = enriched_map.get(item['componentId'], {})
                 item['name'] = meta.get('name', 'UNKNOWN')
                 item['folder'] = meta.get('folderName', '---')
                 item['type'] = meta.get('type', 'Unknown')
+                item['modifiedDate'] = meta.get('modifiedDate', '---')
+                item['modifiedBy'] = meta.get('modifiedBy', '---')
+                item['deployedTo'] = deployment_targets
+                item['rootComponent'] = root_name
+                item['packageId'] = package_id
                 
             # Replace the old key with the enriched version for app.py parity
             data['includedComponent'] = formatted_included
@@ -221,6 +234,45 @@ class BoomiManager:
         except Exception as e:
             log.error(f"Boomi Batch Meta Error: {e}")
             return {}
+
+    def _get_package_deployments(self, package_id):
+        """Identifies environments where this package is currently deployed."""
+        if not self.account_id or not self._get_auth():
+            return "---"
+            
+        url = f"{self.base_url}/{self.account_id}/DeployedPackage/query"
+        payload = {
+            "QueryFilter": {
+                "expression": {"argument": [package_id], "operator": "EQUALS", "property": "packageId"}
+            }
+        }
+        
+        try:
+            res = requests.post(url, auth=self._get_auth(), json=payload, headers={"Accept": "application/json"})
+            if res.status_code == 200:
+                deployments = res.json().get('result', [])
+                if not deployments: return "NOT DEPLOYED"
+                
+                # Extract Environment IDs and resolve to names if possible
+                env_names = []
+                for d in deployments:
+                    env_id = d.get('environmentId')
+                    env_names.append(self._get_environment_name(env_id))
+                return ", ".join(env_names)
+            return "UNKNOWN"
+        except:
+            return "---"
+
+    def _get_environment_name(self, env_id):
+        """Resolves an environment ID to its display name."""
+        url = f"{self.base_url}/{self.account_id}/Environment/{env_id}"
+        try:
+            res = requests.get(url, auth=self._get_auth(), headers={"Accept": "application/json"})
+            if res.status_code == 200:
+                return res.json().get('name', env_id)
+            return env_id
+        except:
+            return env_id
 
     def get_process_details(self, component_id):
         """Extracts deep metadata for a specific process/interface."""
