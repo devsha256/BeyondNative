@@ -91,9 +91,29 @@ class DataWeaveManager:
             if process.returncode == 0:
                 return {"success": True, "output": stdout, "error": None}
             else:
-                # DW CLI often dumps verbose errors to stderr
-                # We attempt to clean it up for the UI
-                return {"success": False, "output": None, "error": stderr or "Unknown execution error"}
+                # Filter out noisy JVM warnings and clean up DW CLI boilerplate
+                import re
+                cleaned_error = []
+                ansi_escape = re.compile(r'\x1b\[[0-9;]*[mGKF]')
+                
+                for line in (stderr or "").splitlines():
+                    # Remove ANSI color codes
+                    line = ansi_escape.sub('', line)
+                    
+                    # Skip JVM warnings
+                    if line.startswith("WARNING:") or "sun.misc.Unsafe" in line or "Please consider reporting" in line:
+                        continue
+                    
+                    # Remove DW CLI specific boilerplate
+                    line = line.replace("[ERROR] ", "")
+                    if "Error while executing the script:" in line:
+                        continue
+                    
+                    if line.strip():
+                        cleaned_error.append(line)
+                
+                final_error = "\n".join(cleaned_error).strip()
+                return {"success": False, "output": None, "error": final_error or stderr or "Unknown execution error"}
                 
         except FileNotFoundError:
             log.error("DW CLI Error: 'dw' command not found in PATH.")

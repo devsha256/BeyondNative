@@ -4,8 +4,8 @@
 {% block viewport_class %}full-bleed{% endblock %}
 
 {% block extra_head %}
-<!-- JSZip for Export/Import -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<!-- Monaco Editor -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -55,10 +55,13 @@
     <div class="playground-main">
         <!-- Sidebar: Project Explorer (Collapsed by default) -->
         <aside id="ide-sidebar" class="project-explorer collapsed">
-            <div class="explorer-section">
-                <div class="section-header">
-                    <span>INPUTS</span>
-                    <button class="icon-mini-btn" onclick="addInput()" title="Add Input">
+            <div class="explorer-section active" id="section-inputs">
+                <div class="section-header" onclick="toggleExplorerSection('inputs')">
+                    <div class="header-main">
+                        <i class="material-icons chevron">chevron_right</i>
+                        <span>INPUTS</span>
+                    </div>
+                    <button class="icon-mini-btn" onclick="addInput(); event.stopPropagation();" title="Add Input">
                         <i class="material-icons">add</i>
                     </button>
                 </div>
@@ -68,11 +71,14 @@
             </div>
             
             <div class="v-spacer"></div>
-
-            <div class="explorer-section">
-                <div class="section-header">
-                    <span>MODULES</span>
-                    <button class="icon-mini-btn" onclick="addScript()" title="Add Module">
+            
+            <div class="explorer-section active" id="section-modules">
+                <div class="section-header" onclick="toggleExplorerSection('modules')">
+                    <div class="header-main">
+                        <i class="material-icons chevron">chevron_right</i>
+                        <span>MODULES</span>
+                    </div>
+                    <button class="icon-mini-btn" onclick="addScript(); event.stopPropagation();" title="Add Module">
                         <i class="material-icons">add</i>
                     </button>
                 </div>
@@ -93,15 +99,17 @@
                 <div class="pane-body">
                     <div id="input-config" class="input-config-bar">
                         <span id="active-input-name">payload</span>
-                        <select id="input-type" class="m3-mini-select" onchange="updateActiveInputType()">
-                            <option value="json">JSON</option>
-                            <option value="xml">XML</option>
-                            <option value="csv">CSV</option>
-                            <option value="yaml">YAML</option>
-                            <option value="txt">TEXT</option>
-                        </select>
+                        <div class="m3-menu-wrap" id="mime-control">
+                            <button class="m3-menu-trigger" onclick="toggleMimeMenu(event)">
+                                <span id="mime-display">JSON</span>
+                                <i class="material-icons">arrow_drop_down</i>
+                            </button>
+                            <div id="mime-menu" class="m3-menu hidden">
+                                <!-- Dynamic items -->
+                            </div>
+                        </div>
                     </div>
-                    <textarea id="dw-input" class="editor-textarea" oninput="saveCurrentInput()"></textarea>
+                    <div id="dw-input" class="editor-instance"></div>
                 </div>
             </div>
 
@@ -115,7 +123,7 @@
                     </div>
                 </div>
                 <div class="pane-body">
-                    <textarea id="dw-script" class="editor-textarea script-font" oninput="saveCurrentScript()"></textarea>
+                    <div id="dw-script" class="editor-instance"></div>
                 </div>
             </div>
 
@@ -142,7 +150,7 @@
                         </div>
                         <pre id="error-message"></pre>
                     </div>
-                    <textarea id="dw-output" class="editor-textarea readonly" readonly placeholder="Transformation result..."></textarea>
+                    <div id="dw-output" class="editor-instance readonly"></div>
                     
                     <!-- Loading State -->
                     <div id="dw-loading" class="dw-loading-overlay hidden">
@@ -234,6 +242,28 @@
             </div>
         </div>
     </div>
+
+    <!-- Create Item Modal -->
+    <div id="create-modal" class="m3-modal-overlay hidden">
+        <div class="m3-modal glass small">
+            <div class="modal-header">
+                <div class="header-title">
+                    <i class="material-icons" id="create-icon">add</i>
+                    <h3 id="create-title">Create New</h3>
+                </div>
+            </div>
+            <div class="modal-body">
+                <p id="create-desc" class="m3-modal-desc">Enter unique identifier</p>
+                <input type="text" id="create-input" class="m3-modal-input" placeholder="e.g. workspace" autocomplete="off">
+            </div>
+            <div class="modal-footer">
+                <button class="m3-mini-btn outline" onclick="closeCreateModal()">Cancel</button>
+                <button class="m3-fab-extend elite-btn small" id="confirm-create">
+                    <span>Create</span>
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -249,10 +279,6 @@
         activeScript: "main.dwl"
     };
 
-    const inputArea = document.getElementById('dw-input');
-    const scriptArea = document.getElementById('dw-script');
-    const outputArea = document.getElementById('dw-output');
-
     function toggleSidebar() {
         const sidebar = document.getElementById('ide-sidebar');
         const shell = document.querySelector('.m3-playground-shell');
@@ -261,81 +287,109 @@
         
         // Update icon based on state
         const icon = document.querySelector('.sidebar-toggle i');
-        icon.innerText = sidebar.classList.contains('collapsed') ? 'menu_open' : 'menu';
+        if (icon) {
+            icon.innerText = sidebar.classList.contains('collapsed') ? 'menu_open' : 'menu';
+        }
+        
+        // Reflow editors
+        setTimeout(() => {
+            if (editors.input) editors.input.layout();
+            if (editors.script) editors.script.layout();
+            if (editors.output) editors.output.layout();
+        }, 300);
     }
+
+    function toggleExplorerSection(sectionId) {
+        const section = document.getElementById(`section-${sectionId}`);
+        section.classList.toggle('active');
+    }
+
+    // --- Monaco Integration ---
+    let editors = { input: null, script: null, output: null };
+    
+    require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' } });
 
     function initIDE() {
-        renderExplorer();
-        renderTabs();
-        loadActiveEditors();
-        setupResizers();
-    }
-
-    function setupResizers() {
-        console.log("Initializing DataWeave IDE Resizers...");
-        const resizer1 = document.getElementById('resizer-1');
-        const resizer2 = document.getElementById('resizer-2');
-        
-        const pane1 = document.getElementById('pane-input');
-        const pane2 = document.getElementById('pane-script');
-        const pane3 = document.getElementById('pane-output');
-
-        if (!resizer1 || !resizer2) {
-            console.error("Resizer elements not found!");
-            return;
-        }
-
-        function initResizer(resizer, leftPane, rightPane, id) {
-            let startX, startWidthLeft, startWidthRight;
-
-            resizer.addEventListener('mousedown', function(e) {
-                console.log(`Resizer ${id} drag started`);
-                startX = e.clientX;
-                startWidthLeft = leftPane.getBoundingClientRect().width;
-                startWidthRight = rightPane.getBoundingClientRect().width;
-                
-                resizer.classList.add('dragging');
-                document.documentElement.style.cursor = 'col-resize';
-                
-                const overlay = document.createElement('div');
-                overlay.style.position = 'fixed';
-                overlay.style.inset = '0';
-                overlay.style.zIndex = '99999';
-                overlay.style.cursor = 'col-resize';
-                document.body.appendChild(overlay);
-
-                function onMouseMove(e) {
-                    const deltaX = e.clientX - startX;
-                    const newWidthLeft = startWidthLeft + deltaX;
-                    const newWidthRight = startWidthRight - deltaX;
-
-                    if (newWidthLeft > 100 && newWidthRight > 100) {
-                        // Apply fixed widths to both panes involved in the resize
-                        leftPane.style.width = `${newWidthLeft}px`;
-                        leftPane.style.flex = '0 0 auto';
-                        
-                        rightPane.style.width = `${newWidthRight}px`;
-                        rightPane.style.flex = '0 0 auto';
-                    }
+        require(['vs/editor/editor.main'], function () {
+            // Register DataWeave (Simplified)
+            monaco.languages.register({ id: 'dataweave' });
+            monaco.languages.setMonarchTokensProvider('dataweave', {
+                tokenizer: {
+                    root: [
+                        [/%dw\s+[0-9.]+/, 'keyword'],
+                        [/\b(import|from|input|output|ns|type|as|do|if|else|match|case|is|external|using)\b/, 'keyword'],
+                        [/\b(true|false|null)\b/, 'constant'],
+                        [/[{}[\]()]/, 'delimiter'],
+                        [/[A-Z][a-z0-9_]*/, 'type'],
+                        [/"[^"]*"/, 'string'],
+                        [/\/\/.*/, 'comment'],
+                        [/---/, 'operator']
+                    ]
                 }
-
-                function onMouseUp() {
-                    console.log(`Resizer ${id} drag ended`);
-                    resizer.classList.remove('dragging');
-                    document.documentElement.style.cursor = 'default';
-                    if (document.body.contains(overlay)) document.body.removeChild(overlay);
-                    document.removeEventListener('mousemove', onMouseMove);
-                    document.removeEventListener('mouseup', onMouseUp);
-                }
-
-                document.addEventListener('mousemove', onMouseMove);
-                document.addEventListener('mouseup', onMouseUp);
             });
-        }
 
-        initResizer(resizer1, pane1, pane2, "1");
-        initResizer(resizer2, pane2, pane3, "2");
-        console.log("Resizers setup complete.");
+            const commonOptions = {
+                theme: document.body.dataset.theme === 'dark' ? 'vs-dark' : 'vs',
+                fontFamily: "'Fira Code', monospace",
+                fontSize: 13,
+                automaticLayout: true,
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                lineNumbers: 'on',
+                renderLineHighlight: 'all',
+                contextmenu: true,
+                padding: { top: 16 }
+            };
+
+            if (!editors.input) {
+                editors.input = monaco.editor.create(document.getElementById('dw-input'), {
+                    ...commonOptions,
+                    language: 'json',
+                    value: projectState.inputs[projectState.activeInput].content
+                });
+                editors.input.onDidChangeModelContent(() => {
+                    projectState.inputs[projectState.activeInput].content = editors.input.getValue();
+                });
+                // Shortcuts
+                editors.input.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => executeDW());
+            }
+
+            if (!editors.script) {
+                editors.script = monaco.editor.create(document.getElementById('dw-script'), {
+                    ...commonOptions,
+                    language: 'dataweave',
+                    value: projectState.scripts[projectState.activeScript]
+                });
+                editors.script.onDidChangeModelContent(() => {
+                    projectState.scripts[projectState.activeScript] = editors.script.getValue();
+                });
+                // Shortcuts
+                editors.script.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => executeDW());
+            }
+
+            if (!editors.output) {
+                editors.output = monaco.editor.create(document.getElementById('dw-output'), {
+                    ...commonOptions,
+                    language: 'json',
+                    readOnly: true,
+                    value: "Transformation result..."
+                });
+            }
+
+            // Theme sync
+            const observer = new MutationObserver(() => {
+                const isDark = document.body.dataset.theme === 'dark';
+                monaco.editor.setTheme(isDark ? 'vs-dark' : 'vs');
+            });
+            observer.observe(document.body, { attributes: true, attributeFilter: ['data-theme'] });
+
+            // Render navigation elements
+            renderExplorer();
+            renderInputTabs();
+            renderScriptTabs();
+            loadActiveEditors();
+            setupResizers();
+        });
     }
 
     function renderExplorer() {
@@ -357,78 +411,159 @@
         `).join('');
     }
 
-    function renderTabs() {
-        const inputTabs = document.getElementById('input-tabs');
-        const scriptTabs = document.getElementById('script-tabs');
-        
-        inputTabs.innerHTML = Object.keys(projectState.inputs).map(name => `
+    function renderInputTabs() {
+        const tabs = document.getElementById('input-tabs');
+        tabs.innerHTML = Object.keys(projectState.inputs).map(name => `
             <div class="tab ${projectState.activeInput === name ? 'active' : ''}" onclick="switchInput('${name}')">
                 <i class="material-icons">data_object</i>
                 <span>${name}</span>
                 ${name !== 'payload' ? `<i class="material-icons tab-close" onclick="deleteInput(event, '${name}')">close</i>` : ''}
             </div>
-        `).join('');
+        `).join('') + `
+            <div class="tab add-tab" onclick="addInput()">
+                <i class="material-icons">add</i>
+            </div>
+        `;
+    }
 
-        scriptTabs.innerHTML = Object.keys(projectState.scripts).map(name => `
+    function renderScriptTabs() {
+        const tabs = document.getElementById('script-tabs');
+        tabs.innerHTML = Object.keys(projectState.scripts).map(name => `
             <div class="tab ${projectState.activeScript === name ? 'active' : ''}" onclick="switchScript('${name}')">
                 <i class="material-icons">description</i>
                 <span>${name}</span>
                 ${name !== 'main.dwl' ? `<i class="material-icons tab-close" onclick="deleteScript(event, '${name}')">close</i>` : ''}
             </div>
-        `).join('');
+        `).join('') + `
+            <div class="tab add-tab" onclick="addScript()">
+                <i class="material-icons">add</i>
+            </div>
+        `;
     }
 
     function loadActiveEditors() {
+        if (!editors.input || !editors.script) return;
+        
         const activeInput = projectState.inputs[projectState.activeInput];
-        inputArea.value = activeInput.content;
-        document.getElementById('input-type').value = activeInput.type;
+        editors.input.setValue(activeInput.content);
+        
+        // Update language based on mime type
+        const langMap = { 'json': 'json', 'xml': 'xml', 'csv': 'plaintext', 'yaml': 'yaml', 'txt': 'plaintext' };
+        monaco.editor.setModelLanguage(editors.input.getModel(), langMap[activeInput.type] || 'plaintext');
+        
         document.getElementById('active-input-name').innerText = projectState.activeInput;
+        renderMimeItems();
 
-        scriptArea.value = projectState.scripts[projectState.activeScript];
+        editors.script.setValue(projectState.scripts[projectState.activeScript]);
     }
 
-    // --- Actions ---
     function switchInput(name) {
-        saveCurrentState();
         projectState.activeInput = name;
-        initIDE();
+        loadActiveEditors();
+        renderInputTabs();
+        renderExplorer();
     }
 
     function switchScript(name) {
-        saveCurrentState();
         projectState.activeScript = name;
-        initIDE();
+        loadActiveEditors();
+        renderScriptTabs();
+        renderExplorer();
     }
 
-    function saveCurrentState() {
-        projectState.inputs[projectState.activeInput].content = inputArea.value;
-        projectState.scripts[projectState.activeScript] = scriptArea.value;
+    function saveCurrentInput() {} 
+    function saveCurrentScript() {} 
+
+    function renderMimeItems() {
+        const types = ['json', 'xml', 'csv', 'yaml', 'txt'];
+        const currentType = projectState.inputs[projectState.activeInput].type;
+        const menu = document.getElementById('mime-menu');
+        if (!menu) return;
+
+        menu.innerHTML = types.map(t => `
+            <div class="m3-menu-item ${currentType === t ? 'active' : ''}" onclick="selectMimeType('${t}')">
+                <span>${t.toUpperCase()}</span>
+                ${currentType === t ? '<i class="material-icons" style="font-size: 14px">check</i>' : ''}
+            </div>
+        `).join('');
+        document.getElementById('mime-display').innerText = currentType.toUpperCase();
     }
 
-    function saveCurrentInput() { projectState.inputs[projectState.activeInput].content = inputArea.value; }
-    function saveCurrentScript() { projectState.scripts[projectState.activeScript] = scriptArea.value; }
-
-    function updateActiveInputType() {
-        projectState.inputs[projectState.activeInput].type = document.getElementById('input-type').value;
+    function toggleMimeMenu(e) {
+        e.stopPropagation();
+        document.getElementById('mime-menu').classList.toggle('hidden');
     }
+
+    function selectMimeType(type) {
+        projectState.inputs[projectState.activeInput].type = type;
+        renderMimeItems();
+        loadActiveEditors();
+    }
+
+    document.addEventListener('click', () => {
+        const menu = document.getElementById('mime-menu');
+        if (menu) menu.classList.add('hidden');
+    });
 
     function addInput() {
-        const name = prompt("Enter input name (e.g. vars):");
-        if (name && !projectState.inputs[name]) {
-            projectState.inputs[name] = { content: "{}", type: "json" };
-            switchInput(name);
-        }
+        showCreateModal(
+            "New Metadata Input", 
+            "data_object", 
+            "Provide a name for the new data source (e.g. vars or userInfo).", 
+            "input_name",
+            (name) => {
+                if (!projectState.inputs[name]) {
+                    projectState.inputs[name] = { content: "{}", type: "json" };
+                    switchInput(name);
+                }
+            }
+        );
     }
 
     function addScript() {
-        const name = prompt("Enter module name (e.g. MyLib.dwl):");
-        if (name) {
-            const filename = name.endsWith(".dwl") ? name : name + ".dwl";
-            if (!projectState.scripts[filename]) {
-                projectState.scripts[filename] = "%dw 2.0\n---";
-                switchScript(filename);
+        showCreateModal(
+            "New DataWeave Module", 
+            "description", 
+            "Add a support library or a helper script (.dwl).", 
+            "Helper.dwl",
+            (name) => {
+                const filename = name.endsWith(".dwl") ? name : name + ".dwl";
+                if (!projectState.scripts[filename]) {
+                    projectState.scripts[filename] = "%dw 2.0\n---";
+                    switchScript(filename);
+                }
             }
-        }
+        );
+    }
+
+    // --- Modal Logic ---
+    function showCreateModal(title, icon, desc, placeholder, callback) {
+        document.getElementById('create-title').innerText = title;
+        document.getElementById('create-icon').innerText = icon;
+        document.getElementById('create-desc').innerText = desc;
+        const input = document.getElementById('create-input');
+        input.placeholder = placeholder;
+        input.value = '';
+        
+        document.getElementById('create-modal').classList.remove('hidden');
+        setTimeout(() => input.focus(), 100);
+
+        const btn = document.getElementById('confirm-create');
+        btn.onclick = () => {
+            if (input.value.trim()) {
+                callback(input.value.trim());
+                closeCreateModal();
+            }
+        };
+
+        input.onkeydown = (e) => {
+            if (e.key === 'Enter') btn.onclick();
+            if (e.key === 'Escape') closeCreateModal();
+        };
+    }
+
+    function closeCreateModal() {
+        document.getElementById('create-modal').classList.add('hidden');
     }
 
     function deleteInput(e, name) {
@@ -436,7 +571,9 @@
         if (confirm(`Delete input '${name}'?`)) {
             delete projectState.inputs[name];
             if (projectState.activeInput === name) projectState.activeInput = "payload";
-            initIDE();
+            loadActiveEditors();
+            renderInputTabs();
+            renderExplorer();
         }
     }
 
@@ -445,20 +582,20 @@
         if (confirm(`Delete script '${name}'?`)) {
             delete projectState.scripts[name];
             if (projectState.activeScript === name) projectState.activeScript = "main.dwl";
-            initIDE();
+            loadActiveEditors();
+            renderScriptTabs();
+            renderExplorer();
         }
     }
 
-    // --- Execution ---
     async function executeDW() {
-        saveCurrentState();
+        if (!editors.output) return;
         const errorPanel = document.getElementById('dw-error-panel');
         const errorMsg = document.getElementById('error-message');
         const loading = document.getElementById('dw-loading');
-        const runBtn = document.querySelector('.dw-run');
 
         errorPanel.classList.add('hidden');
-        outputArea.classList.remove('hidden');
+        document.getElementById('dw-output').classList.remove('hidden');
         loading.classList.remove('hidden');
 
         try {
@@ -473,13 +610,13 @@
             const result = await res.json();
 
             if (result.success) {
-                outputArea.value = result.output;
-                outputArea.classList.remove('hidden');
+                editors.output.setValue(result.output);
+                document.getElementById('dw-output').classList.remove('hidden');
                 errorPanel.classList.add('hidden');
             } else {
                 errorPanel.classList.remove('hidden');
                 errorMsg.innerText = result.error;
-                outputArea.classList.add('hidden');
+                document.getElementById('dw-output').classList.add('hidden');
             }
         } catch (e) {
             showToast("DW Engine unreachable", "error");
@@ -489,9 +626,9 @@
     }
 
     function copyOutput() {
-        if (!outputArea.value) return;
-        outputArea.select();
-        document.execCommand('copy');
+        if (!editors.output) return;
+        const text = editors.output.getValue();
+        navigator.clipboard.writeText(text);
         showToast("Copied to clipboard", "success");
     }
 
@@ -506,7 +643,67 @@
         e.currentTarget.classList.add('active');
     }
 
-    // --- Import / Export Logic ---
+    function setupResizers() {
+        const resizer1 = document.getElementById('resizer-1');
+        const resizer2 = document.getElementById('resizer-2');
+        const pane1 = document.getElementById('pane-input');
+        const pane2 = document.getElementById('pane-script');
+        const pane3 = document.getElementById('pane-output');
+
+        if (!resizer1 || !resizer2) return;
+
+        function initResizer(resizer, leftPane, rightPane) {
+            resizer.addEventListener('mousedown', function(e) {
+                const overlay = document.createElement('div');
+                overlay.style.position = 'fixed';
+                overlay.style.inset = '0';
+                overlay.style.zIndex = '99999';
+                overlay.style.cursor = 'col-resize';
+                document.body.appendChild(overlay);
+
+                let startX = e.clientX;
+                let startWidthLeft = leftPane.getBoundingClientRect().width;
+                let startWidthRight = rightPane.getBoundingClientRect().width;
+                
+                resizer.classList.add('dragging');
+
+                function onMouseMove(e) {
+                    const deltaX = e.clientX - startX;
+                    const newLeftW = startWidthLeft + deltaX;
+                    const newRightW = startWidthRight - deltaX;
+
+                    if (newLeftW > 100 && newRightW > 100) {
+                        leftPane.style.width = `${newLeftW}px`;
+                        leftPane.style.flex = 'none';
+                        rightPane.style.width = `${newRightW}px`;
+                        rightPane.style.flex = 'none';
+                        
+                        if (editors.input) editors.input.layout();
+                        if (editors.script) editors.script.layout();
+                        if (editors.output) editors.output.layout();
+                    }
+                }
+                function onMouseUp() {
+                    resizer.classList.remove('dragging');
+                    document.body.removeChild(overlay);
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                }
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+        }
+        initResizer(resizer1, pane1, pane2);
+        initResizer(resizer2, pane2, pane3);
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            executeDW();
+        }
+    });
+
     function triggerImport() {
         document.getElementById('project-import').click();
     }
@@ -514,19 +711,14 @@
     async function handleImport(event) {
         const file = event.target.files[0];
         if (!file) return;
-
         const zip = new JSZip();
         try {
             const contents = await zip.loadAsync(file);
-            let newInputs = {};
-            let newScripts = {};
-            let hasInputFolder = false;
-            let hasModulesFolder = false;
+            let newInputs = {}, newScripts = {};
+            let hasInputFolder = false, hasModulesFolder = false;
 
-            // Analyze structure
             for (const [path, entry] of Object.entries(contents.files)) {
                 if (entry.dir) continue;
-                
                 if (path.startsWith('input/')) {
                     hasInputFolder = true;
                     const name = path.replace('input/', '').split('.')[0];
@@ -542,41 +734,37 @@
             }
 
             if (!hasInputFolder || !hasModulesFolder || Object.keys(newScripts).length === 0) {
-                alert("Invalid Project Structure!\n\nExpected:\n- ./input/ <data files>\n- ./modules/ <dwl scripts>\n\nPlease ensure your zip contains these folders.");
+                alert("Invalid Project Structure!");
                 return;
             }
 
-            // Update state
             projectState.inputs = newInputs;
             projectState.scripts = newScripts;
             projectState.activeInput = Object.keys(newInputs)[0] || "payload";
             projectState.activeScript = Object.keys(newScripts)[0] || "main.dwl";
 
-            initIDE();
+            loadActiveEditors();
+            renderInputTabs();
+            renderScriptTabs();
+            renderExplorer();
             showToast("Project Imported Successfully", "success");
         } catch (err) {
-            console.error(err);
             showToast("Failed to parse zip file", "error");
         } finally {
-            event.target.value = ''; // Reset input
+            event.target.value = '';
         }
     }
 
     function exportProject() {
         const zip = new JSZip();
-        
-        // Add Inputs
         const inputFolder = zip.folder("input");
         Object.entries(projectState.inputs).forEach(([name, data]) => {
             inputFolder.file(`${name}.${data.type}`, data.content);
         });
-
-        // Add Scripts
         const scriptFolder = zip.folder("modules");
         Object.entries(projectState.scripts).forEach(([name, content]) => {
             scriptFolder.file(name, content);
         });
-
         zip.generateAsync({type: "blob"}).then(function(content) {
             const link = document.createElement('a');
             link.href = URL.createObjectURL(content);
@@ -586,20 +774,17 @@
         });
     }
 
-    // Handle Tabs in Editor
-    document.querySelectorAll('.editor-textarea').forEach(el => {
-        el.addEventListener('keydown', function(e) {
-            if (e.key === 'Tab') {
-                e.preventDefault();
-                const start = this.selectionStart;
-                const end = this.selectionEnd;
-                this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
-                this.selectionStart = this.selectionEnd = start + 4;
-            }
-        });
-    });
+    function toggleHelpModal() {
+        document.getElementById('setup-modal').classList.toggle('hidden');
+    }
 
-    // Global Initialization
+    function switchGuide(e, os) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.guide-content').forEach(c => c.classList.add('hidden'));
+        e.target.classList.add('active');
+        document.getElementById(`guide-${os}`).classList.remove('hidden');
+    }
+
     window.addEventListener('load', initIDE);
 </script>
 
@@ -824,17 +1009,37 @@
     }
     .m3-icon-button-outlined i { font-size: 20px; }
     .explorer-section { display: flex; flex-direction: column; gap: 8px; }
+    .explorer-section .explorer-list { 
+        max-height: 0; 
+        overflow: hidden; 
+        transition: 0.3s ease-in-out; 
+    }
+    .explorer-section.active .explorer-list { 
+        max-height: 500px; 
+    }
+    .explorer-section.active .chevron { 
+        transform: rotate(90deg); 
+    }
     .section-header { 
         display: flex; 
         justify-content: space-between; 
         align-items: center; 
         padding: 0 16px; 
+        cursor: pointer;
+        user-select: none;
+    }
+    .header-main {
+        display: flex;
+        align-items: center;
+        gap: 4px;
         font-size: 10px; 
         font-weight: 800; 
         letter-spacing: 1px; 
-        opacity: 0.5; 
-        margin-bottom: 8px;
+        opacity: 0.6; 
     }
+    .header-main i.chevron { font-size: 14px; transition: 0.2s; }
+    .explorer-section:hover .header-main { opacity: 1; }
+
     .explorer-list { display: flex; flex-direction: column; }
     .explorer-item { 
         display: flex; 
@@ -957,35 +1162,89 @@
 
     .pane-body { flex: 1; position: relative; min-height: 0; display: flex; flex-direction: column; }
     
-    .editor-textarea {
+    .editor-instance {
         width: 100%;
         height: 100%;
-        border: none;
-        padding: 16px;
-        font-family: 'Fira Code', 'Cascadia Code', monospace;
-        font-size: 14px;
-        line-height: 1.6;
-        color: var(--text-main);
         background: transparent;
-        resize: none;
-        outline: none;
     }
-    .editor-textarea.readonly { background: rgba(0,0,0,0.01); color: #555; }
+    .monaco-editor, .monaco-editor .margin, .monaco-editor-background {
+        background-color: transparent !important;
+    }
+    .editor-instance.readonly { opacity: 0.8; }
     .script-font { color: var(--m3-primary); }
 
     /* Controls */
-    .m3-mini-select {
+    .m3-menu-wrap { position: relative; display: inline-block; }
+    .m3-menu-trigger {
+        display: flex;
+        align-items: center;
+        gap: 4px;
         background: transparent;
         border: none;
-        font-size: 11px;
-        font-weight: 900;
         color: var(--m3-primary);
+        font-size: 10px;
+        font-weight: 900;
         text-transform: uppercase;
         cursor: pointer;
         padding: 4px 8px;
         border-radius: 8px;
+        transition: 0.2s;
     }
-    .m3-mini-select:hover { background: rgba(103, 80, 164, 0.05); }
+    .m3-menu-trigger:hover { background: rgba(103, 80, 164, 0.05); }
+    .m3-menu {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: 4px;
+        background: white;
+        border: 1px solid var(--m3-outline);
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+        z-index: 1000;
+        min-width: 110px;
+        padding: 6px;
+        display: flex;
+        flex-direction: column;
+        animation: m3ScaleIn 0.2s cubic-bezier(0.1, 0.9, 0.2, 1);
+        transform-origin: top right;
+    }
+    .m3-menu-item {
+        padding: 8px 12px;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-main);
+        cursor: pointer;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: 0.2s;
+        opacity: 0.8;
+    }
+    .m3-menu-item:hover { 
+        background: var(--m3-primary-container); 
+        color: var(--m3-on-primary-container);
+        opacity: 1;
+    }
+    .m3-menu-item.active { 
+        color: var(--m3-primary); 
+        background: rgba(103, 80, 164, 0.05);
+        opacity: 1;
+    }
+
+    @keyframes m3ScaleIn {
+        from { opacity: 0; transform: scale(0.9) translateY(-10px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    [data-theme='dark'] .m3-menu {
+        background: #1c1b1f;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .m3-mini-select {
+        display: none; /* Replaced by custom menu */
+    }
 
     .m3-badge-mini { font-size: 9px; font-weight: 900; padding: 2px 8px; background: rgba(0,0,0,0.05); border-radius: 10px; opacity: 0.5; }
 
@@ -1034,16 +1293,72 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* Dark Mode */
-    [data-theme='dark'] .m3-playground-shell { background: #141218; }
-    [data-theme='dark'] .m3-glass-appbar { background: rgba(25, 24, 28, 0.82); border-bottom-color: rgba(255,255,255,0.05); }
+    /* Dark Mode Global Overrides */
+    [data-theme='dark'] .m3-playground-shell { background: #0f0d13; }
+    [data-theme='dark'] .idx-title { color: #e6e1e5; opacity: 1; }
+    [data-theme='dark'] .m3-glass-appbar.minimal { background: #1c1b1f; border-bottom-color: rgba(255,255,255,0.08); }
+    [data-theme='dark'] .project-explorer { background: #141218; border-right-color: rgba(255,255,255,0.05); }
+    
+    [data-theme='dark'] .tab { background: rgba(255,255,255,0.03); border-right-color: rgba(255,255,255,0.05); color: #e6e1e5; }
+    [data-theme='dark'] .tab.active { background: #1c1b1f; border-bottom-color: var(--m3-primary); color: #d0bcff; }
+    [data-theme='dark'] .tabs-header { border-bottom-color: rgba(255,255,255,0.05); }
+    
+    [data-theme='dark'] .input-config-bar { background: rgba(255,255,255,0.02); border-bottom-color: rgba(255,255,255,0.03); color: #d0bcff; }
+    [data-theme='dark'] .pane-header { background: #1c1b1f; border-bottom-color: rgba(255,255,255,0.05); }
+    [data-theme='dark'] .pane-title { color: #e6e1e5; }
+    
+    [data-theme='dark'] .explorer-item { color: #cac4d0; }
+    [data-theme='dark'] .explorer-item:hover { background: rgba(208, 188, 255, 0.08); color: #e6e1e5; }
+    [data-theme='dark'] .explorer-item.active { background: rgba(208, 188, 255, 0.12); color: #d0bcff; }
+    
+    [data-theme='dark'] .resizer { background: #141218; }
+    [data-theme='dark'] .resizer:hover, [data-theme='dark'] .resizer.dragging { background: var(--m3-primary); }
+    
     [data-theme='dark'] .dw-pane { background: #1c1b1f; }
-    [data-theme='dark'] .pane-header { background: rgba(255,255,255,0.02); border-bottom-color: rgba(255,255,255,0.05); }
-    [data-theme='dark'] .editor-textarea { color: #E6E1E5; }
-    [data-theme='dark'] .dw-error-panel { background: rgba(183, 28, 28, 0.15); border-color: rgba(183,28,28,0.3); color: #ffb4ab; }
+    [data-theme='dark'] .dw-error-panel { background: rgba(255, 180, 171, 0.1); border-color: rgba(255, 180, 171, 0.2); }
     [data-theme='dark'] .error-status { color: #ffb4ab; }
     [data-theme='dark'] #error-message { color: #ffb4ab; }
-    [data-theme='dark'] .guide-tabs { background: #1c1b1f; }
-    [data-theme='dark'] .tab-btn.active { background: var(--m3-primary); }
+    
+    [data-theme='dark'] .m3-menu { background: #252428; border-color: rgba(255,255,255,0.1); }
+    [data-theme='dark'] .m3-menu-item { color: #e6e1e5; }
+    [data-theme='dark'] .v-spacer { border-top-color: rgba(255,255,255,0.05); }
+    [data-theme='dark'] .icon-mini-btn { color: #cac4d0; }
+    [data-theme='dark'] .icon-mini-btn:hover { background: rgba(255,255,255,0.05); color: #e6e1e5; }
+    .m3-modal.small { max-width: 400px; padding: 24px; }
+    .m3-modal-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
+    .m3-modal-input {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(0,0,0,0.03);
+        border: 1px solid var(--m3-outline);
+        border-radius: 10px;
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        color: var(--text-main);
+        outline: none;
+        transition: 0.2s;
+    }
+    .m3-modal-input:focus {
+        border-color: var(--m3-primary);
+        background: white;
+        box-shadow: 0 0 0 4px rgba(103, 80, 164, 0.1);
+    }
+    [data-theme='dark'] .m3-modal-input { background: rgba(255,255,255,0.03); color: white; }
+    [data-theme='dark'] .m3-modal-input:focus { background: rgba(255,255,255,0.05); }
+
+    .m3-mini-btn.outline {
+        background: transparent;
+        border: 1px solid var(--m3-outline);
+        color: var(--text-muted);
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-size: 11px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    .m3-mini-btn.outline:hover { background: rgba(0,0,0,0.02); color: var(--m3-primary); }
+
+    [data-theme='dark'] .m3-mini-btn.outline:hover { background: rgba(255,255,255,0.05); }
 
     .hidden { display: none !important; }
 </style>
