@@ -149,7 +149,7 @@
                     <i class="material-icons">terminal</i>
                     <h3>Environment Setup Guide</h3>
                 </div>
-                <button class="m3-icon-button" onclick="toggleHelpModal()">
+                <button class="m3-icon-button-outlined" onclick="toggleHelpModal()" title="Close Guide">
                     <i class="material-icons">close</i>
                 </button>
             </div>
@@ -167,16 +167,17 @@
                         <p>Recommended: Amazon Corretto 11. Run: <code>brew install --cask corretto</code></p>
                     </section>
                     <section>
-                        <h5>2. Configure Path</h5>
-                        <p>Ensure JAVA_HOME is in <code>~/.zshrc</code>:</p>
-                        <pre>export JAVA_HOME=$(/usr/libexec/java_home)&#10;export PATH=$JAVA_HOME/bin:$PATH</pre>
-                    </section>
-                    <section>
-                        <h5>3. Install DataWeave CLI</h5>
-                        <p>1. Download the <strong>Mac</strong> binary from <code>mulesoft/data-weave-cli/releases</code>.</p>
+                        <h5>2. Install DataWeave CLI</h5>
+                        <p><strong>Option A: Homebrew (Recommended)</strong></p>
+                        <pre>brew tap mulesoft-labs/data-weave&#10;brew install dw</pre>
+                        <p><strong>Option B: Manual Installation</strong></p>
+                        <p>1. Download the Mac binary from <a href="https://github.com/mulesoft/data-weave-cli/releases" target="_blank" class="elite-link">GitHub Releases</a>.</p>
                         <p>2. Extract to <code>~/.dw</code> and add its bin folder to your <code>~/.zshrc</code>:</p>
                         <pre>export PATH=$PATH:~/.dw/bin</pre>
-                        <p>3. Restart terminal and run <code>dw --version</code>.</p>
+                    </section>
+                    <section>
+                        <h5>3. Verify Installation</h5>
+                        <p>Restart terminal and run: <code>dw --version</code></p>
                     </section>
                 </div>
 
@@ -187,14 +188,13 @@
                         <p>Download the MSI installer for Amazon Corretto 11 or 17.</p>
                     </section>
                     <section>
-                        <h5>2. Configure Path</h5>
-                        <p>Add <code>JAVA_HOME</code> to System Variables. Then add <code>%JAVA_HOME%\bin</code> to your <code>Path</code>.</p>
+                        <h5>2. Install DataWeave CLI</h5>
+                        <p>1. Download the Windows binary from <a href="https://github.com/mulesoft/data-weave-cli/releases" target="_blank" class="elite-link">GitHub Releases</a>.</p>
+                        <p>2. Extract to <code>C:\dw</code> and add <code>C:\dw\bin</code> to your system <strong>Path</strong> environment variable.</p>
                     </section>
                     <section>
-                        <h5>3. Install DataWeave CLI</h5>
-                        <p>1. Download the Windows binary from <code>mulesoft/data-weave-cli/releases</code>.</p>
-                        <p>2. Extract to <code>C:\dw</code> and add <code>C:\dw\bin</code> to your system PATH.</p>
-                        <p>3. Restart Terminal and run <code>dw --version</code>.</p>
+                        <h5>3. Verify Installation</h5>
+                        <p>Restart Terminal and run: <code>dw --version</code></p>
                     </section>
                 </div>
 
@@ -205,13 +205,13 @@
                         <p>Ubuntu/Debian: <code>sudo apt install openjdk-11-jdk</code></p>
                     </section>
                     <section>
-                        <h5>2. Configure Path</h5>
-                        <p>Add to <code>~/.bashrc</code>:</p>
-                        <pre>export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64&#10;export PATH=$JAVA_HOME/bin:$PATH</pre>
+                        <h5>2. Install DataWeave CLI</h5>
+                        <p>1. Download the Linux binary from <a href="https://github.com/mulesoft/data-weave-cli/releases" target="_blank" class="elite-link">GitHub Releases</a>.</p>
+                        <p>2. Extract to <code>~/.dw</code> and add <code>export PATH=$PATH:~/.dw/bin</code> to your <code>~/.bashrc</code>.</p>
                     </section>
                     <section>
-                        <h5>3. Install DataWeave CLI</h5>
-                        <p>Download the Linux binary from <code>mulesoft/data-weave-cli</code>, extract to <code>~/.dw</code>, and add <code>~/.dw/bin</code> to your PATH.</p>
+                        <h5>3. Verify Installation</h5>
+                        <p>Restart terminal and run: <code>dw --version</code></p>
                     </section>
                 </div>
             </div>
