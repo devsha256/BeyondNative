@@ -51,33 +51,36 @@ class DataWeaveManager:
                 input_args.extend(["-i", f"{name}={input_file_path}"])
 
             # 2. Setup Scripts (Modules)
-            # All scripts are written to the root of the temp_dir so main can import others.
+            # Scripts are written to temp_dir, preserving subdirectory structures
             main_script_path = None
             for filename, content in scripts_map.items():
-                # Sanitize filename
                 if not filename.endswith(".dwl"):
                     filename += ".dwl"
                 
                 script_path = os.path.join(temp_dir, filename)
+                # Ensure parent directory exists for modules in subfolders
+                os.makedirs(os.path.dirname(script_path), exist_ok=True)
+                
                 with open(script_path, "w") as f:
                     f.write(content)
                 
-                # We assume the first script or 'main.dwl' is the entry point
+                # Check for entry point
                 if filename == "main.dwl" or main_script_path is None:
                     main_script_path = script_path
 
             if not main_script_path:
                 return {"success": False, "error": "No script files provided."}
 
-            # 3. Orchaestration and Execution
-            # Command: dw run -i name=path/to/file [main_script]
-            command = [self.cmd, "run"] + input_args + ["-f", main_script_path]
+            # 3. Orchestration and Execution
+            # Command: dw run -i name=path/to/file --path . -f main_script
+            # Note: We use --path . to include the local workspace in the library path for imports
+            command = [self.cmd, "run"] + input_args + ["--path", ".", "-f", main_script_path]
             
             log.debug(f"DW Project Execution: {' '.join(command)}")
             
             process = subprocess.Popen(
                 command,
-                cwd=temp_dir, # Set CWD to resolve relative imports
+                cwd=temp_dir,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True
