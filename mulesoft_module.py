@@ -40,7 +40,8 @@ class MuleSoftManager:
             except Exception as e:
                 log.error(f"Error logging HTTP request: {e}")
                 
-        # self.http_session.hooks['response'].append(log_roundtrip)
+        if os.getenv('DEBUG_HTTP_REQUESTS', 'false').lower() in ('true', '1', 'yes'):
+            self.http_session.hooks['response'].append(log_roundtrip)
         
         adapter = HTTPAdapter(pool_connections=50, pool_maxsize=50)
         self.http_session.mount('https://', adapter)
