@@ -40,7 +40,7 @@ class MuleSoftManager:
             except Exception as e:
                 log.error(f"Error logging HTTP request: {e}")
                 
-        self.http_session.hooks['response'].append(log_roundtrip)
+        # self.http_session.hooks['response'].append(log_roundtrip)
         
         adapter = HTTPAdapter(pool_connections=50, pool_maxsize=50)
         self.http_session.mount('https://', adapter)
@@ -402,8 +402,7 @@ class MuleSoftManager:
         import json
         ndjson_header = {
             "index": [index_pattern],
-            "ignore_unavailable": True,
-            "preference": 1778259436250
+            "ignore_unavailable": True
         }
         
         ndjson_body = {
@@ -427,8 +426,7 @@ class MuleSoftManager:
             "highlight": {
                 "pre_tags": ["@kibana-highlighted-field@"],
                 "post_tags": ["@/kibana-highlighted-field@"],
-                "fields": {"*": {}},
-                "fragment_size": 2147483647
+                "fields": {"*": {}}
             },
             "query": {
                 "bool": {
