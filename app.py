@@ -364,9 +364,16 @@ def logs_api_events():
     groups = {}
     severity_order = {"ERROR": 4, "WARN": 3, "INFO": 2, "DEBUG": 1}
     
+    import uuid
+    
     # Pre-parse and sort logs by timestamp
     for line in all_logs:
-        cid = line.get('correlationId') or 'unknown'
+        cid = line.get('correlationId')
+        # If no correlation ID exists, generate a unique one for this log so it doesn't merge with other unrelated logs
+        if not cid or str(cid).strip().lower() == 'unknown':
+            cid = f"no-corr-id-{uuid.uuid4().hex[:8]}"
+            line['correlationId'] = cid
+            
         if cid not in groups:
             groups[cid] = {
                 "correlationId": cid,
