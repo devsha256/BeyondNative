@@ -22,6 +22,26 @@ class MuleSoftManager:
     def __init__(self):
         # Enable connection pooling to dramatically reduce TLS handshake / TCP overhead
         self.http_session = requests.Session()
+        
+        # Add debug logging for all HTTP requests
+        def log_roundtrip(response, *args, **kwargs):
+            try:
+                log.debug(f"\n========== HTTP REQUEST ==========")
+                log.debug(f"{response.request.method} {response.request.url}")
+                log.debug(f"Headers: {response.request.headers}")
+                if response.request.body:
+                    body_str = response.request.body.decode('utf-8') if isinstance(response.request.body, bytes) else str(response.request.body)
+                    log.debug(f"Body: {body_str[:2500]}")
+                log.debug(f"---------- HTTP RESPONSE ----------")
+                log.debug(f"Status: {response.status_code}")
+                log.debug(f"Headers: {response.headers}")
+                log.debug(f"Body: {response.text[:2500]}")
+                log.debug(f"===================================\n")
+            except Exception as e:
+                log.error(f"Error logging HTTP request: {e}")
+                
+        self.http_session.hooks['response'].append(log_roundtrip)
+        
         adapter = HTTPAdapter(pool_connections=50, pool_maxsize=50)
         self.http_session.mount('https://', adapter)
         self.http_session.mount('http://', adapter)
