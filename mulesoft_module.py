@@ -428,33 +428,33 @@ class MuleSoftManager:
                 "pre_tags": ["@kibana-highlighted-field@"],
                 "post_tags": ["@/kibana-highlighted-field@"],
                 "fields": {"*": {}}
-            },
-            "query": {
-                "bool": {
-                    "must": [],
-                    "filter": [
-                        {
-                            "range": {
-                                "timestamp": {
-                                    "gte": start_time,
-                                    "lte": end_time,
-                                    "format": "epoch_millis"
-                                }
-                            }
-                        },
-                        {
-                            "query_string": {
-                                "query": qs,
-                                "language": "lucene"
-                            }
-                        }
-                    ]
-                }
             }
         }
         
-        # Remove separators to match the exact spacing of the working Postman request (in case the proxy has strict regex validation)
-        payload = json.dumps(ndjson_header) + "\n" + json.dumps(ndjson_body) + "\n"
+        ndjson_body_filters = {
+            "filter": [
+                {
+                    "range": {
+                        "timestamp": {
+                            "gte": start_time,
+                            "lte": end_time,
+                            "format": "epoch_millis"
+                        }
+                    }
+                }
+            ],
+            "query": [
+                {
+                    "query_string": {
+                        "query": qs,
+                        "language": "lucene"
+                    }
+                }
+            ]
+        }
+        
+        # Construct the exact 3-line payload requested
+        payload = json.dumps(ndjson_header) + "\n" + json.dumps(ndjson_body) + "\n" + json.dumps(ndjson_body_filters) + "\n"
 
         try:
             res = self.http_session.post(url, headers=headers, data=payload.encode('utf-8'))
