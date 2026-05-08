@@ -365,6 +365,9 @@ class MuleSoftManager:
             "from": offset,
             "sort": [{"timestamp": {"order": es_order, "unmapped_type": "boolean"}}],
             "_source": {"excludes": []},
+            "stored_fields": ["*"],
+            "script_fields": {},
+            "docvalue_fields": ["timestamp"],
             "query": {
                 "bool": {
                     "must": [],
@@ -381,7 +384,7 @@ class MuleSoftManager:
                         {
                             "query_string": {
                                 "query": qs,
-                                "analyze_wildcard": True
+                                "language": "lucene"
                             }
                         }
                     ]
@@ -389,10 +392,10 @@ class MuleSoftManager:
             }
         }
         
-        payload = json.dumps(ndjson_header) + "\n" + json.dumps(ndjson_body) + "\n"
+        payload = json.dumps(ndjson_header, separators=(',', ':')) + "\n" + json.dumps(ndjson_body, separators=(',', ':')) + "\n"
 
         try:
-            res = self.http_session.post(url, headers=headers, data=payload)
+            res = self.http_session.post(url, headers=headers, data=payload.encode('utf-8'))
             if res.status_code == 401:
                 # Re-auth attempt
                 if self.using_bearer_override:
