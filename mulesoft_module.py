@@ -492,9 +492,21 @@ class MuleSoftManager:
                         else:
                             epoch_ts = raw_ts
                             
+                        cid = source.get("correlationId") or source.get("correlation_id")
+                        
+                        # Extract correlation ID from the "event" field if present
+                        if not cid and "event" in source and isinstance(source["event"], str):
+                            if source["event"].startswith("event: "):
+                                cid = source["event"].replace("event: ", "").strip()
+                            else:
+                                cid = source["event"].strip()
+                                
+                        if not cid:
+                            cid = "unknown"
+                            
                         # Adapt fields to what app.py expects
                         adapted = {
-                            "correlationId": source.get("correlationId", source.get("correlation_id", "unknown")),
+                            "correlationId": cid,
                             "applicationName": source.get("applicationName", source.get("application_name", source.get("app_name", "Unknown App"))),
                             "workerId": source.get("workerId", source.get("worker", "Unknown Worker")),
                             "timestamp": epoch_ts,
