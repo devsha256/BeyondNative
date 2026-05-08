@@ -445,10 +445,8 @@ class MuleSoftManager:
             ],
             "query": [
                 {
-                    "query_string": {
-                        "query": qs,
-                        "language": "lucene"
-                    }
+                    "query": qs,
+                    "language": "lucene"
                 }
             ]
         }
