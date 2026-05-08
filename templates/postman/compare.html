@@ -71,6 +71,7 @@
         <section class="input-canvas">
             <div class="canvas-tabs">
                 <button class="tab-link active" data-tab="json"><i class="material-icons">schema</i> JSON</button>
+                <button class="tab-link" data-tab="xml"><i class="material-icons">code</i> XML</button>
                 <button class="tab-link" data-tab="curl"><i class="material-icons">terminal</i> cURL</button>
                 <button class="tab-link" data-tab="collection"><i class="material-icons">folder_special</i>
                     Collection</button>
@@ -84,6 +85,18 @@
                     </div>
                     <div class="m3-editor-container" data-label="TARGET (B)">
                         <textarea id="resp-b" placeholder="Paste destination JSON payload..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- XML Panel -->
+            <div id="view-xml" class="view-panel">
+                <div class="editor-pair">
+                    <div class="m3-editor-container" data-label="REFERENCE (A) XML">
+                        <textarea id="resp-a-xml" placeholder="Paste source XML payload..."></textarea>
+                    </div>
+                    <div class="m3-editor-container" data-label="TARGET (B) XML">
+                        <textarea id="resp-b-xml" placeholder="Paste destination XML payload..."></textarea>
                     </div>
                 </div>
             </div>
@@ -1098,6 +1111,8 @@
             let hasWork = false;
             if (currentMode === 'json') {
                 hasWork = document.getElementById('resp-a').value.length > 0 || document.getElementById('resp-b').value.length > 0;
+            } else if (currentMode === 'xml') {
+                hasWork = document.getElementById('resp-a-xml').value.length > 0 || document.getElementById('resp-b-xml').value.length > 0;
             } else if (currentMode === 'curl') {
                 hasWork = document.getElementById('curl-a').value.length > 0 || document.getElementById('curl-b').value.length > 0;
             }
@@ -1201,8 +1216,18 @@
         };
 
         if (currentMode === 'json') {
-            payload.response_a = JSON.parse(document.getElementById('resp-a').value || '{}');
-            payload.response_b = JSON.parse(document.getElementById('resp-b').value || '{}');
+            try {
+                payload.response_a = JSON.parse(document.getElementById('resp-a').value || '{}');
+                payload.response_b = JSON.parse(document.getElementById('resp-b').value || '{}');
+            } catch (e) {
+                alert("Invalid JSON format");
+                btn.disabled = false;
+                btn.querySelector('span').innerText = originalText;
+                return;
+            }
+        } else if (currentMode === 'xml') {
+            payload.response_a_xml = document.getElementById('resp-a-xml').value || '';
+            payload.response_b_xml = document.getElementById('resp-b-xml').value || '';
         } else if (currentMode === 'curl') {
             payload.curl_a = document.getElementById('curl-a').value;
             payload.curl_b = document.getElementById('curl-b').value;
@@ -1313,6 +1338,10 @@
             'match': { icon: 'check', color: 'var(--success)' }
         };
 
+        const escapeHtml = (unsafe) => {
+            return (unsafe || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        };
+
         data.diff.forEach(row => {
             const div = document.createElement('div');
             div.className = `diff-row row-${row.status}`;
@@ -1322,11 +1351,11 @@
             const st = statusMap[row.status];
 
             div.innerHTML = `
-            <div class="diff-text">${indentA}${row.text_a}</div>
+            <div class="diff-text">${indentA}${escapeHtml(row.text_a)}</div>
             <div class="diff-status-cell">
                 <i class="material-icons" style="font-size:16px; color:${st.color}">${st.icon}</i>
             </div>
-            <div class="diff-text">${indentB}${row.text_b}</div>
+            <div class="diff-text">${indentB}${escapeHtml(row.text_b)}</div>
         `;
             body.appendChild(div);
         });

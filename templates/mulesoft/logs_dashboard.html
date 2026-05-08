@@ -1,0 +1,941 @@
+{% extends "base.html" %}
+{% block title %}Log Dashboard | MuleSoft Suite{% endblock %}
+{% block content %}
+<div class="logs-dashboard-container">
+    <div class="dashboard-topbar">
+        <div class="topbar-left">
+            <a href="/mulesoft" class="back-btn"><i class="material-icons">arrow_back</i></a>
+            <h2>Anypoint Log Dashboard</h2>
+            <div id="auth-status" class="auth-status"><span class="dot"></span> <span class="status-text">Checking Auth...</span></div>
+        </div>
+        
+        <div class="topbar-filters">
+            <select id="env-select" class="m3-select" disabled>
+                <option value="">Select Environment...</option>
+            </select>
+            
+            <select id="app-select" class="m3-select" disabled>
+                <option value="all">All Applications</option>
+            </select>
+            
+            <div class="time-range-toggle">
+                <button class="m3-btn-pill active" data-range="15m">15m</button>
+                <button class="m3-btn-pill" data-range="30m">30m</button>
+                <button class="m3-btn-pill" data-range="1h">1h</button>
+                <button class="m3-btn-pill" data-range="24h">24h</button>
+                <button class="m3-btn-pill" data-range="7d">7d</button>
+                <button class="m3-btn-pill" data-range="30d">30d</button>
+                <button class="m3-btn-pill" data-range="custom">Custom</button>
+            </div>
+            
+            <div id="custom-time-picker" class="custom-time-picker" style="display: none;">
+                <input type="datetime-local" id="custom-start" class="m3-input">
+                <span>to</span>
+                <input type="datetime-local" id="custom-end" class="m3-input">
+            </div>
+            
+            <button id="refresh-btn" class="m3-btn-primary" disabled><i class="material-icons">refresh</i></button>
+            
+            <label class="auto-refresh-toggle">
+                <input type="checkbox" id="auto-refresh-checkbox">
+                <span class="slider"></span>
+                <span class="label-text">Auto (30s)</span>
+            </label>
+        </div>
+    </div>
+    
+    <div class="dashboard-body">
+        <div class="events-panel" id="events-panel">
+            <div class="panel-header">
+                <h3>Events <span id="event-count" class="badge">0</span></h3>
+            </div>
+            <div class="events-list" id="events-list">
+                <div class="empty-state">Select an environment to view logs.</div>
+            </div>
+        </div>
+        
+        <div class="details-panel" id="details-panel">
+            <div class="panel-header details-header">
+                <div class="header-info">
+                    <h3 id="detail-corr-id">No Event Selected</h3>
+                    <div class="header-meta" id="detail-meta"></div>
+                </div>
+                <div class="header-actions">
+                    <button id="copy-corr-id" class="m3-btn-icon" title="Copy Correlation ID" disabled><i class="material-icons">content_copy</i></button>
+                    <button id="export-json" class="m3-btn-secondary" disabled>JSON</button>
+                    <button id="export-csv" class="m3-btn-secondary" disabled>CSV</button>
+                </div>
+            </div>
+            
+            <div class="logs-table-container">
+                <table class="logs-table" id="logs-table">
+                    <thead>
+                        <tr>
+                            <th width="180">Timestamp</th>
+                            <th width="80">Level</th>
+                            <th width="150">Worker / Thread</th>
+                            <th>Message</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-tbody">
+                        <tr><td colspan="4" class="empty-state">Click on an event to view log details.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .logs-dashboard-container {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 64px); /* assuming navbar height */
+        background: var(--bg-main);
+        color: var(--text-main);
+        font-family: 'Inter', sans-serif;
+        overflow: hidden;
+    }
+    
+    .dashboard-topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 24px;
+        background: var(--m3-surface);
+        border-bottom: 1px solid var(--border-light);
+        backdrop-filter: blur(20px);
+        z-index: 10;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .topbar-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    
+    .topbar-left h2 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+    }
+    
+    .back-btn {
+        color: var(--text-main);
+        opacity: 0.7;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        transition: opacity 0.2s;
+    }
+    .back-btn:hover { opacity: 1; }
+    
+    .auth-status {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+        padding: 4px 12px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 12px;
+        border: 1px solid var(--border-light);
+    }
+    .auth-status .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #888;
+    }
+    .auth-status.connected .dot { background: #00E676; box-shadow: 0 0 8px #00E676; }
+    .auth-status.error .dot { background: #FF3D00; box-shadow: 0 0 8px #FF3D00; }
+    
+    .topbar-filters {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    
+    .m3-select, .m3-input {
+        background: rgba(0,0,0,0.2);
+        border: 1px solid var(--border-light);
+        color: var(--text-main);
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+    .m3-select:focus, .m3-input:focus {
+        border-color: #00A2DF;
+    }
+    .m3-select:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .time-range-toggle {
+        display: flex;
+        background: rgba(0,0,0,0.2);
+        border-radius: 8px;
+        padding: 4px;
+        border: 1px solid var(--border-light);
+    }
+    .m3-btn-pill {
+        background: transparent;
+        border: none;
+        color: var(--text-main);
+        opacity: 0.7;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .m3-btn-pill:hover { opacity: 1; background: rgba(255,255,255,0.05); }
+    .m3-btn-pill.active {
+        background: #00A2DF;
+        color: white;
+        opacity: 1;
+        box-shadow: 0 2px 8px rgba(0, 162, 223, 0.4);
+    }
+    
+    .custom-time-picker {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .m3-btn-primary {
+        background: #00A2DF;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+    .m3-btn-primary:hover:not(:disabled) {
+        background: #00D1FF;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 162, 223, 0.4);
+    }
+    .m3-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    .m3-btn-secondary {
+        background: rgba(255,255,255,0.05);
+        color: var(--text-main);
+        border: 1px solid var(--border-light);
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .m3-btn-secondary:hover:not(:disabled) {
+        background: rgba(255,255,255,0.1);
+        border-color: var(--text-main);
+    }
+    .m3-btn-secondary:disabled { opacity: 0.3; cursor: not-allowed; }
+    
+    .m3-btn-icon {
+        background: transparent;
+        color: var(--text-main);
+        border: none;
+        padding: 6px;
+        border-radius: 6px;
+        cursor: pointer;
+        opacity: 0.7;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .m3-btn-icon:hover:not(:disabled) {
+        opacity: 1;
+        background: rgba(255,255,255,0.1);
+    }
+    .m3-btn-icon:disabled { opacity: 0.3; cursor: not-allowed; }
+    
+    /* Auto Refresh Toggle */
+    .auto-refresh-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        opacity: 0.8;
+    }
+    .auto-refresh-toggle:hover { opacity: 1; }
+    .auto-refresh-toggle input { display: none; }
+    .auto-refresh-toggle .slider {
+        position: relative;
+        width: 32px;
+        height: 18px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
+        transition: 0.3s;
+    }
+    .auto-refresh-toggle .slider::before {
+        content: "";
+        position: absolute;
+        height: 14px;
+        width: 14px;
+        left: 2px;
+        bottom: 2px;
+        background: white;
+        border-radius: 50%;
+        transition: 0.3s;
+    }
+    .auto-refresh-toggle input:checked + .slider { background: #00A2DF; }
+    .auto-refresh-toggle input:checked + .slider::before { transform: translateX(14px); }
+    
+    /* Body */
+    .dashboard-body {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+    }
+    
+    /* Left Panel */
+    .events-panel {
+        width: 35%;
+        min-width: 300px;
+        max-width: 450px;
+        background: var(--m3-surface);
+        border-right: 1px solid var(--border-light);
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .panel-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border-light);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(0,0,0,0.1);
+    }
+    .panel-header h3 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .badge {
+        background: rgba(0, 162, 223, 0.2);
+        color: #00A2DF;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 800;
+    }
+    
+    .events-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .event-card {
+        background: rgba(0,0,0,0.2);
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        padding: 16px;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        position: relative;
+        overflow: hidden;
+    }
+    .event-card:hover {
+        background: rgba(255,255,255,0.05);
+        border-color: rgba(255,255,255,0.2);
+        transform: translateY(-2px);
+    }
+    .event-card.active {
+        background: rgba(0, 162, 223, 0.1);
+        border-color: #00A2DF;
+    }
+    .event-card.active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: #00A2DF;
+    }
+    
+    .event-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .severity-pill {
+        font-size: 0.7rem;
+        font-weight: 800;
+        padding: 4px 8px;
+        border-radius: 4px;
+        letter-spacing: 0.5px;
+    }
+    .severity-ERROR { background: rgba(255, 61, 0, 0.15); color: #FF5252; border: 1px solid rgba(255, 82, 82, 0.3); }
+    .severity-WARN { background: rgba(255, 171, 0, 0.15); color: #FFD740; border: 1px solid rgba(255, 215, 64, 0.3); }
+    .severity-INFO { background: rgba(0, 162, 223, 0.15); color: #40C4FF; border: 1px solid rgba(64, 196, 255, 0.3); }
+    .severity-DEBUG { background: rgba(255, 255, 255, 0.05); color: #B0BEC5; border: 1px solid rgba(176, 190, 197, 0.3); }
+    
+    .corr-id-text {
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-size: 0.85rem;
+        opacity: 0.9;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px;
+    }
+    
+    .event-card-body {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 0.85rem;
+        opacity: 0.7;
+    }
+    
+    .event-card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.8rem;
+        border-top: 1px solid rgba(255,255,255,0.05);
+        padding-top: 10px;
+        margin-top: 2px;
+    }
+    
+    .duration-pill {
+        background: rgba(255,255,255,0.05);
+        padding: 2px 8px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .duration-pill i { font-size: 12px; }
+    
+    /* Right Panel */
+    .details-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-main);
+        position: relative;
+    }
+    
+    .details-header {
+        padding: 20px 24px;
+        background: var(--m3-surface);
+    }
+    
+    .header-info h3 {
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+        word-break: break-all;
+    }
+    
+    .header-meta {
+        font-size: 0.9rem;
+        opacity: 0.7;
+        display: flex;
+        gap: 16px;
+    }
+    
+    .header-actions {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .logs-table-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0;
+    }
+    
+    .logs-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-size: 0.85rem;
+    }
+    
+    .logs-table th {
+        position: sticky;
+        top: 0;
+        background: var(--table-header);
+        backdrop-filter: blur(10px);
+        text-align: left;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border-light);
+        font-weight: 600;
+        color: var(--text-main);
+        opacity: 0.8;
+        z-index: 5;
+    }
+    
+    .logs-table td {
+        padding: 10px 16px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        vertical-align: top;
+    }
+    
+    .logs-table tr:hover td {
+        background: rgba(255,255,255,0.02);
+    }
+    
+    .log-msg-cell {
+        word-break: break-all;
+        white-space: pre-wrap;
+        color: #E0E0E0;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        opacity: 0.5;
+        font-style: italic;
+    }
+
+    .loader {
+        border: 3px solid rgba(255,255,255,0.1);
+        border-top: 3px solid #00A2DF;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        animation: spin 1s linear infinite;
+        margin: 40px auto;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+</style>
+
+<script>
+    let currentOrgs = [];
+    let currentEnvs = [];
+    let currentApps = [];
+    let eventsData = [];
+    let activeCorrId = null;
+    let refreshInterval = null;
+
+    const DOM = {
+        authStatus: document.getElementById('auth-status'),
+        statusText: document.querySelector('#auth-status .status-text'),
+        envSelect: document.getElementById('env-select'),
+        appSelect: document.getElementById('app-select'),
+        refreshBtn: document.getElementById('refresh-btn'),
+        autoRefreshCheck: document.getElementById('auto-refresh-checkbox'),
+        timeBtns: document.querySelectorAll('.m3-btn-pill'),
+        customPicker: document.getElementById('custom-time-picker'),
+        customStart: document.getElementById('custom-start'),
+        customEnd: document.getElementById('custom-end'),
+        eventsList: document.getElementById('events-list'),
+        eventCount: document.getElementById('event-count'),
+        detailCorrId: document.getElementById('detail-corr-id'),
+        detailMeta: document.getElementById('detail-meta'),
+        logsTbody: document.getElementById('logs-tbody'),
+        copyBtn: document.getElementById('copy-corr-id'),
+        exportJsonBtn: document.getElementById('export-json'),
+        exportCsvBtn: document.getElementById('export-csv')
+    };
+
+    // Initialize
+    async function init() {
+        // Set default custom dates to today
+        const now = new Date();
+        const yesterday = new Date(now.getTime() - 24*60*60*1000);
+        DOM.customStart.value = yesterday.toISOString().slice(0,16);
+        DOM.customEnd.value = now.toISOString().slice(0,16);
+
+        await checkAuth();
+        setupEventListeners();
+    }
+
+    async function checkAuth() {
+        try {
+            const res = await fetch('/logs/api/auth/test', { method: 'POST' });
+            const data = await res.json();
+            
+            if (data.status === 'success') {
+                DOM.authStatus.className = 'auth-status connected';
+                DOM.statusText.textContent = 'Connected';
+                currentOrgs = data.orgs;
+                
+                // We'll just use the first org for this demo to simplify or get default
+                const defaultOrgId = '{{ default_org }}';
+                const orgIdToUse = defaultOrgId || (currentOrgs[0] ? currentOrgs[0].id : null);
+                
+                if (orgIdToUse) {
+                    await loadEnvironments(orgIdToUse);
+                } else {
+                    DOM.statusText.textContent = 'No Orgs Found';
+                }
+            } else {
+                DOM.authStatus.className = 'auth-status error';
+                DOM.statusText.textContent = 'Auth Failed';
+            }
+        } catch (e) {
+            DOM.authStatus.className = 'auth-status error';
+            DOM.statusText.textContent = 'Error';
+            console.error(e);
+        }
+    }
+
+    async function loadEnvironments(orgId) {
+        DOM.envSelect.innerHTML = '<option value="">Loading Environments...</option>';
+        try {
+            // Re-using the existing route
+            const res = await fetch(`/api/mule/envs/${orgId}`);
+            if(res.ok) {
+                currentEnvs = await res.json();
+                DOM.envSelect.innerHTML = '<option value="">Select Environment...</option>';
+                currentEnvs.forEach(env => {
+                    const opt = document.createElement('option');
+                    opt.value = env.id;
+                    opt.dataset.orgId = orgId;
+                    opt.textContent = env.name;
+                    DOM.envSelect.appendChild(opt);
+                });
+                
+                const defaultEnvId = '{{ default_env }}';
+                if(defaultEnvId && currentEnvs.find(e => e.id === defaultEnvId)) {
+                    DOM.envSelect.value = defaultEnvId;
+                    await loadApps(orgId, defaultEnvId);
+                }
+                
+                DOM.envSelect.disabled = false;
+            }
+        } catch(e) {
+            console.error(e);
+        }
+    }
+
+    async function loadApps(orgId, envId) {
+        DOM.appSelect.innerHTML = '<option value="">Loading Apps...</option>';
+        DOM.appSelect.disabled = true;
+        try {
+            const res = await fetch(`/logs/api/apps?org_id=${orgId}&env_id=${envId}`);
+            if(res.ok) {
+                currentApps = await res.json();
+                DOM.appSelect.innerHTML = '<option value="all">All Applications</option>';
+                currentApps.forEach(app => {
+                    const opt = document.createElement('option');
+                    // Usually we need domain or app id, depending on monitoring API spec
+                    // The log API needs app name or domain for CH1, and id for RTF/CH2.
+                    // We'll pass the name/domain as app_id for now.
+                    opt.value = app.fullDomain || app.name; 
+                    opt.textContent = app.name;
+                    DOM.appSelect.appendChild(opt);
+                });
+                DOM.appSelect.disabled = false;
+            }
+        } catch(e) {
+            console.error(e);
+        }
+    }
+
+    function setupEventListeners() {
+        DOM.envSelect.addEventListener('change', (e) => {
+            const opt = e.target.selectedOptions[0];
+            if(opt && opt.value) {
+                loadApps(opt.dataset.orgId, opt.value);
+            }
+        });
+
+        DOM.appSelect.addEventListener('change', () => {
+            fetchLogs();
+        });
+
+        DOM.timeBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                DOM.timeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                if(btn.dataset.range === 'custom') {
+                    DOM.customPicker.style.display = 'flex';
+                } else {
+                    DOM.customPicker.style.display = 'none';
+                    if(DOM.envSelect.value) fetchLogs();
+                }
+            });
+        });
+
+        DOM.refreshBtn.addEventListener('click', fetchLogs);
+
+        DOM.autoRefreshCheck.addEventListener('change', (e) => {
+            if(e.target.checked) {
+                refreshInterval = setInterval(() => {
+                    if(DOM.envSelect.value) fetchLogs(true);
+                }, 30000);
+            } else {
+                if(refreshInterval) clearInterval(refreshInterval);
+            }
+        });
+        
+        DOM.copyBtn.addEventListener('click', () => {
+            if(activeCorrId) {
+                navigator.clipboard.writeText(activeCorrId);
+                const icon = DOM.copyBtn.querySelector('i');
+                icon.textContent = 'check';
+                setTimeout(() => icon.textContent = 'content_copy', 2000);
+            }
+        });
+        
+        DOM.exportJsonBtn.addEventListener('click', exportActiveJson);
+        DOM.exportCsvBtn.addEventListener('click', exportActiveCsv);
+    }
+
+    function getTimeRange() {
+        const activeBtn = document.querySelector('.m3-btn-pill.active');
+        const range = activeBtn.dataset.range;
+        
+        const now = Date.now();
+        let start = now;
+        
+        if (range === 'custom') {
+            const startD = new Date(DOM.customStart.value);
+            const endD = new Date(DOM.customEnd.value);
+            return { start: startD.getTime(), end: endD.getTime() };
+        }
+        
+        if(range === '15m') start = now - 15 * 60000;
+        else if(range === '30m') start = now - 30 * 60000;
+        else if(range === '1h') start = now - 60 * 60000;
+        else if(range === '24h') start = now - 24 * 3600000;
+        else if(range === '7d') start = now - 7 * 24 * 3600000;
+        else if(range === '30d') start = now - 30 * 24 * 3600000;
+        
+        return { start, end: now };
+    }
+
+    function timeAgo(ts) {
+        const seconds = Math.floor((new Date() - new Date(ts)) / 1000);
+        let interval = seconds / 31536000;
+        if (interval > 1) return Math.floor(interval) + " years ago";
+        interval = seconds / 2592000;
+        if (interval > 1) return Math.floor(interval) + " months ago";
+        interval = seconds / 86400;
+        if (interval > 1) return Math.floor(interval) + " days ago";
+        interval = seconds / 3600;
+        if (interval > 1) return Math.floor(interval) + " hours ago";
+        interval = seconds / 60;
+        if (interval > 1) return Math.floor(interval) + " mins ago";
+        return Math.floor(seconds) + " seconds ago";
+    }
+
+    async function fetchLogs(silent = false) {
+        const envOpt = DOM.envSelect.selectedOptions[0];
+        const appId = DOM.appSelect.value || "all";
+        
+        if(!envOpt) return;
+        
+        const orgId = envOpt.dataset.orgId;
+        const envId = envOpt.value;
+        const { start, end } = getTimeRange();
+        
+        if(!silent) {
+            DOM.eventsList.innerHTML = '<div class="loader"></div>';
+            DOM.refreshBtn.disabled = true;
+            DOM.refreshBtn.querySelector('i').classList.add('spin');
+        }
+        
+        try {
+            const res = await fetch(`/logs/api/events?org_id=${orgId}&env_id=${envId}&app_id=${encodeURIComponent(appId)}&startTime=${start}&endTime=${end}`);
+            if(res.ok) {
+                eventsData = await res.json();
+                renderEventsList();
+                
+                // Keep active selection if it still exists
+                if(activeCorrId) {
+                    const exists = eventsData.find(e => e.correlationId === activeCorrId);
+                    if(!exists) clearDetailView();
+                    else renderDetailView(activeCorrId);
+                }
+            } else {
+                throw new Error("Failed to fetch logs");
+            }
+        } catch (e) {
+            console.error(e);
+            DOM.eventsList.innerHTML = `<div class="empty-state" style="color: #FF5252;">Failed to load logs. ${e.message}</div>`;
+        } finally {
+            DOM.refreshBtn.disabled = false;
+            DOM.refreshBtn.querySelector('i').classList.remove('spin');
+        }
+    }
+
+    function renderEventsList() {
+        DOM.eventCount.textContent = eventsData.length;
+        
+        if (eventsData.length === 0) {
+            DOM.eventsList.innerHTML = '<div class="empty-state">No events found in this time range.</div>';
+            return;
+        }
+        
+        DOM.eventsList.innerHTML = '';
+        
+        eventsData.forEach(event => {
+            const card = document.createElement('div');
+            card.className = `event-card ${activeCorrId === event.correlationId ? 'active' : ''}`;
+            card.dataset.id = event.correlationId;
+            
+            const firstSeenDate = new Date(event.firstSeen);
+            
+            card.innerHTML = `
+                <div class="event-card-header">
+                    <span class="severity-pill severity-${event.highestSeverity}">${event.highestSeverity}</span>
+                    <span class="corr-id-text" title="${event.correlationId}">${event.correlationId}</span>
+                </div>
+                <div class="event-card-body">
+                    <div><strong>App:</strong> ${event.applicationName}</div>
+                    <div><strong>Worker:</strong> ${event.workerId}</div>
+                </div>
+                <div class="event-card-footer">
+                    <span title="${firstSeenDate.toISOString()}">${timeAgo(event.firstSeen)}</span>
+                    <div style="display: flex; gap: 8px;">
+                        <span class="duration-pill"><i class="material-icons">timer</i> ${event.duration}ms</span>
+                        <span class="badge">${event.logCount} lines</span>
+                    </div>
+                </div>
+            `;
+            
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.event-card').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                activeCorrId = event.correlationId;
+                renderDetailView(activeCorrId);
+            });
+            
+            DOM.eventsList.appendChild(card);
+        });
+    }
+
+    function renderDetailView(corrId) {
+        const event = eventsData.find(e => e.correlationId === corrId);
+        if(!event) return;
+        
+        DOM.detailCorrId.textContent = event.correlationId;
+        const startDate = new Date(event.firstSeen);
+        const endDate = new Date(event.lastSeen);
+        
+        DOM.detailMeta.innerHTML = `
+            <span><strong>App:</strong> ${event.applicationName}</span>
+            <span><strong>Worker:</strong> ${event.workerId}</span>
+            <span><strong>Range:</strong> ${startDate.toLocaleTimeString()} - ${endDate.toLocaleTimeString()}</span>
+        `;
+        
+        DOM.copyBtn.disabled = false;
+        DOM.exportJsonBtn.disabled = false;
+        DOM.exportCsvBtn.disabled = false;
+        
+        DOM.logsTbody.innerHTML = '';
+        event.lines.forEach(line => {
+            const tr = document.createElement('tr');
+            const ts = new Date(line.timestamp).toISOString();
+            const level = (line.logLevel || 'DEBUG').toUpperCase();
+            
+            tr.innerHTML = `
+                <td>${ts.replace('T', ' ').replace('Z', '')}</td>
+                <td><span class="severity-pill severity-${level}">${level}</span></td>
+                <td>${line.threadName || line.workerId || '-'}</td>
+                <td class="log-msg-cell">${escapeHtml(line.message || '')}</td>
+            `;
+            DOM.logsTbody.appendChild(tr);
+        });
+    }
+    
+    function clearDetailView() {
+        activeCorrId = null;
+        DOM.detailCorrId.textContent = 'No Event Selected';
+        DOM.detailMeta.innerHTML = '';
+        DOM.logsTbody.innerHTML = '<tr><td colspan="4" class="empty-state">Click on an event to view log details.</td></tr>';
+        DOM.copyBtn.disabled = true;
+        DOM.exportJsonBtn.disabled = true;
+        DOM.exportCsvBtn.disabled = true;
+    }
+
+    function escapeHtml(unsafe) {
+        return unsafe
+             .replace(/&/g, "&amp;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;")
+             .replace(/"/g, "&quot;")
+             .replace(/'/g, "&#039;");
+    }
+    
+    function exportActiveJson() {
+        if(!activeCorrId) return;
+        const event = eventsData.find(e => e.correlationId === activeCorrId);
+        if(!event) return;
+        
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(event.lines, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", `logs_${activeCorrId}.json`);
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    }
+    
+    function exportActiveCsv() {
+        if(!activeCorrId) return;
+        const event = eventsData.find(e => e.correlationId === activeCorrId);
+        if(!event) return;
+        
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Timestamp,Level,Worker,Thread,Message\n";
+        
+        event.lines.forEach(line => {
+            const ts = new Date(line.timestamp).toISOString();
+            const level = line.logLevel || 'DEBUG';
+            const worker = line.workerId || '';
+            const thread = line.threadName || '';
+            const msg = `"${(line.message || '').replace(/"/g, '""')}"`;
+            
+            csvContent += `${ts},${level},${worker},${thread},${msg}\n`;
+        });
+        
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", encodeURI(csvContent));
+        downloadAnchorNode.setAttribute("download", `logs_${activeCorrId}.csv`);
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+</script>
+{% endblock %}

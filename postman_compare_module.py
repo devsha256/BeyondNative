@@ -48,10 +48,11 @@ class PostmanComparator:
         if isinstance(data, dict):
             return {k: self._normalize(data[k]) for k in sorted(data.keys())}
         elif isinstance(data, list):
-            if all(isinstance(x, (str, int, float, bool, type(None))) for x in data):
-                try: return sorted(data, key=lambda x: str(x))
-                except: return data
-            return [self._normalize(x) for x in data]
+            normalized_list = [self._normalize(x) for x in data]
+            try:
+                return sorted(normalized_list, key=lambda x: json.dumps(x, sort_keys=True))
+            except Exception:
+                return normalized_list
         return data
 
     def _get_json_lines(self, obj: Any, path: str = "", indent: int = 0) -> List[Dict]:
@@ -88,6 +89,58 @@ class PostmanComparator:
             lines.append({"text": "]", "indent": indent, "path": path, "type": "close-arr"})
         return lines
 
+    def _hash_xml(self, element: Any) -> str:
+        if element is None: return ""
+        tag = element.tag
+        attr_str = "".join([f'{k}={v}' for k, v in sorted(element.attrib.items())])
+        text = (element.text or "").strip()
+        children_hashes = sorted([self._hash_xml(c) for c in list(element)])
+        return f"{tag}|{attr_str}|{text}|{'|'.join(children_hashes)}"
+
+    def _get_xml_lines(self, element: Any, path: str = "", indent: int = 0) -> List[Dict]:
+        lines = []
+        if element is None:
+            return lines
+            
+        tag = element.tag
+        current_path = path if path else tag
+        
+        attr_str = "".join([f' {k}="{v}"' for k, v in sorted(element.attrib.items())])
+        
+        children = list(element)
+        children.sort(key=self._hash_xml)
+        
+        text = (element.text or "").strip()
+        
+        if not children and not text:
+            lines.append({"text": f"<{tag}{attr_str}/>", "indent": indent, "path": current_path, "type": "primitive"})
+        else:
+            lines.append({"text": f"<{tag}{attr_str}>", "indent": indent, "path": current_path, "type": "open-obj"})
+            
+            if text:
+                lines.append({"text": text, "indent": indent + 1, "path": f"{current_path}.#text", "type": "primitive"})
+                
+            tag_counts = {}
+            for child in children:
+                tag_counts[child.tag] = tag_counts.get(child.tag, 0) + 1
+                
+            current_indices = {}
+            for child in children:
+                ctag = child.tag
+                idx = current_indices.get(ctag, 0)
+                current_indices[ctag] = idx + 1
+                
+                if tag_counts[ctag] > 1:
+                    child_path = f"{current_path}.{ctag}[{idx}]"
+                else:
+                    child_path = f"{current_path}.{ctag}"
+                    
+                lines.extend(self._get_xml_lines(child, child_path, indent + 1))
+                
+            lines.append({"text": f"</{tag}>", "indent": indent, "path": current_path, "type": "close-obj"})
+            
+        return lines
+
     def _align_lines(self, lines_a: List[Dict], lines_b: List[Dict]) -> List[Dict]:
         aligned = []
         i, j = 0, 0
@@ -110,14 +163,19 @@ class PostmanComparator:
                 else: aligned.append({"a": la, "b": None, "status": "only_a"}); i += 1
         return aligned
 
-    def compare(self, data_a: Any, data_b: Any) -> Dict:
+    def compare(self, data_a: Any, data_b: Any, format: str = "json") -> Dict:
         self.stats = {k: 0 for k in self.stats}
         self.exempted_paths_found = set()
         
-        norm_a = self._normalize(data_a)
-        norm_b = self._normalize(data_b)
-        lines_a = self._get_json_lines(norm_a)
-        lines_b = self._get_json_lines(norm_b)
+        if format == "xml":
+            lines_a = self._get_xml_lines(data_a)
+            lines_b = self._get_xml_lines(data_b)
+        else:
+            norm_a = self._normalize(data_a)
+            norm_b = self._normalize(data_b)
+            lines_a = self._get_json_lines(norm_a)
+            lines_b = self._get_json_lines(norm_b)
+            
         aligned = self._align_lines(lines_a, lines_b)
         
         for row in aligned:

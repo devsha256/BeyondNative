@@ -295,6 +295,138 @@ def change_mule_app_status():
         return jsonify({"status": "success", "message": f"Successfully triggered {action}"})
     return jsonify({"status": "error", "message": msg}), 400
 
+# --- Logs Dashboard ---
+@app.route('/mulesoft/logs')
+def logs_dashboard():
+    default_org = db_utils.get_setting('mule_default_org', '')
+    default_env = db_utils.get_setting('mule_default_env', '')
+    return render_template('mulesoft/logs_dashboard.html', default_org=default_org, default_env=default_env)
+
+@app.route('/logs/api/apps')
+def logs_api_apps():
+    org_id = request.args.get('org_id')
+    env_id = request.args.get('env_id')
+    if not org_id or not env_id:
+        return jsonify([])
+    apps = mule.get_runtime_apps(org_id, env_id, extract_details=False)
+    return jsonify(apps)
+
+@app.route('/logs/api/auth/test', methods=['POST'])
+def logs_api_auth_test():
+    is_connected = mule.check_connection()
+    if is_connected:
+        try:
+            orgs = mule.get_organizations()
+            return jsonify({"status": "success", "orgs": orgs})
+        except Exception as e:
+            return jsonify({"status": "error", "message": str(e)}), 400
+    return jsonify({"status": "error", "message": "Authentication failed"}), 401
+
+@app.route('/logs/api/events')
+def logs_api_events():
+    org_id = request.args.get('org_id')
+    env_id = request.args.get('env_id')
+    app_id = request.args.get('app_id')
+    start_time = request.args.get('startTime')
+    end_time = request.args.get('endTime')
+    
+    if not all([org_id, env_id, start_time, end_time]):
+        return jsonify({"error": "Missing required parameters"}), 400
+        
+    try:
+        start_time = int(start_time)
+        end_time = int(end_time)
+    except ValueError:
+        return jsonify({"error": "Invalid time format. Must be epoch milliseconds"}), 400
+
+    # Fetch logs - paginate to get more logs
+    all_logs = []
+    limit = 1000
+    offset = 0
+    max_fetches = 5 # fetch up to 5000 lines to prevent memory explosion
+    
+    for _ in range(max_fetches):
+        logs = mule.fetch_logs(org_id, env_id, app_id, start_time, end_time, limit=limit, offset=offset, order="DESC")
+        if not logs:
+            break
+        all_logs.extend(logs)
+        if len(logs) < limit:
+            break
+        offset += limit
+
+    # Group by correlationId
+    groups = {}
+    severity_order = {"ERROR": 4, "WARN": 3, "INFO": 2, "DEBUG": 1}
+    
+    # Pre-parse and sort logs by timestamp
+    for line in all_logs:
+        cid = line.get('correlationId') or 'unknown'
+        if cid not in groups:
+            groups[cid] = {
+                "correlationId": cid,
+                "firstSeen": float('inf'),
+                "lastSeen": 0,
+                "duration": 0,
+                "logCount": 0,
+                "highestSeverity": "DEBUG",
+                "hasError": False,
+                "applicationName": line.get('applicationName', 'Unknown App'),
+                "workerId": line.get('workerId', 'Unknown Worker'),
+                "lines": []
+            }
+        
+        g = groups[cid]
+        ts = line.get('timestamp', 0)
+        
+        if ts < g["firstSeen"]: g["firstSeen"] = ts
+        if ts > g["lastSeen"]: g["lastSeen"] = ts
+        
+        g["logCount"] += 1
+        
+        level = (line.get('logLevel') or "DEBUG").upper()
+        if severity_order.get(level, 0) > severity_order.get(g["highestSeverity"], 0):
+            g["highestSeverity"] = level
+        if level == "ERROR":
+            g["hasError"] = True
+            
+        g["lines"].append(line)
+        
+    for g in groups.values():
+        g["duration"] = g["lastSeen"] - g["firstSeen"]
+        if g["firstSeen"] == float('inf'):
+            g["firstSeen"] = 0
+        g["lines"].sort(key=lambda x: x.get('timestamp', 0)) # ASC for detail view
+        
+    # Sort groups by firstSeen DESC
+    sorted_groups = sorted(groups.values(), key=lambda x: x["firstSeen"], reverse=True)
+    
+    return jsonify(sorted_groups)
+
+@app.route('/logs/api/events/<corr_id>')
+def logs_api_event_detail(corr_id):
+    # Normally this would fetch explicitly, but since the events route returns the lines,
+    # we can just have the frontend use the returned lines or we can build this if needed.
+    # To satisfy the spec "GET /logs/api/events/<corrId>", we can query it directly
+    org_id = request.args.get('org_id')
+    env_id = request.args.get('env_id')
+    app_id = request.args.get('app_id')
+    start_time = request.args.get('startTime')
+    end_time = request.args.get('endTime')
+    
+    if not all([org_id, env_id, start_time, end_time]):
+        return jsonify({"error": "Missing required parameters"}), 400
+        
+    try:
+        start_time = int(start_time)
+        end_time = int(end_time)
+    except ValueError:
+        return jsonify({"error": "Invalid time format"}), 400
+        
+    query = f"\"{corr_id}\""
+    
+    logs = mule.fetch_logs(org_id, env_id, app_id, start_time, end_time, query=query, limit=1000, order="ASC")
+    return jsonify(logs)
+
 # ==========================================
 # Postman Suite
 # ==========================================
@@ -383,6 +515,36 @@ def postman_compare_execute():
             "response_a_raw": resp_a,
             "response_b_raw": resp_b,
             "collection_name": data.get('collection_name', 'Manual Input')
+        })
+        return jsonify(res)
+        
+    elif mode == 'xml':
+        # Direct XML comparison
+        xml_a = data.get('response_a_xml', '')
+        xml_b = data.get('response_b_xml', '')
+        
+        import xml.etree.ElementTree as ET
+        
+        def parse_xml_root(xml_string):
+            if not xml_string.strip(): return None
+            try:
+                return ET.fromstring(xml_string)
+            except Exception as e:
+                return {"error": f"Invalid XML: {str(e)}"}
+                
+        root_a = parse_xml_root(xml_a)
+        if isinstance(root_a, dict) and "error" in root_a: return jsonify(root_a), 400
+        root_b = parse_xml_root(xml_b)
+        if isinstance(root_b, dict) and "error" in root_b: return jsonify(root_b), 400
+
+        comparator = PostmanComparator(exempted_fields=exempted)
+        res = comparator.compare(root_a, root_b, format="xml")
+        res.update({
+            "method": "MANUAL",
+            "curl": "N/A",
+            "response_a_raw": xml_a,
+            "response_b_raw": xml_b,
+            "collection_name": data.get('collection_name', 'Manual XML Input')
         })
         return jsonify(res)
         

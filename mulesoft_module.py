@@ -335,3 +335,42 @@ class MuleSoftManager:
         except Exception as e:
             log.error(f"Failed to execute app action '{action}': {e}")
             return False, str(e)
+
+    def fetch_logs(self, org_id, env_id, app_id, start_time, end_time, query="*", limit=1000, offset=0, order="ASC"):
+        """Fetches logs using Anypoint Monitoring Search API."""
+        headers = self.get_headers()
+        headers["X-ANYPNT-ORG-ID"] = org_id
+        headers["X-ANYPNT-ENV-ID"] = env_id
+
+        if app_id and app_id != "all":
+            url = f"{self.anypoint_url}/monitoring/archive/api/v1/organizations/{org_id}/environments/{env_id}/applications/{app_id}/logs/search"
+        else:
+            url = f"{self.anypoint_url}/monitoring/archive/api/v1/organizations/{org_id}/environments/{env_id}/logs/search"
+        payload = {
+            "startTime": start_time,
+            "endTime": end_time,
+            "query": query,
+            "limit": limit,
+            "offset": offset,
+            "order": order
+        }
+        try:
+            res = self.http_session.post(url, headers=headers, json=payload)
+            if res.status_code == 200:
+                return res.json().get('data', [])
+            elif res.status_code == 401:
+                # Re-auth attempt
+                if self.using_bearer_override:
+                    raise MuleSoftAuthError("Bearer Token Expired")
+                self.access_token = None
+                headers = self.get_headers()
+                headers["X-ANYPNT-ORG-ID"] = org_id
+                headers["X-ANYPNT-ENV-ID"] = env_id
+                res = self.http_session.post(url, headers=headers, json=payload)
+                if res.status_code == 200:
+                    return res.json().get('data', [])
+            log.error(f"Log Fetch Failed: {res.status_code} - {res.text}")
+            return []
+        except Exception as e:
+            log.error(f"Log Fetch Error: {e}")
+            return []
