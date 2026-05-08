@@ -453,7 +453,8 @@ class MuleSoftManager:
             }
         }
         
-        payload = json.dumps(ndjson_header, separators=(',', ':')) + "\n" + json.dumps(ndjson_body, separators=(',', ':')) + "\n"
+        # Remove separators to match the exact spacing of the working Postman request (in case the proxy has strict regex validation)
+        payload = json.dumps(ndjson_header) + "\n" + json.dumps(ndjson_body) + "\n"
 
         try:
             res = self.http_session.post(url, headers=headers, data=payload.encode('utf-8'))
