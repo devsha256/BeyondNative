@@ -200,7 +200,7 @@ class MuleSoftManager:
         headers.update({ "X-ANYPNT-ORG-ID": org_id, "X-ANYPNT-ENV-ID": env_id })
         
         # Check cache
-        key = (org_id, env_id)
+        key = (org_id, env_id, extract_details)
         if key in cache:
             return cache[key]
 
@@ -230,7 +230,9 @@ class MuleSoftManager:
             return []
 
         if not extract_details or not apps:
-            return apps
+            pruned_apps = [self._prune_app(a) for a in apps]
+            cache[key] = pruned_apps
+            return pruned_apps
 
         # 2. Parallel Deep Scan (Bounded Workers)
         def enrich(app):
