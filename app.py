@@ -345,8 +345,14 @@ def logs_api_events():
     offset = 0
     max_fetches = 5 # fetch up to 5000 lines to prevent memory explosion
     
-    for _ in range(max_fetches):
-        logs = mule.fetch_logs(org_id, env_id, app_id, start_time, end_time, limit=limit, offset=offset, order="DESC")
+    aggregations = []
+    
+    for i in range(max_fetches):
+        res = mule.fetch_logs(org_id, env_id, app_id, start_time, end_time, limit=limit, offset=offset, order="DESC")
+        logs = res.get("logs", [])
+        if i == 0:
+            aggregations = res.get("aggregations", [])
+            
         if not logs:
             break
         all_logs.extend(logs)
@@ -400,7 +406,10 @@ def logs_api_events():
     # Sort groups by firstSeen DESC
     sorted_groups = sorted(groups.values(), key=lambda x: x["firstSeen"], reverse=True)
     
-    return jsonify(sorted_groups)
+    return jsonify({
+        "events": sorted_groups,
+        "aggregations": aggregations
+    })
 
 @app.route('/logs/api/events/<corr_id>')
 def logs_api_event_detail(corr_id):
@@ -424,8 +433,8 @@ def logs_api_event_detail(corr_id):
         
     query = f"\"{corr_id}\""
     
-    logs = mule.fetch_logs(org_id, env_id, app_id, start_time, end_time, query=query, limit=1000, order="ASC")
-    return jsonify(logs)
+    res = mule.fetch_logs(org_id, env_id, app_id, start_time, end_time, query=query, limit=1000, order="ASC")
+    return jsonify(res.get("logs", []))
 
 # ==========================================
 # Postman Suite

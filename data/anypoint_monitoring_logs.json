@@ -1,0 +1,4377 @@
+{
+  "responses": [
+    {
+      "took": 216,
+      "timed_out": false,
+      "_shards": {
+        "total": 3928,
+        "successful": 3928,
+        "skipped": 3926,
+        "failed": 0
+      },
+      "hits": {
+        "total": 1790,
+        "max_score": null,
+        "hits": [
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-0",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:32:40.141174Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-141",
+              "log-level": "ERROR",
+              "correlationId": "corr-id-alpha-0",
+              "message": "Sample operation log for process ID 0. Status: ERROR",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-1",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:14:40.141190Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-421",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-4",
+              "message": "Sample operation log for process ID 1. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-2",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:25:40.141199Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-282",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-0",
+              "message": "Sample operation log for process ID 2. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-3",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:19:40.141205Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-894",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-6",
+              "message": "Sample operation log for process ID 3. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-4",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:26:40.141211Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-572",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-3",
+              "message": "Sample operation log for process ID 4. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-5",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:07:40.141216Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-602",
+              "log-level": "WARN",
+              "correlationId": "corr-id-alpha-2",
+              "message": "Sample operation log for process ID 5. Status: WARN",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-6",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:26:40.141222Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-571",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-3",
+              "message": "Sample operation log for process ID 6. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-7",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:35:40.141227Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-209",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 7. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-8",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:11:40.141232Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-752",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-2",
+              "message": "Sample operation log for process ID 8. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-9",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:13:40.141237Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-737",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-7",
+              "message": "Sample operation log for process ID 9. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-10",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:19:40.141242Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-570",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-0",
+              "message": "Sample operation log for process ID 10. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-11",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:25:40.141247Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-954",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-1",
+              "message": "Sample operation log for process ID 11. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-12",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:35:40.141252Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-301",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-4",
+              "message": "Sample operation log for process ID 12. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-13",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:23:40.141257Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-882",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-7",
+              "message": "Sample operation log for process ID 13. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-14",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:07:40.141262Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-678",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 14. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-15",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:23:40.141267Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-237",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-6",
+              "message": "Sample operation log for process ID 15. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-16",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:26:40.141272Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-660",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-3",
+              "message": "Sample operation log for process ID 16. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-17",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:19:40.141277Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-208",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 17. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-18",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:18:40.141284Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-392",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-6",
+              "message": "Sample operation log for process ID 18. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-19",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:33:40.141289Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-345",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-4",
+              "message": "Sample operation log for process ID 19. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-20",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:13:40.141294Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-696",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-5",
+              "message": "Sample operation log for process ID 20. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-21",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:19:40.141299Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-569",
+              "log-level": "WARN",
+              "correlationId": "corr-id-alpha-9",
+              "message": "Sample operation log for process ID 21. Status: WARN",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-22",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:34:40.141303Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-224",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-1",
+              "message": "Sample operation log for process ID 22. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-23",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:29:40.141308Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-461",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-2",
+              "message": "Sample operation log for process ID 23. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-24",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:33:40.141313Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-513",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 24. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-25",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:06:40.141317Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-142",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-3",
+              "message": "Sample operation log for process ID 25. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-26",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:26:40.141322Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-427",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 26. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-27",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:33:40.141327Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-806",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-0",
+              "message": "Sample operation log for process ID 27. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-28",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:33:40.141332Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-959",
+              "log-level": "WARN",
+              "correlationId": "corr-id-alpha-0",
+              "message": "Sample operation log for process ID 28. Status: WARN",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-29",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:33:40.141339Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-905",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-7",
+              "message": "Sample operation log for process ID 29. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-30",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:05:40.141344Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-969",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-0",
+              "message": "Sample operation log for process ID 30. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-31",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:17:40.141349Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-311",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 31. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-32",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:31:40.141354Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-348",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-4",
+              "message": "Sample operation log for process ID 32. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-33",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:18:40.141359Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-183",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-1",
+              "message": "Sample operation log for process ID 33. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-34",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:33:40.141363Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-481",
+              "log-level": "ERROR",
+              "correlationId": "corr-id-alpha-9",
+              "message": "Sample operation log for process ID 34. Status: ERROR",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-35",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:35:40.141368Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-728",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-4",
+              "message": "Sample operation log for process ID 35. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-36",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:06:40.141373Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-321",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-7",
+              "message": "Sample operation log for process ID 36. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-37",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:12:40.141380Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-661",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 37. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-38",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:17:40.141385Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-908",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-9",
+              "message": "Sample operation log for process ID 38. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-39",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:32:40.141389Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-140",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-9",
+              "message": "Sample operation log for process ID 39. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-40",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:34:40.141394Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-787",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-9",
+              "message": "Sample operation log for process ID 40. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-41",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:31:40.141399Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-645",
+              "log-level": "WARN",
+              "correlationId": "corr-id-alpha-2",
+              "message": "Sample operation log for process ID 41. Status: WARN",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-42",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:26:40.141403Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-858",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-5",
+              "message": "Sample operation log for process ID 42. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-43",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:23:40.141408Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-124",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-7",
+              "message": "Sample operation log for process ID 43. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-44",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:32:40.141413Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-278",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-1",
+              "message": "Sample operation log for process ID 44. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-45",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:31:40.141417Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-441",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-0",
+              "message": "Sample operation log for process ID 45. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-46",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:23:40.141422Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-525",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-4",
+              "message": "Sample operation log for process ID 46. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-47",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:08:40.141427Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-385",
+              "log-level": "ERROR",
+              "correlationId": "corr-id-alpha-3",
+              "message": "Sample operation log for process ID 47. Status: ERROR",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-48",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:15:40.141432Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-996",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 48. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-49",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:11:40.141438Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-350",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-5",
+              "message": "Sample operation log for process ID 49. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-50",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:10:40.141444Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-187",
+              "log-level": "ERROR",
+              "correlationId": "corr-id-alpha-6",
+              "message": "Sample operation log for process ID 50. Status: ERROR",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-51",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:30:40.141449Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-555",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-6",
+              "message": "Sample operation log for process ID 51. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-52",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:10:40.141454Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-814",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-4",
+              "message": "Sample operation log for process ID 52. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-53",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:35:40.141459Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-452",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-0",
+              "message": "Sample operation log for process ID 53. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-54",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:14:40.141463Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-194",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 54. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-55",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:26:40.141468Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-755",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 55. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-56",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:32:40.141473Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-231",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-9",
+              "message": "Sample operation log for process ID 56. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-57",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:13:40.141478Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-950",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-9",
+              "message": "Sample operation log for process ID 57. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-58",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:26:40.141485Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-192",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-5",
+              "message": "Sample operation log for process ID 58. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-59",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:05:40.141490Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-304",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-5",
+              "message": "Sample operation log for process ID 59. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-60",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:16:40.141494Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-688",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-0",
+              "message": "Sample operation log for process ID 60. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-61",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:31:40.141499Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-805",
+              "log-level": "ERROR",
+              "correlationId": "corr-id-alpha-6",
+              "message": "Sample operation log for process ID 61. Status: ERROR",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-62",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:15:40.141504Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-291",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-9",
+              "message": "Sample operation log for process ID 62. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-63",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:06:40.141509Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-695",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-2",
+              "message": "Sample operation log for process ID 63. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-64",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:23:40.141514Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-575",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-9",
+              "message": "Sample operation log for process ID 64. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-65",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:18:40.141519Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-849",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-5",
+              "message": "Sample operation log for process ID 65. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-66",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:28:40.141523Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-399",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 66. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-67",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:20:40.141528Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-756",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-9",
+              "message": "Sample operation log for process ID 67. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-68",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:07:40.141533Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-396",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-1",
+              "message": "Sample operation log for process ID 68. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-69",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:06:40.141538Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-526",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-3",
+              "message": "Sample operation log for process ID 69. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-70",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:09:40.141543Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-168",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-5",
+              "message": "Sample operation log for process ID 70. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-71",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:27:40.141547Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-336",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-1",
+              "message": "Sample operation log for process ID 71. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-72",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:12:40.141552Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-575",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-5",
+              "message": "Sample operation log for process ID 72. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-73",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:08:40.141556Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-291",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 73. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-74",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:25:40.141561Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-705",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-5",
+              "message": "Sample operation log for process ID 74. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-75",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:20:40.141566Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-745",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 75. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-76",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:09:40.141571Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-181",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-2",
+              "message": "Sample operation log for process ID 76. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-77",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:14:40.141578Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-179",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-3",
+              "message": "Sample operation log for process ID 77. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-78",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:30:40.141583Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-251",
+              "log-level": "WARN",
+              "correlationId": "corr-id-alpha-2",
+              "message": "Sample operation log for process ID 78. Status: WARN",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-79",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:16:40.141588Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-526",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-9",
+              "message": "Sample operation log for process ID 79. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-80",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:24:40.141592Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-166",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-0",
+              "message": "Sample operation log for process ID 80. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-81",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:08:40.141597Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-763",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-1",
+              "message": "Sample operation log for process ID 81. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-82",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:35:40.141602Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-396",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-5",
+              "message": "Sample operation log for process ID 82. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-83",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:31:40.141607Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-949",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 83. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-84",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:05:40.141611Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-901",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-2",
+              "message": "Sample operation log for process ID 84. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-85",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:33:40.141616Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-251",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-9",
+              "message": "Sample operation log for process ID 85. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-86",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:08:40.141621Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-969",
+              "log-level": "ERROR",
+              "correlationId": "corr-id-alpha-7",
+              "message": "Sample operation log for process ID 86. Status: ERROR",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-87",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:09:40.141626Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-522",
+              "log-level": "ERROR",
+              "correlationId": "corr-id-alpha-5",
+              "message": "Sample operation log for process ID 87. Status: ERROR",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-88",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:20:40.141631Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-485",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-9",
+              "message": "Sample operation log for process ID 88. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-89",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:28:40.141635Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-841",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 89. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-90",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:15:40.141640Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-927",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-5",
+              "message": "Sample operation log for process ID 90. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-91",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:25:40.141645Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-960",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-4",
+              "message": "Sample operation log for process ID 91. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-92",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:16:40.141649Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-110",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-2",
+              "message": "Sample operation log for process ID 92. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-93",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:10:40.141655Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-334",
+              "log-level": "ERROR",
+              "correlationId": "corr-id-alpha-9",
+              "message": "Sample operation log for process ID 93. Status: ERROR",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-94",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:22:40.141660Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-146",
+              "log-level": "WARN",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 94. Status: WARN",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-95",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:23:40.141664Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-768",
+              "log-level": "ERROR",
+              "correlationId": "corr-id-alpha-7",
+              "message": "Sample operation log for process ID 95. Status: ERROR",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-96",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:31:40.141669Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-392",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-2",
+              "message": "Sample operation log for process ID 96. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-97",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:34:40.141674Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-231",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-6",
+              "message": "Sample operation log for process ID 97. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-98",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:07:40.141682Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-205",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-1",
+              "message": "Sample operation log for process ID 98. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-99",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:09:40.141686Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-349",
+              "log-level": "WARN",
+              "correlationId": "corr-id-alpha-6",
+              "message": "Sample operation log for process ID 99. Status: WARN",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-100",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:20:40.141691Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-291",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-3",
+              "message": "Sample operation log for process ID 100. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-101",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:27:40.141696Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-647",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-9",
+              "message": "Sample operation log for process ID 101. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-102",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:06:40.141701Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-583",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-5",
+              "message": "Sample operation log for process ID 102. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-103",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:20:40.141706Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-627",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-6",
+              "message": "Sample operation log for process ID 103. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-104",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:19:40.141711Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-687",
+              "log-level": "WARN",
+              "correlationId": "corr-id-alpha-0",
+              "message": "Sample operation log for process ID 104. Status: WARN",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-105",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:28:40.141715Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-502",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-3",
+              "message": "Sample operation log for process ID 105. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-106",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:28:40.141720Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-730",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-5",
+              "message": "Sample operation log for process ID 106. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-107",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:35:40.141726Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-576",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-0",
+              "message": "Sample operation log for process ID 107. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-108",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:20:40.141731Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-850",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-1",
+              "message": "Sample operation log for process ID 108. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-109",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:07:40.141737Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-117",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-1",
+              "message": "Sample operation log for process ID 109. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-110",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:17:40.141742Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-748",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-7",
+              "message": "Sample operation log for process ID 110. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-111",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:19:40.141746Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-617",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-0",
+              "message": "Sample operation log for process ID 111. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-112",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:33:40.141751Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-623",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-4",
+              "message": "Sample operation log for process ID 112. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-113",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:17:40.141755Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-357",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-7",
+              "message": "Sample operation log for process ID 113. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-114",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:12:40.141760Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-873",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-3",
+              "message": "Sample operation log for process ID 114. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-115",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:35:40.141765Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-511",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-2",
+              "message": "Sample operation log for process ID 115. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-116",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:12:40.141769Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-332",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-4",
+              "message": "Sample operation log for process ID 116. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-117",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:35:40.141774Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-580",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-3",
+              "message": "Sample operation log for process ID 117. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-118",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:32:40.141779Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-115",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-1",
+              "message": "Sample operation log for process ID 118. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-119",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:31:40.141783Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-967",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-1",
+              "message": "Sample operation log for process ID 119. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-120",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:29:40.141788Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-693",
+              "log-level": "WARN",
+              "correlationId": "corr-id-alpha-4",
+              "message": "Sample operation log for process ID 120. Status: WARN",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-121",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:27:40.141793Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-662",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-4",
+              "message": "Sample operation log for process ID 121. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-122",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:29:40.141799Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-491",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-4",
+              "message": "Sample operation log for process ID 122. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-123",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:17:40.141804Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-705",
+              "log-level": "ERROR",
+              "correlationId": "corr-id-alpha-5",
+              "message": "Sample operation log for process ID 123. Status: ERROR",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-124",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:31:40.141809Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-928",
+              "log-level": "ERROR",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 124. Status: ERROR",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-125",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:19:40.141813Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-903",
+              "log-level": "ERROR",
+              "correlationId": "corr-id-alpha-7",
+              "message": "Sample operation log for process ID 125. Status: ERROR",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-126",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:07:40.141818Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-837",
+              "log-level": "ERROR",
+              "correlationId": "corr-id-alpha-1",
+              "message": "Sample operation log for process ID 126. Status: ERROR",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-127",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:17:40.141823Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-407",
+              "log-level": "WARN",
+              "correlationId": "corr-id-alpha-1",
+              "message": "Sample operation log for process ID 127. Status: WARN",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-128",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:18:40.141828Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-974",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-0",
+              "message": "Sample operation log for process ID 128. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-129",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:28:40.141833Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-707",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 129. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-130",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:10:40.141837Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-270",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-7",
+              "message": "Sample operation log for process ID 130. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-131",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:27:40.141842Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-268",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-4",
+              "message": "Sample operation log for process ID 131. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-132",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:30:40.141847Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-561",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-6",
+              "message": "Sample operation log for process ID 132. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-133",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:35:40.141851Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-524",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 133. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-134",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:26:40.141856Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-301",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-4",
+              "message": "Sample operation log for process ID 134. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-135",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:14:40.141860Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-499",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-7",
+              "message": "Sample operation log for process ID 135. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-136",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:05:40.141865Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-702",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-7",
+              "message": "Sample operation log for process ID 136. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-137",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:05:40.141869Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-539",
+              "log-level": "ERROR",
+              "correlationId": "corr-id-alpha-0",
+              "message": "Sample operation log for process ID 137. Status: ERROR",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-138",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:24:40.141876Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-303",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-0",
+              "message": "Sample operation log for process ID 138. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-139",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:33:40.141881Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-553",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-7",
+              "message": "Sample operation log for process ID 139. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-140",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:19:40.141885Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-462",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-9",
+              "message": "Sample operation log for process ID 140. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-141",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:21:40.141890Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-410",
+              "log-level": "WARN",
+              "correlationId": "corr-id-alpha-2",
+              "message": "Sample operation log for process ID 141. Status: WARN",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-142",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:33:40.141895Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-138",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-5",
+              "message": "Sample operation log for process ID 142. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-143",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:08:40.141900Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-329",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-1",
+              "message": "Sample operation log for process ID 143. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-144",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:06:40.141904Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-821",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-4",
+              "message": "Sample operation log for process ID 144. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-145",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:10:40.141909Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-723",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-6",
+              "message": "Sample operation log for process ID 145. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-146",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:20:40.141914Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-621",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-7",
+              "message": "Sample operation log for process ID 146. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-147",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:29:40.141919Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-680",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-4",
+              "message": "Sample operation log for process ID 147. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-148",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:26:40.141923Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-738",
+              "log-level": "WARN",
+              "correlationId": "corr-id-alpha-3",
+              "message": "Sample operation log for process ID 148. Status: WARN",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-149",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:18:40.141928Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-669",
+              "log-level": "WARN",
+              "correlationId": "corr-id-alpha-9",
+              "message": "Sample operation log for process ID 149. Status: WARN",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-150",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:19:40.141933Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-671",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-2",
+              "message": "Sample operation log for process ID 150. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-151",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:31:40.141937Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-599",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 151. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-152",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:08:40.141942Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-386",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 152. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-153",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:09:40.141947Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-991",
+              "log-level": "WARN",
+              "correlationId": "corr-id-alpha-5",
+              "message": "Sample operation log for process ID 153. Status: WARN",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-154",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:05:40.141952Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-631",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-0",
+              "message": "Sample operation log for process ID 154. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-155",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:09:40.141957Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-151",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-6",
+              "message": "Sample operation log for process ID 155. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-156",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:32:40.141961Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-423",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-6",
+              "message": "Sample operation log for process ID 156. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-157",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:14:40.141966Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-585",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-6",
+              "message": "Sample operation log for process ID 157. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-158",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:34:40.141971Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-803",
+              "log-level": "ERROR",
+              "correlationId": "corr-id-alpha-3",
+              "message": "Sample operation log for process ID 158. Status: ERROR",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-159",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:26:40.141975Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-843",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-9",
+              "message": "Sample operation log for process ID 159. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-160",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:22:40.141980Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-891",
+              "log-level": "ERROR",
+              "correlationId": "corr-id-alpha-6",
+              "message": "Sample operation log for process ID 160. Status: ERROR",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-161",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:22:40.141985Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-462",
+              "log-level": "WARN",
+              "correlationId": "corr-id-alpha-5",
+              "message": "Sample operation log for process ID 161. Status: WARN",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-162",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:09:40.141990Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-864",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-5",
+              "message": "Sample operation log for process ID 162. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-163",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:12:40.141994Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-189",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-6",
+              "message": "Sample operation log for process ID 163. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-164",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:08:40.141999Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-318",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-3",
+              "message": "Sample operation log for process ID 164. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-165",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:21:40.142004Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-249",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 165. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-166",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:20:40.142008Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-560",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-4",
+              "message": "Sample operation log for process ID 166. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-167",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:24:40.142013Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-371",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-6",
+              "message": "Sample operation log for process ID 167. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-168",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:24:40.142018Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-964",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-9",
+              "message": "Sample operation log for process ID 168. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-169",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:19:40.142022Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-886",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-4",
+              "message": "Sample operation log for process ID 169. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-170",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:34:40.142027Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-701",
+              "log-level": "ERROR",
+              "correlationId": "corr-id-alpha-0",
+              "message": "Sample operation log for process ID 170. Status: ERROR",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-171",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:15:40.142031Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-940",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-5",
+              "message": "Sample operation log for process ID 171. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-172",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:07:40.142036Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-670",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-0",
+              "message": "Sample operation log for process ID 172. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-173",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:32:40.142041Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-965",
+              "log-level": "ERROR",
+              "correlationId": "corr-id-alpha-7",
+              "message": "Sample operation log for process ID 173. Status: ERROR",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-174",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:16:40.142046Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-445",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-1",
+              "message": "Sample operation log for process ID 174. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-175",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:35:40.142051Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-380",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-7",
+              "message": "Sample operation log for process ID 175. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-176",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:23:40.142055Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-498",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-2",
+              "message": "Sample operation log for process ID 176. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-177",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:19:40.142062Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-828",
+              "log-level": "WARN",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 177. Status: WARN",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-178",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:06:40.142068Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-947",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-5",
+              "message": "Sample operation log for process ID 178. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-179",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:35:40.142073Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-360",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-2",
+              "message": "Sample operation log for process ID 179. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-180",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:20:40.142078Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-793",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-3",
+              "message": "Sample operation log for process ID 180. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-181",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:16:40.142083Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-411",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-3",
+              "message": "Sample operation log for process ID 181. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-182",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:06:40.142087Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-369",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-0",
+              "message": "Sample operation log for process ID 182. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-183",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:08:40.142092Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-912",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-1",
+              "message": "Sample operation log for process ID 183. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-184",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:14:40.142096Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-773",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-5",
+              "message": "Sample operation log for process ID 184. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-185",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:21:40.142101Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-462",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-7",
+              "message": "Sample operation log for process ID 185. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-186",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:31:40.142106Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-608",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-1",
+              "message": "Sample operation log for process ID 186. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-187",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:27:40.142110Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-853",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-3",
+              "message": "Sample operation log for process ID 187. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-188",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:09:40.142115Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-379",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-0",
+              "message": "Sample operation log for process ID 188. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-189",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:08:40.142120Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-286",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 189. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-190",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:18:40.142125Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-120",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-1",
+              "message": "Sample operation log for process ID 190. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-191",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:09:40.142129Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-284",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-5",
+              "message": "Sample operation log for process ID 191. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-192",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:25:40.142134Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-203",
+              "log-level": "ERROR",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 192. Status: ERROR",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-193",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:12:40.142139Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-943",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-4",
+              "message": "Sample operation log for process ID 193. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-194",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:32:40.142143Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-138",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-2",
+              "message": "Sample operation log for process ID 194. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-195",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:30:40.142148Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-382",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-6",
+              "message": "Sample operation log for process ID 195. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-196",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:29:40.142153Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-804",
+              "log-level": "WARN",
+              "correlationId": "corr-id-alpha-3",
+              "message": "Sample operation log for process ID 196. Status: WARN",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-197",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:17:40.142157Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-121",
+              "log-level": "DEBUG",
+              "correlationId": "corr-id-alpha-7",
+              "message": "Sample operation log for process ID 197. Status: DEBUG",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-198",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:13:40.142162Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-412",
+              "log-level": "ERROR",
+              "correlationId": "corr-id-alpha-3",
+              "message": "Sample operation log for process ID 198. Status: ERROR",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          },
+          {
+            "_index": "active-583d11d1-1d73-434e",
+            "_type": "es-logging-mapping",
+            "_id": "VoOFCJ4BD5A4hJD2sMJa-199",
+            "_source": {
+              "logger": "HikariPool",
+              "timestamp": "2026-05-09T00:24:40.142167Z",
+              "request_path": "/v1/logs",
+              "source": "%{original_source}",
+              "event": "event: ",
+              "orgId": "5e35e1fa-c86f-4691-b626-1eb1db3f87c5",
+              "masterOrgId": "583d11d1-1d73-434e",
+              "workerId": "vc-digital-sap-hana-sapi-dev-6f658f7897-266",
+              "log-level": "INFO",
+              "correlationId": "corr-id-alpha-8",
+              "message": "Sample operation log for process ID 199. Status: INFO",
+              "class": "HikariPool-1 housekeeper",
+              "appId": "vc-digital-sap-hana-sapi-dev",
+              "envId": "32a286be-2293-4f10"
+            }
+          }
+        ]
+      },
+      "aggregations": {
+        "2": {
+          "buckets": [
+            {
+              "key_as_string": "2026-05-09T00:05:40.140876",
+              "key": 1778265340140,
+              "doc_count": 6
+            },
+            {
+              "key_as_string": "2026-05-09T00:06:40.140890",
+              "key": 1778265400140,
+              "doc_count": 9
+            },
+            {
+              "key_as_string": "2026-05-09T00:07:40.140896",
+              "key": 1778265460140,
+              "doc_count": 6
+            },
+            {
+              "key_as_string": "2026-05-09T00:08:40.140901",
+              "key": 1778265520140,
+              "doc_count": 16
+            },
+            {
+              "key_as_string": "2026-05-09T00:09:40.140904",
+              "key": 1778265580140,
+              "doc_count": 2
+            },
+            {
+              "key_as_string": "2026-05-09T00:10:40.140907",
+              "key": 1778265640140,
+              "doc_count": 14
+            },
+            {
+              "key_as_string": "2026-05-09T00:11:40.140910",
+              "key": 1778265700140,
+              "doc_count": 8
+            },
+            {
+              "key_as_string": "2026-05-09T00:12:40.140913",
+              "key": 1778265760140,
+              "doc_count": 18
+            },
+            {
+              "key_as_string": "2026-05-09T00:13:40.140915",
+              "key": 1778265820140,
+              "doc_count": 13
+            },
+            {
+              "key_as_string": "2026-05-09T00:14:40.140918",
+              "key": 1778265880140,
+              "doc_count": 2
+            },
+            {
+              "key_as_string": "2026-05-09T00:15:40.140921",
+              "key": 1778265940140,
+              "doc_count": 20
+            },
+            {
+              "key_as_string": "2026-05-09T00:16:40.140924",
+              "key": 1778266000140,
+              "doc_count": 11
+            },
+            {
+              "key_as_string": "2026-05-09T00:17:40.140926",
+              "key": 1778266060140,
+              "doc_count": 5
+            },
+            {
+              "key_as_string": "2026-05-09T00:18:40.140929",
+              "key": 1778266120140,
+              "doc_count": 20
+            },
+            {
+              "key_as_string": "2026-05-09T00:19:40.140932",
+              "key": 1778266180140,
+              "doc_count": 12
+            },
+            {
+              "key_as_string": "2026-05-09T00:20:40.140934",
+              "key": 1778266240140,
+              "doc_count": 19
+            },
+            {
+              "key_as_string": "2026-05-09T00:21:40.140937",
+              "key": 1778266300140,
+              "doc_count": 16
+            },
+            {
+              "key_as_string": "2026-05-09T00:22:40.140940",
+              "key": 1778266360140,
+              "doc_count": 19
+            },
+            {
+              "key_as_string": "2026-05-09T00:23:40.140942",
+              "key": 1778266420140,
+              "doc_count": 4
+            },
+            {
+              "key_as_string": "2026-05-09T00:24:40.140945",
+              "key": 1778266480140,
+              "doc_count": 16
+            },
+            {
+              "key_as_string": "2026-05-09T00:25:40.140947",
+              "key": 1778266540140,
+              "doc_count": 20
+            },
+            {
+              "key_as_string": "2026-05-09T00:26:40.140950",
+              "key": 1778266600140,
+              "doc_count": 7
+            },
+            {
+              "key_as_string": "2026-05-09T00:27:40.140952",
+              "key": 1778266660140,
+              "doc_count": 1
+            },
+            {
+              "key_as_string": "2026-05-09T00:28:40.140955",
+              "key": 1778266720140,
+              "doc_count": 9
+            },
+            {
+              "key_as_string": "2026-05-09T00:29:40.140957",
+              "key": 1778266780140,
+              "doc_count": 9
+            },
+            {
+              "key_as_string": "2026-05-09T00:30:40.140960",
+              "key": 1778266840140,
+              "doc_count": 1
+            },
+            {
+              "key_as_string": "2026-05-09T00:31:40.140963",
+              "key": 1778266900140,
+              "doc_count": 14
+            },
+            {
+              "key_as_string": "2026-05-09T00:32:40.140965",
+              "key": 1778266960140,
+              "doc_count": 16
+            },
+            {
+              "key_as_string": "2026-05-09T00:33:40.140968",
+              "key": 1778267020140,
+              "doc_count": 16
+            },
+            {
+              "key_as_string": "2026-05-09T00:34:40.140971",
+              "key": 1778267080140,
+              "doc_count": 14
+            }
+          ]
+        }
+      },
+      "status": 200
+    }
+  ]
+}

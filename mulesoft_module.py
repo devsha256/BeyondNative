@@ -338,6 +338,29 @@ class MuleSoftManager:
             log.error(f"Failed to execute app action '{action}': {e}")
             return False, str(e)
 
+    def _get_active_index_pattern(self, org_id):
+        cache_key = f"index_pattern_{org_id}"
+        if cache_key in cache:
+            return cache[cache_key]
+            
+        url = f"{self.anypoint_url}/monitoring/api/logs/api/saved_objects/?type=index-pattern&per_page=10000"
+        headers = self.get_headers()
+        headers["x-active-org-id"] = org_id
+        
+        try:
+            res = self.http_session.get(url, headers=headers, timeout=10)
+            if res.status_code == 200:
+                data = res.json()
+                for obj in data.get("saved_objects", []):
+                    title = obj.get("attributes", {}).get("title", "")
+                    if title.startswith("active-"):
+                        cache[cache_key] = title
+                        return title
+        except Exception as e:
+            log.error(f"Failed to fetch index pattern: {e}")
+            
+        return "active-*"
+
     def fetch_logs(self, org_id, env_id, app_id, start_time, end_time, query="*", limit=1000, offset=0, order="ASC"):
         """Fetches logs using Anypoint Monitoring Elasticsearch API."""
         headers = self.get_headers()
@@ -353,9 +376,12 @@ class MuleSoftManager:
             
         es_order = "desc" if order.upper() == "DESC" else "asc"
         
+        # Fetch dynamic index pattern
+        index_pattern = self._get_active_index_pattern(org_id)
+        
         import json
         ndjson_header = {
-            "index": [f"active-{env_id}*"],
+            "index": [index_pattern],
             "ignore_unavailable": True,
             "preference": 1778259436250
         }
@@ -459,10 +485,11 @@ class MuleSoftManager:
                         source.update(adapted)
                         adapted_logs.append(source)
                         
-                    return adapted_logs
+                    aggs = responses[0].get("aggregations", {}).get("2", {}).get("buckets", [])
+                    return {"logs": adapted_logs, "aggregations": aggs}
             
             log.error(f"Log Fetch Failed: {res.status_code} - {res.text[:500]}")
-            return []
+            return {"logs": [], "aggregations": []}
         except Exception as e:
             log.error(f"Log Fetch Error: {e}")
-            return []
+            return {"logs": [], "aggregations": []}

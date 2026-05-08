@@ -44,6 +44,11 @@
         </div>
     </div>
     
+    <div class="aggregations-panel" id="aggregations-panel" style="display: none;">
+        <div class="chart-container" id="chart-container">
+        </div>
+    </div>
+    
     <div class="dashboard-body">
         <div class="events-panel" id="events-panel">
             <div class="panel-header">
@@ -298,6 +303,70 @@
     .auto-refresh-toggle input:checked + .slider { background: #00A2DF; }
     .auto-refresh-toggle input:checked + .slider::before { transform: translateX(14px); }
     
+    /* Aggregations Panel */
+    .aggregations-panel {
+        background: var(--m3-surface);
+        border-bottom: 1px solid var(--border-light);
+        padding: 16px 24px;
+        height: 120px;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .chart-container {
+        flex: 1;
+        display: flex;
+        align-items: flex-end;
+        gap: 4px;
+        height: 100%;
+        overflow: hidden;
+    }
+    
+    .chart-bar-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: center;
+        height: 100%;
+        position: relative;
+    }
+    
+    .chart-bar {
+        width: 100%;
+        background: #00A2DF;
+        border-radius: 4px 4px 0 0;
+        min-height: 2px;
+        transition: height 0.3s ease;
+        opacity: 0.8;
+    }
+    
+    .chart-bar-wrapper:hover .chart-bar {
+        opacity: 1;
+        background: #00D1FF;
+    }
+    
+    .chart-tooltip {
+        position: absolute;
+        bottom: 100%;
+        margin-bottom: 8px;
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s;
+        z-index: 100;
+        border: 1px solid var(--border-light);
+    }
+    
+    .chart-bar-wrapper:hover .chart-tooltip {
+        opacity: 1;
+    }
+    
     /* Body */
     .dashboard-body {
         display: flex;
@@ -549,6 +618,7 @@
     let currentEnvs = [];
     let currentApps = [];
     let eventsData = [];
+    let aggregationsData = [];
     let activeCorrId = null;
     let refreshInterval = null;
 
@@ -565,6 +635,8 @@
         customEnd: document.getElementById('custom-end'),
         eventsList: document.getElementById('events-list'),
         eventCount: document.getElementById('event-count'),
+        aggregationsPanel: document.getElementById('aggregations-panel'),
+        chartContainer: document.getElementById('chart-container'),
         detailCorrId: document.getElementById('detail-corr-id'),
         detailMeta: document.getElementById('detail-meta'),
         logsTbody: document.getElementById('logs-tbody'),
@@ -662,6 +734,9 @@
                     DOM.appSelect.appendChild(opt);
                 });
                 DOM.appSelect.disabled = false;
+                
+                // Automatically fetch logs when environment is loaded/changed
+                fetchLogs();
             }
         } catch(e) {
             console.error(e);
@@ -673,6 +748,13 @@
             const opt = e.target.selectedOptions[0];
             if(opt && opt.value) {
                 loadApps(opt.dataset.orgId, opt.value);
+            } else {
+                DOM.appSelect.innerHTML = '<option value="all">All Applications</option>';
+                DOM.appSelect.disabled = true;
+                eventsData = [];
+                aggregationsData = [];
+                renderEventsList();
+                renderAggregationsChart();
             }
         });
 
@@ -761,7 +843,7 @@
         const envOpt = DOM.envSelect.selectedOptions[0];
         const appId = DOM.appSelect.value || "all";
         
-        if(!envOpt) return;
+        if(!envOpt || !envOpt.value) return;
         
         const orgId = envOpt.dataset.orgId;
         const envId = envOpt.value;
@@ -776,8 +858,12 @@
         try {
             const res = await fetch(`/logs/api/events?org_id=${orgId}&env_id=${envId}&app_id=${encodeURIComponent(appId)}&startTime=${start}&endTime=${end}`);
             if(res.ok) {
-                eventsData = await res.json();
+                const data = await res.json();
+                eventsData = data.events || [];
+                aggregationsData = data.aggregations || [];
+                
                 renderEventsList();
+                renderAggregationsChart();
                 
                 // Keep active selection if it still exists
                 if(activeCorrId) {
@@ -840,6 +926,38 @@
             });
             
             DOM.eventsList.appendChild(card);
+        });
+    }
+
+    function renderAggregationsChart() {
+        if (!aggregationsData || aggregationsData.length === 0) {
+            DOM.aggregationsPanel.style.display = 'none';
+            return;
+        }
+        
+        DOM.aggregationsPanel.style.display = 'flex';
+        DOM.chartContainer.innerHTML = '';
+        
+        const maxCount = Math.max(...aggregationsData.map(b => b.doc_count));
+        
+        aggregationsData.forEach(bucket => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'chart-bar-wrapper';
+            
+            const heightPercent = maxCount > 0 ? (bucket.doc_count / maxCount) * 100 : 0;
+            
+            const bar = document.createElement('div');
+            bar.className = 'chart-bar';
+            bar.style.height = `${heightPercent}%`;
+            
+            const tooltip = document.createElement('div');
+            tooltip.className = 'chart-tooltip';
+            const dateStr = new Date(bucket.key_as_string).toLocaleTimeString();
+            tooltip.innerHTML = `<strong>${bucket.doc_count}</strong> logs<br>${dateStr}`;
+            
+            wrapper.appendChild(tooltip);
+            wrapper.appendChild(bar);
+            DOM.chartContainer.appendChild(wrapper);
         });
     }
 
