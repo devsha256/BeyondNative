@@ -473,8 +473,7 @@ class MuleSoftManager:
                     hits = responses[0]["hits"].get("hits", [])
                     adapted_logs = []
                     
-                    import dateutil.parser
-                    from datetime import timezone
+                    from datetime import datetime, timezone
                     
                     for h in hits:
                         source = h.get("_source", {})
@@ -484,7 +483,9 @@ class MuleSoftManager:
                         epoch_ts = 0
                         if isinstance(raw_ts, str):
                             try:
-                                dt = dateutil.parser.parse(raw_ts)
+                                # Replace Z with +00:00 for strict ISO format compliance in Python < 3.11
+                                clean_ts = raw_ts.replace('Z', '+00:00')
+                                dt = datetime.fromisoformat(clean_ts)
                                 epoch_ts = int(dt.replace(tzinfo=timezone.utc).timestamp() * 1000)
                             except:
                                 epoch_ts = 0
