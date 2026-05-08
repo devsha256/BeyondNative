@@ -349,25 +349,41 @@ class MuleSoftManager:
         # Build query string
         qs = query
         if app_id and app_id != "all":
-            qs = f"({qs}) AND (application_name:\"{app_id}\" OR app_name:\"{app_id}\" OR application.name:\"{app_id}\" OR \"{app_id}\")"
+            qs = f"appId:\"{app_id}\"" if query == "*" else f"appId:\"{app_id}\" AND ({query})"
             
         es_order = "desc" if order.upper() == "DESC" else "asc"
         
         import json
         ndjson_header = {
             "index": [f"active-{env_id}*"],
-            "ignore_unavailable": True
+            "ignore_unavailable": True,
+            "preference": 1778259436250
         }
         
         ndjson_body = {
             "version": True,
             "size": limit,
-            "from": offset,
             "sort": [{"timestamp": {"order": es_order, "unmapped_type": "boolean"}}],
             "_source": {"excludes": []},
+            "aggs": {
+                "2": {
+                    "date_histogram": {
+                        "field": "timestamp",
+                        "interval": "30s",
+                        "time_zone": "UTC",
+                        "min_doc_count": 1
+                    }
+                }
+            },
             "stored_fields": ["*"],
             "script_fields": {},
             "docvalue_fields": ["timestamp"],
+            "highlight": {
+                "pre_tags": ["@kibana-highlighted-field@"],
+                "post_tags": ["@/kibana-highlighted-field@"],
+                "fields": {"*": {}},
+                "fragment_size": 2147483647
+            },
             "query": {
                 "bool": {
                     "must": [],
