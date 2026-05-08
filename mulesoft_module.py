@@ -339,39 +339,110 @@ class MuleSoftManager:
             return False, str(e)
 
     def fetch_logs(self, org_id, env_id, app_id, start_time, end_time, query="*", limit=1000, offset=0, order="ASC"):
-        """Fetches logs using Anypoint Monitoring Search API."""
+        """Fetches logs using Anypoint Monitoring Elasticsearch API."""
         headers = self.get_headers()
-        headers["X-ANYPNT-ORG-ID"] = org_id
-        headers["X-ANYPNT-ENV-ID"] = env_id
+        headers["x-active-org-id"] = org_id
+        headers["Content-Type"] = "application/x-ndjson"
 
+        url = f"{self.anypoint_url}/monitoring/api/logs/elasticsearch/_msearch"
+        
+        # Build query string
+        qs = query
         if app_id and app_id != "all":
-            url = f"{self.anypoint_url}/monitoring/archive/api/v1/organizations/{org_id}/environments/{env_id}/applications/{app_id}/logs/search"
-        else:
-            url = f"{self.anypoint_url}/monitoring/archive/api/v1/organizations/{org_id}/environments/{env_id}/logs/search"
-        payload = {
-            "startTime": start_time,
-            "endTime": end_time,
-            "query": query,
-            "limit": limit,
-            "offset": offset,
-            "order": order
+            qs = f"({qs}) AND (application_name:\"{app_id}\" OR app_name:\"{app_id}\" OR application.name:\"{app_id}\" OR \"{app_id}\")"
+            
+        es_order = "desc" if order.upper() == "DESC" else "asc"
+        
+        import json
+        ndjson_header = {
+            "index": [f"active-{env_id}*"],
+            "ignore_unavailable": True
         }
+        
+        ndjson_body = {
+            "version": True,
+            "size": limit,
+            "from": offset,
+            "sort": [{"timestamp": {"order": es_order, "unmapped_type": "boolean"}}],
+            "_source": {"excludes": []},
+            "query": {
+                "bool": {
+                    "must": [],
+                    "filter": [
+                        {
+                            "range": {
+                                "timestamp": {
+                                    "gte": start_time,
+                                    "lte": end_time,
+                                    "format": "epoch_millis"
+                                }
+                            }
+                        },
+                        {
+                            "query_string": {
+                                "query": qs,
+                                "analyze_wildcard": True
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+        
+        payload = json.dumps(ndjson_header) + "\n" + json.dumps(ndjson_body) + "\n"
+
         try:
-            res = self.http_session.post(url, headers=headers, json=payload)
-            if res.status_code == 200:
-                return res.json().get('data', [])
-            elif res.status_code == 401:
+            res = self.http_session.post(url, headers=headers, data=payload)
+            if res.status_code == 401:
                 # Re-auth attempt
                 if self.using_bearer_override:
                     raise MuleSoftAuthError("Bearer Token Expired")
                 self.access_token = None
                 headers = self.get_headers()
-                headers["X-ANYPNT-ORG-ID"] = org_id
-                headers["X-ANYPNT-ENV-ID"] = env_id
-                res = self.http_session.post(url, headers=headers, json=payload)
-                if res.status_code == 200:
-                    return res.json().get('data', [])
-            log.error(f"Log Fetch Failed: {res.status_code} - {res.text}")
+                headers["x-active-org-id"] = org_id
+                headers["Content-Type"] = "application/x-ndjson"
+                res = self.http_session.post(url, headers=headers, data=payload)
+                
+            if res.status_code == 200:
+                data = res.json()
+                responses = data.get("responses", [])
+                if responses and "hits" in responses[0]:
+                    hits = responses[0]["hits"].get("hits", [])
+                    adapted_logs = []
+                    
+                    import dateutil.parser
+                    from datetime import timezone
+                    
+                    for h in hits:
+                        source = h.get("_source", {})
+                        
+                        # Extract and normalize timestamp to epoch millis
+                        raw_ts = source.get("timestamp", 0)
+                        epoch_ts = 0
+                        if isinstance(raw_ts, str):
+                            try:
+                                dt = dateutil.parser.parse(raw_ts)
+                                epoch_ts = int(dt.replace(tzinfo=timezone.utc).timestamp() * 1000)
+                            except:
+                                epoch_ts = 0
+                        else:
+                            epoch_ts = raw_ts
+                            
+                        # Adapt fields to what app.py expects
+                        adapted = {
+                            "correlationId": source.get("correlationId", source.get("correlation_id", "unknown")),
+                            "applicationName": source.get("applicationName", source.get("application_name", source.get("app_name", "Unknown App"))),
+                            "workerId": source.get("workerId", source.get("worker", "Unknown Worker")),
+                            "timestamp": epoch_ts,
+                            "logLevel": source.get("logLevel", source.get("level", source.get("log_level", "INFO"))),
+                            "message": source.get("message", "")
+                        }
+                        source.update(adapted)
+                        adapted_logs.append(source)
+                        
+                    return adapted_logs
+            
+            log.error(f"Log Fetch Failed: {res.status_code} - {res.text[:500]}")
             return []
         except Exception as e:
             log.error(f"Log Fetch Error: {e}")
