@@ -382,7 +382,7 @@ class MuleSoftManager:
             
         return "active-*"
 
-    def fetch_logs(self, org_id, env_id, app_id, start_time, end_time, log_level="ALL Level", query="*", limit=1000, offset=0, order="ASC"):
+    def fetch_logs(self, org_id, env_id, app_id, start_time, end_time, log_level="ALL Level", query="", limit=1000, offset=0, order="ASC"):
         """Fetches logs using Anypoint Monitoring Elasticsearch API."""
         headers = self.get_headers()
         headers["x-active-org-id"] = org_id
@@ -393,7 +393,7 @@ class MuleSoftManager:
         # Build query string
         qs = query
         if app_id and app_id != "all":
-            qs = f"appId:\"{app_id}\"" if query == "*" else f"appId:\"{app_id}\" AND ({query})"
+            qs = f"appId:\"{app_id}\"" if not query else f"appId:\"{app_id}\" AND ({query})"
             
         es_order = "desc" if order.upper() == "DESC" else "asc"
         
@@ -416,7 +416,7 @@ class MuleSoftManager:
                     "date_histogram": {
                         "field": "timestamp",
                         "interval": "30s",
-                        "time_zone": "UTC",
+                        "time_zone": "Asia/Kolkata",
                         "min_doc_count": 1
                     }
                 }
@@ -427,7 +427,8 @@ class MuleSoftManager:
             "highlight": {
                 "pre_tags": ["@kibana-highlighted-field@"],
                 "post_tags": ["@/kibana-highlighted-field@"],
-                "fields": {"*": {}}
+                "fields": {"*": {}},
+                "fragment_size": 2147483647
             }
         }
         
