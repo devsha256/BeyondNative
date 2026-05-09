@@ -443,12 +443,12 @@ class MuleSoftManager:
                     }
                 }
             ],
-            "query": {
-                "query_string": {
+            "query": [
+                {
                     "query": qs,
                     "language": "lucene"
                 }
-            }
+            ]
         }
         
         if log_level and log_level.upper() != "ALL LEVEL":
