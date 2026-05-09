@@ -833,6 +833,7 @@
                 
                 if(btn.dataset.range === 'custom') {
                     DOM.customPicker.style.display = 'flex';
+                    if(DOM.envSelect.value) fetchLogs();
                 } else {
                     DOM.customPicker.style.display = 'none';
                     if(DOM.envSelect.value) fetchLogs();
@@ -841,6 +842,13 @@
         });
 
         DOM.refreshBtn.addEventListener('click', fetchLogs);
+
+        DOM.customStart.addEventListener('change', () => {
+            if(DOM.envSelect.value) fetchLogs();
+        });
+        DOM.customEnd.addEventListener('change', () => {
+            if(DOM.envSelect.value) fetchLogs();
+        });
 
         DOM.autoRefreshCheck.addEventListener('change', (e) => {
             if(e.target.checked) {
