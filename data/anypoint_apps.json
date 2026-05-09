@@ -1,0 +1,14 @@
+[
+  {
+    "id": "mock-app-auth",
+    "name": "auth-api-v1",
+    "fullDomain": "auth-api-v1.us-e1.cloudhub.io",
+    "status": "STARTED"
+  },
+  {
+    "id": "mock-app-customer",
+    "name": "customer-sapi",
+    "fullDomain": "customer-sapi.us-e1.cloudhub.io",
+    "status": "STARTED"
+  }
+]

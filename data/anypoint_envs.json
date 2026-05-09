@@ -1,0 +1,14 @@
+[
+  {
+    "id": "mock-env-dev",
+    "name": "Development",
+    "type": "sandbox",
+    "isProduction": false
+  },
+  {
+    "id": "mock-env-prod",
+    "name": "Production",
+    "type": "production",
+    "isProduction": true
+  }
+]

@@ -382,7 +382,7 @@ class MuleSoftManager:
             
         return "active-*"
 
-    def fetch_logs(self, org_id, env_id, app_id, start_time, end_time, query="*", limit=1000, offset=0, order="ASC"):
+    def fetch_logs(self, org_id, env_id, app_id, start_time, end_time, log_level="ALL Level", query="*", limit=1000, offset=0, order="ASC"):
         """Fetches logs using Anypoint Monitoring Elasticsearch API."""
         headers = self.get_headers()
         headers["x-active-org-id"] = org_id
@@ -443,31 +443,67 @@ class MuleSoftManager:
                     }
                 }
             ],
-            "query": [
-                {
+            "query": {
+                "query_string": {
                     "query": qs,
                     "language": "lucene"
                 }
-            ]
+            }
         }
+        
+        if log_level and log_level.upper() != "ALL LEVEL":
+            ndjson_body_filters["filter"].insert(0, {
+                "meta": {
+                    "negate": False,
+                    "index": index_pattern,
+                    "type": "phrase",
+                    "key": "log-level",
+                    "value": log_level.upper(),
+                    "params": {
+                        "query": log_level.upper(),
+                        "type": "phrase"
+                    },
+                    "disabled": False,
+                    "alias": None
+                },
+                "query": {
+                    "match": {
+                        "log-level": {
+                            "query": log_level.upper(),
+                            "type": "phrase"
+                        }
+                    }
+                },
+                "$state": {
+                    "store": "appState"
+                }
+            })
         
         # Construct the exact 3-line payload requested
         payload = json.dumps(ndjson_header) + "\n" + json.dumps(ndjson_body) + "\n" + json.dumps(ndjson_body_filters) + "\n"
 
         try:
-            res = self.http_session.post(url, headers=headers, data=payload.encode('utf-8'))
-            if res.status_code == 401:
-                # Re-auth attempt
-                if self.using_bearer_override:
-                    raise MuleSoftAuthError("Bearer Token Expired")
-                self.access_token = None
-                headers = self.get_headers()
-                headers["x-active-org-id"] = org_id
-                headers["Content-Type"] = "application/x-ndjson"
-                res = self.http_session.post(url, headers=headers, data=payload)
+            import os
+            if os.environ.get('MOCK_MONITORING', 'false').lower() == 'true':
+                log.info("MOCK_MONITORING enabled. Serving local AnyPoint dummy logs.")
+                with open('data/anypoint_monitoring_logs.json', 'r') as f:
+                    data = json.load(f)
+                status_code = 200
+            else:
+                res = self.http_session.post(url, headers=headers, data=payload.encode('utf-8'))
+                if res.status_code == 401:
+                    # Re-auth attempt
+                    if self.using_bearer_override:
+                        raise MuleSoftAuthError("Bearer Token Expired")
+                    self.access_token = None
+                    headers = self.get_headers()
+                    headers["x-active-org-id"] = org_id
+                    headers["Content-Type"] = "application/x-ndjson"
+                    res = self.http_session.post(url, headers=headers, data=payload)
+                status_code = res.status_code
+                data = res.json() if status_code == 200 else None
                 
-            if res.status_code == 200:
-                data = res.json()
+            if status_code == 200 and data:
                 responses = data.get("responses", [])
                 if responses and "hits" in responses[0]:
                     hits = responses[0]["hits"].get("hits", [])
@@ -510,12 +546,28 @@ class MuleSoftManager:
                             "applicationName": source.get("applicationName", source.get("application_name", source.get("app_name", "Unknown App"))),
                             "workerId": source.get("workerId", source.get("worker", "Unknown Worker")),
                             "timestamp": epoch_ts,
-                            "logLevel": source.get("logLevel", source.get("level", source.get("log_level", "INFO"))),
+                            "logLevel": source.get("logLevel") or source.get("level") or source.get("log_level") or source.get("log-level") or "INFO",
                             "message": source.get("message", "")
                         }
                         source.update(adapted)
-                        adapted_logs.append(source)
                         
+                        import os
+                        if os.environ.get('MOCK_MONITORING', 'false').lower() == 'true':
+                            if app_id != "all" and source.get("appId") != app_id and adapted.get("applicationName") != app_id:
+                                continue
+                                
+                            log_lvl_val = str(adapted.get("logLevel") or "").upper()
+                            src_log_lvl_val = str(source.get("log-level") or "").upper()
+                            
+                            if log_level.upper() != "ALL LEVEL" and log_lvl_val != log_level.upper() and src_log_lvl_val != log_level.upper():
+                                continue
+                                
+                        # Only return limit amount to prevent infinite loop in app.py mock mode
+                        if os.environ.get('MOCK_MONITORING', 'false').lower() == 'true' and len(adapted_logs) >= limit:
+                            pass
+                        else:
+                            adapted_logs.append(source)
+                            
                     aggs = responses[0].get("aggregations", {}).get("2", {}).get("buckets", [])
                     return {"logs": adapted_logs, "aggregations": aggs}
             

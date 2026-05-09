@@ -209,6 +209,10 @@ def get_mule_orgs():
 
 @app.route('/api/mule/envs/<org_id>', methods=['GET'])
 def get_mule_envs(org_id):
+    import os, json
+    if os.environ.get('MOCK_MONITORING', 'false').lower() == 'true':
+        with open('data/anypoint_envs.json', 'r') as f:
+            return jsonify(json.load(f))
     try:
         return jsonify(mule.get_environments(org_id))
     except MuleSoftAuthError:
@@ -304,6 +308,11 @@ def logs_dashboard():
 
 @app.route('/logs/api/apps')
 def logs_api_apps():
+    import os, json
+    if os.environ.get('MOCK_MONITORING', 'false').lower() == 'true':
+        with open('data/anypoint_apps.json', 'r') as f:
+            return jsonify(json.load(f))
+            
     org_id = request.args.get('org_id')
     env_id = request.args.get('env_id')
     if not org_id or not env_id:
@@ -313,6 +322,11 @@ def logs_api_apps():
 
 @app.route('/logs/api/auth/test', methods=['POST'])
 def logs_api_auth_test():
+    import os, json
+    if os.environ.get('MOCK_MONITORING', 'false').lower() == 'true':
+        with open('data/anypoint_auth_test.json', 'r') as f:
+            return jsonify(json.load(f))
+            
     is_connected = mule.check_connection()
     if is_connected:
         try:
@@ -327,6 +341,7 @@ def logs_api_events():
     org_id = request.args.get('org_id')
     env_id = request.args.get('env_id')
     app_id = request.args.get('app_id')
+    log_level = request.args.get('log_level', 'ALL Level')
     start_time = request.args.get('startTime')
     end_time = request.args.get('endTime')
     
@@ -348,7 +363,7 @@ def logs_api_events():
     aggregations = []
     
     for i in range(max_fetches):
-        res = mule.fetch_logs(org_id, env_id, app_id, start_time, end_time, limit=limit, offset=offset, order="DESC")
+        res = mule.fetch_logs(org_id, env_id, app_id, start_time, end_time, log_level=log_level, limit=limit, offset=offset, order="DESC")
         logs = res.get("logs", [])
         if i == 0:
             aggregations = res.get("aggregations", [])

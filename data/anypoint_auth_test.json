@@ -1,0 +1,10 @@
+{
+  "status": "success",
+  "orgs": [
+    {
+      "id": "mock-org-1234",
+      "name": "Mock Organization",
+      "domain": "mock-org"
+    }
+  ]
+}
