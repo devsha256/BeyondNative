@@ -655,6 +655,18 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
+
+    .capped-message {
+        padding: 24px 16px;
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        line-height: 1.4;
+        border-top: 1px solid var(--divider);
+        background: rgba(0, 0, 0, 0.02);
+        opacity: 0.8;
+        font-style: italic;
+    }
 </style>
 
 <script>
@@ -663,6 +675,7 @@
     let currentApps = [];
     let eventsData = [];
     let aggregationsData = [];
+    let isCapped = false;
     let activeCorrId = null;
     let refreshInterval = null;
 
@@ -913,6 +926,7 @@
                 const data = await res.json();
                 eventsData = data.events || [];
                 aggregationsData = data.aggregations || [];
+                isCapped = data.is_capped || false;
                 
                 renderEventsList();
                 renderAggregationsChart();
@@ -974,6 +988,14 @@
             
             DOM.eventsList.appendChild(card);
         });
+        
+        // Add capped message if limit reached
+        if (isCapped) {
+            const footer = document.createElement('div');
+            footer.className = 'capped-message';
+            footer.innerText = 'These are the first 500 documents matching your search, refine your search to see others';
+            DOM.eventsList.appendChild(footer);
+        }
     }
 
     function renderAggregationsChart() {

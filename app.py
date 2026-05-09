@@ -354,26 +354,12 @@ def logs_api_events():
     except ValueError:
         return jsonify({"error": "Invalid time format. Must be epoch milliseconds"}), 400
 
-    # Fetch logs - paginate to get more logs
-    all_logs = []
-    limit = 1000
-    offset = 0
-    max_fetches = 5 # fetch up to 5000 lines to prevent memory explosion
-    
-    aggregations = []
-    
-    for i in range(max_fetches):
-        res = mule.fetch_logs(org_id, env_id, app_id, start_time, end_time, log_level=log_level, limit=limit, offset=offset, order="DESC")
-        logs = res.get("logs", [])
-        if i == 0:
-            aggregations = res.get("aggregations", [])
-            
-        if not logs:
-            break
-        all_logs.extend(logs)
-        if len(logs) < limit:
-            break
-        offset += limit
+    # Fetch logs - capped at 500 as per user requirement
+    limit = 500
+    res = mule.fetch_logs(org_id, env_id, app_id, start_time, end_time, log_level=log_level, limit=limit, order="DESC")
+    all_logs = res.get("logs", [])
+    aggregations = res.get("aggregations", [])
+    is_capped = len(all_logs) >= limit
 
     # Group by correlationId
     groups = {}
@@ -430,7 +416,8 @@ def logs_api_events():
     
     return jsonify({
         "events": sorted_groups,
-        "aggregations": aggregations
+        "aggregations": aggregations,
+        "is_capped": is_capped
     })
 
 @app.route('/logs/api/events/<corr_id>')
